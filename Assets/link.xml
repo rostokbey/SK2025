@@ -1,0 +1,3 @@
+<linker>
+  <assembly fullname="BouncyCastle.Crypto" preserve="all"/>
+</linker>

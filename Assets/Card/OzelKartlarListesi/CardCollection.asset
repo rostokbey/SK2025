@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cab0a3135c2eb3744bfbacae61fd520c, type: 3}
+  m_Name: CardCollection
+  m_EditorClassIdentifier: 
+  allCards:
+  - id: CARD-KARA-0001
+    cardName: KARA_BUYUCUSU
+    baseHP: 100
+    baseDamage: 28
+    baseDex: 60
+    dex: 0
+    rarity: 
+    ability: 
+    passive: 
+    level: 1
+    xp: 0
+    skillCooldownMax: 0
+    className: 
+    race: 
+    combo: 
+    characterSprite: {fileID: 21300000, guid: 6254bc74ecc5a764bb69a93bfbd2cf73, type: 3}
+    characterPrefab3D: {fileID: 833110138989164826, guid: 2d03395fa583512418ee9b55312d2709, type: 3}
+    prefab: 
+    cardId: 
+    type: 0
+    damage: 0
+    heal: 0
+    duration: 0
+    critChance: 0
+    critDamage: 0
+    reflect: 0
+    stun: 0
+    banish: 0
+    summonCount: 0
+    combine: 0
+  - id: CARD-SonsuzSavunma-0001
+    cardName: 
+    baseHP: 100
+    baseDamage: 28
+    baseDex: 60
+    dex: 0
+    rarity: 
+    ability: 
+    passive: 
+    level: 1
+    xp: 0
+    skillCooldownMax: 0
+    className: 
+    race: 
+    combo: 
+    characterSprite: {fileID: 21300000, guid: bd7df280eeaca3049ae3ab39cf2f4238, type: 3}
+    characterPrefab3D: {fileID: 1839113162530911641, guid: 01fc5a64504060249acfec7fc5e05ca8, type: 3}
+    prefab: 
+    cardId: 
+    type: 0
+    damage: 0
+    heal: 0
+    duration: 0
+    critChance: 0
+    critDamage: 0
+    reflect: 0
+    stun: 0
+    banish: 0
+    summonCount: 0
+    combine: 0
