@@ -57,7 +57,7 @@ public class PlayerInventory : MonoBehaviour
         {
             int dupXp = CardLevelSystem.Instance?.DuplicateScanXpDefault ?? 100;
 
-            CardLevelSystem.Instance?.AddExperience(exist, dupXp);
+            CardLevelSystem.Instance?.AdDefperience(exist, dupXp);
             SaveToDisk(); // ilerlemeyi yaz
             Debug.Log($"[Inventory] Duplicate scan → XP +{dupXp}: {exist.cardName} ({exist.id})");
             return;
@@ -124,10 +124,10 @@ public class PlayerInventory : MonoBehaviour
         return myCards[activeCardIndex];
     }
 
-    public void SetActiveCardIndex(int index)
+    public void SetActiveCardIndex(int inDef)
     {
         if (myCards == null || myCards.Count == 0) { activeCardIndex = -1; return; }
-        activeCardIndex = Mathf.Clamp(index, 0, myCards.Count - 1);
+        activeCardIndex = Mathf.Clamp(inDef, 0, myCards.Count - 1);
     }
 
     // Eski sahnelerden gelebilecek çağrılar için stub’lar:

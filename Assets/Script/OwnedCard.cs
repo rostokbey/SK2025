@@ -13,6 +13,6 @@ public class OwnedCard
 
     public int GetDamage()
     {
-        return card.baseDamage + (level * 2); // her seviye +2 dmg
+        return card.baseStr + (level * 2); // her seviye +2 dmg
     }
 }

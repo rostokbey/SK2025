@@ -21,7 +21,7 @@ public class CardLevelSystem : MonoBehaviour
     // ----------------- Dış API -----------------
 
     /// <summary> Envanterde id ile kart bulup XP ekler/çıkarır. </summary>
-    public void AddExperienceByKey(string cardId, int xpDelta)
+    public void AdDefperienceByKey(string cardId, int xpDelta)
     {
         var inv = PlayerInventory.Instance;
         if (inv == null || string.IsNullOrEmpty(cardId)) return;
@@ -29,7 +29,7 @@ public class CardLevelSystem : MonoBehaviour
         var c = inv.myCards.Find(x => x.id == cardId);
         if (c == null) return;
 
-        AddExperience(c, xpDelta);
+        AdDefperience(c, xpDelta);
         inv.SaveToDisk();
     }
 
@@ -37,7 +37,7 @@ public class CardLevelSystem : MonoBehaviour
     /// Kartın XP’sini değiştirir. Pozitifte seviye atlatır, negatifte XP’yi 0’ın altına indirmez
     /// (de-level yapmıyoruz).
     /// </summary>
-    public void AddExperience(CardData c, int xpDelta)
+    public void AdDefperience(CardData c, int xpDelta)
     {
         if (c == null) return;
 
@@ -70,16 +70,16 @@ public class CardLevelSystem : MonoBehaviour
         if (c == null) return;
 
         int hp = c.baseHP;
-        int str = c.baseDamage;
-        int dx = (c.baseDex); // temel dex
+        int str = c.baseStr;
+        int dx = (c.baseDef); // temel Def
 
         // Level 1 taban, 2..level arası her adımın getirisi eklenir
         for (int L = 2; L <= Mathf.Max(1, c.level); L++)
             AddRoleBasedGains(c, L, ref hp, ref str, ref dx);
 
         c.baseHP = hp;
-        c.baseDamage = str;
-        c.baseDex = dx; // Kart üstünde dex’i baseDEX’te tutuyoruz
+        c.baseStr = str;
+        c.baseDef = dx; // Kart üstünde Def’i baseDef’te tutuyoruz
     }
 
     // ----------------- XP eğrisi -----------------
@@ -157,19 +157,19 @@ public class CardLevelSystem : MonoBehaviour
     }
 
     /// <summary>Her level adımı için rol bazlı artışları ekler.</summary>
-    private void AddRoleBasedGains(CardData c, int levelStep, ref int hp, ref int str, ref int dex)
+    private void AddRoleBasedGains(CardData c, int levelStep, ref int hp, ref int str, ref int Def)
     {
         var role = ResolveRole(c);
         bool legendary = IsLegendaryGroup(c);
 
         switch (role)
         {
-            case Role.Tank: hp += 14; str += 2; dex += 6; break;
-            case Role.Warrior: hp += 10; str += 8; dex += 2; break;
-            case Role.Mage: hp += 10; str += 6; dex += 4; break;
-            case Role.Support: hp += 10; str += 3; dex += 3; break;
-            case Role.Assassin: hp += 10; str += (legendary ? 11 : 9); dex += (legendary ? 2 : 1); break;
-            default: hp += 10; str += 5; dex += 2; break; // güvenli varsayılan
+            case Role.Tank: hp += 14; str += 2; Def += 6; break;
+            case Role.Warrior: hp += 10; str += 8; Def += 2; break;
+            case Role.Mage: hp += 10; str += 6; Def += 4; break;
+            case Role.Support: hp += 10; str += 3; Def += 3; break;
+            case Role.Assassin: hp += 10; str += (legendary ? 11 : 9); Def += (legendary ? 2 : 1); break;
+            default: hp += 10; str += 5; Def += 2; break; // güvenli varsayılan
         }
     }
 
@@ -177,13 +177,13 @@ public class CardLevelSystem : MonoBehaviour
     public void ApplyLevelGains(CardData c, int targetLevel)
     {
         int hp = c.baseHP;
-        int str = c.baseDamage;
-        int dx = c.baseDex;
+        int str = c.baseStr;
+        int dx = c.baseDef;
 
         AddRoleBasedGains(c, targetLevel, ref hp, ref str, ref dx);
 
         c.baseHP = hp;
-        c.baseDamage = str;
-        c.baseDex = dx;
+        c.baseStr = str;
+        c.baseDef = dx;
     }
 }

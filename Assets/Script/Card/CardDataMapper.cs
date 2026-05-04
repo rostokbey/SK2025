@@ -10,9 +10,8 @@ public static class CardDataMapper
             cardName = c.cardName,
 
             baseHP = c.baseHP,
-            baseDamage = c.baseDamage,
-            baseDex = c.baseDex,   // <-- buras�
-            dex = c.dex,       // <-- buras�
+            baseStr = c.baseStr,
+            baseDef = c.baseDef,
 
             rarity = c.rarity,
             ability = c.ability,
@@ -37,11 +36,9 @@ public static class CardDataMapper
         if (!string.IsNullOrEmpty(d.spritePath))
             sp = Resources.Load<Sprite>("Characters/" + d.spritePath);
 
-        // yeni yap�c�y� kullan�yoruz (baseDex + dex birlikte)
         return new CardData(
             d.id, d.cardName,
-            d.baseHP, d.baseDamage,
-            d.baseDex, d.dex,                 // <-- buras�
+            d.baseHP, d.baseStr, d.baseDef,
             d.rarity, d.ability, d.passive,
             d.level, d.xp, d.skillCooldownMax,
             sp,

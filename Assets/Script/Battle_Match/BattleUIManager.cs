@@ -36,7 +36,7 @@ public class BattleUIManager : MonoBehaviour
         {
             playerImage.sprite = playerCard.characterSprite;
             playerNameText.text = playerCard.cardName.Replace("_", " ");
-            playerHPText.text = "HP: " + playerCard.baseHP; playerSTRText.text = "STR: " + playerCard.baseDamage;
+            playerHPText.text = "HP: " + playerCard.baseHP; playerSTRText.text = "STR: " + playerCard.baseStr;
             playerLevelText.text = "Lv: " + playerCard.level;
             playerXPText.text = "XP: " + playerCard.xp + "/100";
         }
@@ -47,7 +47,7 @@ public class BattleUIManager : MonoBehaviour
             enemyImage.sprite = enemyCard.characterSprite; // Null olabilir
             enemyNameText.text = enemyCard.cardName;
             enemyHPText.text = "HP: " + enemyCard.baseHP;
-            enemySTRText.text = "STR: " + enemyCard.baseDamage;
+            enemySTRText.text = "STR: " + enemyCard.baseStr;
             enemyLevelText.text = "Lv: " + enemyCard.level;
         }
     }

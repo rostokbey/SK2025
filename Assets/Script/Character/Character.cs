@@ -54,7 +54,7 @@ public class Character : NetworkBehaviour
             var targetHS = targetObj.GetComponent<HealthSystem>();
             if (targetHS != null)
             {
-                int dmg = Mathf.Max(1, cardData.baseDamage);
+                int dmg = Mathf.Max(1, cardData.baseStr);
                 targetHS.TakeDamageServerRpc(dmg);
                 Debug.Log($"[CHAR] {cardData.cardName} vurdu: {dmg}");
             }

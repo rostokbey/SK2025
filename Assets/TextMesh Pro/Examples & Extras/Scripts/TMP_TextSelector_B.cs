@@ -97,10 +97,10 @@ namespace TMPro.Examples
                 {
                     m_lastIndex = charIndex;
 
-                    // Get the index of the material / sub text object used by this character.
+                    // Get the inDef of the material / sub text object used by this character.
                     int materialIndex = m_TextMeshPro.textInfo.characterInfo[charIndex].materialReferenceIndex;
 
-                    // Get the index of the first vertex of the selected character.
+                    // Get the inDef of the first vertex of the selected character.
                     int vertexIndex = m_TextMeshPro.textInfo.characterInfo[charIndex].vertexIndex;
 
                     // Get a reference to the vertices array.
@@ -151,7 +151,7 @@ namespace TMPro.Examples
                     // Get a reference to the meshInfo of the selected character.
                     TMP_MeshInfo meshInfo = m_TextMeshPro.textInfo.meshInfo[materialIndex];
 
-                    // Get the index of the last character's vertex attributes.
+                    // Get the inDef of the last character's vertex attributes.
                     int lastVertexIndex = vertices.Length - 4;
 
                     // Swap the current character's vertex attributes with those of the last element in the vertex attribute arrays.
@@ -178,10 +178,10 @@ namespace TMPro.Examples
                     {
                         int characterIndex = wInfo.firstCharacterIndex + i;
 
-                        // Get the index of the material / sub text object used by this character.
+                        // Get the inDef of the material / sub text object used by this character.
                         int meshIndex = m_TextMeshPro.textInfo.characterInfo[characterIndex].materialReferenceIndex;
 
-                        // Get the index of the first vertex of this character.
+                        // Get the inDef of the first vertex of this character.
                         int vertexIndex = m_TextMeshPro.textInfo.characterInfo[characterIndex].vertexIndex;
 
                         // Get a reference to the vertex color
@@ -453,15 +453,15 @@ namespace TMPro.Examples
         }
 
 
-        void RestoreCachedVertexAttributes(int index)
+        void RestoreCachedVertexAttributes(int inDef)
         {
-            if (index == -1 || index > m_TextMeshPro.textInfo.characterCount - 1) return;
+            if (inDef == -1 || inDef > m_TextMeshPro.textInfo.characterCount - 1) return;
 
-            // Get the index of the material / sub text object used by this character.
-            int materialIndex = m_TextMeshPro.textInfo.characterInfo[index].materialReferenceIndex;
+            // Get the inDef of the material / sub text object used by this character.
+            int materialIndex = m_TextMeshPro.textInfo.characterInfo[inDef].materialReferenceIndex;
 
-            // Get the index of the first vertex of the selected character.
-            int vertexIndex = m_TextMeshPro.textInfo.characterInfo[index].vertexIndex;
+            // Get the inDef of the first vertex of the selected character.
+            int vertexIndex = m_TextMeshPro.textInfo.characterInfo[inDef].vertexIndex;
 
             // Restore Vertices
             // Get a reference to the cached / original vertices.

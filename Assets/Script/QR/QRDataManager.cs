@@ -10,7 +10,7 @@ public class QRDataManager : MonoBehaviour
 
     [Header("Preview UI (opsiyonel)")]
     public Image characterImage;
-    public TextMeshProUGUI nameText, hpText, strText, abilityText, passiveText;
+    public TextMeshProUGUI nameText, hpText, strText, defText, abilityText, passiveText;
     public Sprite defaultListSprite;
 
     public static Action<CardData> OnCardReady;
@@ -18,7 +18,11 @@ public class QRDataManager : MonoBehaviour
     void Awake() => Instance = this;
 
     public void ParseQRData(string jwtText)
+
+        
     {
+        Debug.Log("[QRDataManager] ParseQRData çalıştı. Gelen veri: " + jwtText);
+
         if (string.IsNullOrWhiteSpace(jwtText))
         {
             Debug.LogWarning("[QR] Boş QR metni.");
@@ -31,22 +35,20 @@ public class QRDataManager : MonoBehaviour
             return;
         }
 
-        // Önce CardDatabase içinde savaş kartı mı kontrol et
         CardData dbCard = CardDatabase.AllCards.FirstOrDefault(c => c.id == p.id);
         CardData card;
 
         if (dbCard != null)
         {
-            // Savaş kartı → hazır tanımdan kopya al
             card = dbCard.Clone();
             Debug.Log($"[QR] Savaş kartı bulundu: {card.cardName} ({card.id})");
         }
         else
         {
-            // Normal karakter kartı
             if (nameText) nameText.text = p.name?.Replace("_", " ") ?? "";
             if (hpText) hpText.text = "HP: " + p.hp;
             if (strText) strText.text = "STR: " + p.str;
+            if (defText) defText.text = "DEF: " + p.def;
             if (abilityText) abilityText.text = "Ability: " + p.ability;
             if (passiveText) passiveText.text = "Passive: " + p.passive;
 
@@ -56,24 +58,25 @@ public class QRDataManager : MonoBehaviour
             if (!listSprite) listSprite = defaultListSprite;
             if (characterImage) characterImage.sprite = listSprite;
 
-            int baseDex = 0, dex = 0;
+            
+
+            
 
             card = new CardData(
-                p.id, p.name,
-                p.hp, p.str,
-                baseDex, dex,
-                p.rarity, p.ability, p.passive,
-                1,           // level
-                0,           // xp
-                3,           // skillCooldownMax (starter)
-                listSprite,
-                null,
-                p.prefab
-            );
+            p.id, p.name,
+            p.hp, p.str, p.def, // QR'da base olarak alıyoruz
+            p.rarity, p.ability, p.passive,
+            1,
+            0,
+            3,
+            listSprite,
+            null,
+             p.prefab
+);
+
             Debug.Log($"[QR] Karakter kartı oluşturuldu: {card.cardName} ({card.id})");
         }
 
-        // Envantere ekle
         var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
         if (inv != null)
         {
@@ -84,7 +87,6 @@ public class QRDataManager : MonoBehaviour
             Debug.LogWarning("[QR] PlayerInventory bulunamadı.");
         }
 
-        // 🔹 DeckManagerObject’e de ekle (yeni eklenen kısım)
         var deckManager = DeckManagerObject.Instance ?? FindObjectOfType<DeckManagerObject>();
         if (deckManager != null)
         {

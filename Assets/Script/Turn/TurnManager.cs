@@ -27,8 +27,8 @@ public class TurnManager : NetworkBehaviour
     public void EndTurnServerRpc(ServerRpcParams rpcParams = default)
     {
         var allPlayers = NetworkManager.Singleton.ConnectedClientsIds.ToList();
-        int index = allPlayers.IndexOf(currentTurnPlayer.Value);
-        currentTurnPlayer.Value = allPlayers[(index + 1) % allPlayers.Count];
+        int inDef = allPlayers.IndexOf(currentTurnPlayer.Value);
+        currentTurnPlayer.Value = allPlayers[(inDef + 1) % allPlayers.Count];
 
         Debug.Log($"Sıra artık Player {currentTurnPlayer.Value}'da.");
 

@@ -3,100 +3,111 @@
 [System.Serializable]
 public class CardData
 {
-    // Kimlik / İsim
+    // ---------------- ENUM ----------------
+    public enum CardType
+    {
+        Attack,
+        Defense,
+        Buff,
+        Debuff,
+        Utility,
+        Special
+    }
+
+    // ---------------- KİMLİK ----------------
     public string id;
+    public string cardId;
     public string cardName;
 
-    // Base istatistikler
+    // ---------------- BASE STAT (kalıcı) ----------------
     public int baseHP;
-    public int baseDamage;
+    public int baseStr;
+    public int baseDef;
 
-    // DEX: base ve anlık
-    public int baseDex;
-    public int dex;
+    // ---------------- CURRENT STAT (combat) ----------------
+    public int hp;
+    public int str;
+    public int def;
 
-    // Diğer özellikler
+    // ---------------- META ----------------
     public string rarity;
     public string ability;
     public string passive;
 
-    // RPG ilerleme
     public int level;
     public int xp;
     public int skillCooldownMax;
 
-    // Sınıf/ırk/kombo (opsiyonel)
     public string className;
     public string race;
     public string combo;
 
-    // Görseller / Prefab’lar
+    // ---------------- ASSET ----------------
     public Sprite characterSprite;
     public GameObject characterPrefab3D;
     public string prefab;
 
-    //CharacterPlacer.cs için eklendi
-    public string cardId;
-
-    // ---------------- Yeni Mekanik Alanlar ----------------
-    public enum CardType { Attack, Defense, Buff, Debuff, Utility, Special }
+    // ---------------- TYPE ----------------
     public CardType type;
 
-    public int damage;          // Doğrudan hasar
-    public int heal;            // İyileştirme miktarı
-    public int duration;        // Etkinin süresi (tur cinsinden)
+    // ---------------- MEKANİK ----------------
+    public int damage;
+    public int heal;
+    public int duration;
 
-    public float critChance;    // Kritik ihtimali
-    public float critDamage;    // Kritik hasar çarpanı
-    public float reflect;       // Yansıtma yüzdesi
+    public float critChance;
+    public float critDamage;
+    public float reflect;
 
-    public bool stun;           // Sersemletme/dondurma
-    public bool banish;         // Zindana atma
-    public int summonCount;     // Klon sayısı
-    public bool combine;        // Kombine kartı mı
-    public bool disableAttack; // Kart hedefinin saldırmasını engeller
+    public bool stun;
+    public bool banish;
+    public int summonCount;
+    public bool combine;
+    public bool disableAttack;
 
-
-    // ---------------- Constructors ----------------
-
-    // Basitleştirilmiş constructor (Savaş kartları için)
     public CardData(string id, string name, string ability)
     {
         this.id = id;
-        this.cardId = id; // Düzeltme burada
+        this.cardId = id;
         this.cardName = name;
         this.ability = ability;
 
         this.baseHP = 0;
-        this.baseDamage = 0;
-        this.baseDex = 0;
-        this.dex = 0;
+        this.baseStr = 0;
+        this.baseDef = 0;
+
+        ResetStats();
+
         this.rarity = "Common";
         this.passive = "";
         this.level = 1;
         this.xp = 0;
         this.skillCooldownMax = 0;
+
         this.characterSprite = null;
         this.characterPrefab3D = null;
         this.prefab = null;
+
+        this.type = CardType.Special;
     }
 
-    // Eski sürüm (tek dex parametresi alır)
+    // ---------------- CONSTRUCTOR ----------------
     public CardData(
-        string id, string name, int hp, int dmg, int dex,
+        string id, string name,
+        int baseHP, int baseStr, int baseDef,
         string rarity, string ability, string passive,
         int level, int xp, int skillCdMax,
         Sprite sp, GameObject prefab3d, string prefabPath = null)
     {
         this.id = id;
-        this.cardId = id; // Düzeltme burada
+        this.cardId = id;
         this.cardName = name;
 
-        this.baseHP = hp;
-        this.baseDamage = dmg;
+        this.baseHP = baseHP;
+        this.baseStr = baseStr;
+        this.baseDef = baseDef;
 
-        this.baseDex = dex;
-        this.dex = dex;
+        ResetStats(); // 🔥 önemli
 
         this.rarity = rarity;
         this.ability = ability;
@@ -106,48 +117,27 @@ public class CardData
         this.xp = xp;
         this.skillCooldownMax = skillCdMax;
 
-        this.characterSprite = sp;
-        this.characterPrefab3D = prefab3d;
-        this.prefab = prefabPath;
+        characterSprite = sp;
+        characterPrefab3D = prefab3d;
+        prefab = prefabPath;
+
+        type = CardType.Attack; // default
     }
 
-    // Yeni sürüm (baseDex + dex birlikte)
-    public CardData(
-        string id, string name, int hp, int dmg, int baseDex, int dex,
-        string rarity, string ability, string passive,
-        int level, int xp, int skillCdMax,
-        Sprite sp, GameObject prefab3d, string prefabPath = null)
+    // ---------------- STAT RESET ----------------
+    public void ResetStats()
     {
-        this.id = id;
-        this.cardId = id; // Düzeltme burada
-        this.cardName = name;
-
-        this.baseHP = hp;
-        this.baseDamage = dmg;
-
-        this.baseDex = baseDex;
-        this.dex = dex;
-
-        this.rarity = rarity;
-        this.ability = ability;
-        this.passive = passive;
-
-        this.level = level;
-        this.xp = xp;
-        this.skillCooldownMax = skillCdMax;
-
-        this.characterSprite = sp;
-        this.characterPrefab3D = prefab3d;
-        this.prefab = prefabPath;
+        hp = baseHP;
+        str = baseStr;
+        def = baseDef;
     }
 
-    // Clone - DÜZELTME: SİZİN ORİJİNAL, TAM ÇALIŞAN METODUNUZ GERİ GETİRİLDİ
+    // ---------------- CLONE ----------------
     public CardData Clone()
     {
         return new CardData(
             id, cardName,
-            baseHP, baseDamage,
-            baseDex, dex,
+            baseHP, baseStr, baseDef,
             rarity, ability, passive,
             level, xp, skillCooldownMax,
             characterSprite, characterPrefab3D, prefab
@@ -157,8 +147,15 @@ public class CardData
             race = this.race,
             combo = this.combo,
 
-            // Mekanik alanlar da kopyalansın
+            // combat state
+            hp = this.hp,
+            str = this.str,
+            def = this.def,
+
+            // type
             type = this.type,
+
+            // mekanik alanlar
             damage = this.damage,
             heal = this.heal,
             duration = this.duration,
@@ -168,31 +165,8 @@ public class CardData
             stun = this.stun,
             banish = this.banish,
             summonCount = this.summonCount,
-            combine = this.combine
-            // cardId zaten constructor'da atandığı için burada tekrar atamaya gerek yok.
+            combine = this.combine,
+            disableAttack = this.disableAttack
         };
-    }
-    public int hp
-    {
-        get => baseHP;
-        set => baseHP = value;
-    }
-
-    public int dmg
-    {
-        get => baseDamage;
-        set => baseDamage = value;
-    }
-
-    public int str
-    {
-        get => baseDamage;
-        set => baseDamage = value;
-    }
-
-    public int dexterity
-    {
-        get => baseDex;
-        set => baseDex = value;
     }
 }

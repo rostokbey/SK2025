@@ -13,7 +13,7 @@ public class CardUIController : MonoBehaviour
     {
         nameText.text = card.cardName;
         hpText.text = "HP: " + card.baseHP;
-        damageText.text = "DMG: " + card.baseDamage;
+        damageText.text = "DMG: " + card.baseStr;
         abilityText.text = "Aktif: " + card.ability;
         passiveText.text = "Pasif: " + card.passive;
     }

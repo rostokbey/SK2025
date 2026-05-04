@@ -14,7 +14,7 @@ public static class CardDatabase
         new CardData("S03-001", "Klonlama", "2�6 klon olu�turur (3 tur)") {
             type = CardData.CardType.Special, duration = 3, summonCount = 3
         },
-        new CardData("S04-001", "G��lendirme", "Hasar� 2 tur %50 art�r�r") {
+        new CardData("S04-001", "G��lendirme", "Hasarı 2 tur %50 art�r�r") {
             type = CardData.CardType.Buff, duration = 2, damage = 50
         },
         new CardData("S05-001", "Silah", "Ek silah g�c� kazand�r�r") {

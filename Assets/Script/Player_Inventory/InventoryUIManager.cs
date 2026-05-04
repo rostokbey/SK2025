@@ -23,7 +23,7 @@ public class InventoryUIManager : MonoBehaviour
             cardGO.transform.Find("Image").GetComponent<Image>().sprite = card.characterSprite;
             cardGO.transform.Find("NameText").GetComponent<TMP_Text>().text = card.cardName.Replace("_", " ");
             cardGO.transform.Find("HPText").GetComponent<TMP_Text>().text = "HP: " + card.baseHP;
-            cardGO.transform.Find("STRText").GetComponent<TMP_Text>().text = "STR: " + card.baseDamage;
+            cardGO.transform.Find("STRText").GetComponent<TMP_Text>().text = "STR: " + card.baseStr;
         }
     }
 

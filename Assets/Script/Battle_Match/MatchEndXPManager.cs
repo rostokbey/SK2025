@@ -35,7 +35,7 @@ public class MatchEndXPManager : MonoBehaviour
 
         // XP ver
         foreach (var c in myUsed)
-            if (c != null) cls.AddExperience(c, delta);
+            if (c != null) cls.AdDefperience(c, delta);
 
         // Sonuç verisini doldur
         MatchResultBus.LastCards.Clear();

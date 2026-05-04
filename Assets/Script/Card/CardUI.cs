@@ -10,7 +10,7 @@ public class CardUI : MonoBehaviour
     public TMP_Text damageText;
     public TMP_Text levelText;
     public TMP_Text xpText;
-    public TMP_Text dexText;
+    public TMP_Text DefText;
 
     [Tooltip("Kartın ön yüzü (karakter görseli)")]
     public Image characterImage;   // front
@@ -36,10 +36,10 @@ public class CardUI : MonoBehaviour
 
         if (nameText) nameText.text = data.cardName.Replace("_", " ");
         if (hpText) hpText.text = "HP: " + data.baseHP;
-        if (damageText) damageText.text = "STR: " + data.baseDamage;
+        if (damageText) damageText.text = "STR: " + data.baseStr;
         if (levelText) levelText.text = "Lv: " + data.level;
         if (xpText) xpText.text = "XP: " + data.xp + "/100";
-        if (dexText) dexText.text = "DEX: " + data.baseDex;
+        if (DefText) DefText.text = "DEF: " + data.baseDef;
 
         if (characterImage) characterImage.sprite = data.characterSprite;
 

@@ -12,7 +12,7 @@ public class CardDetailPanel : MonoBehaviour
     public GameObject inventoryPanel; // 💡 Buraya InventoryUI panelini atayacağız (DeckSelectPanel)
 
     public TMP_Text nameText;
-    public TMP_Text dexText;
+    public TMP_Text DefText;
     public TMP_Text classText;
     public TMP_Text raceText;
     public TMP_Text comboText;

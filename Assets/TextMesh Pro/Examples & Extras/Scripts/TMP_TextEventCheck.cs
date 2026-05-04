@@ -39,24 +39,24 @@ namespace TMPro.Examples
         }
 
 
-        void OnCharacterSelection(char c, int index)
+        void OnCharacterSelection(char c, int inDef)
         {
-            Debug.Log("Character [" + c + "] at Index: " + index + " has been selected.");
+            Debug.Log("Character [" + c + "] at Index: " + inDef + " has been selected.");
         }
 
-        void OnSpriteSelection(char c, int index)
+        void OnSpriteSelection(char c, int inDef)
         {
-            Debug.Log("Sprite [" + c + "] at Index: " + index + " has been selected.");
+            Debug.Log("Sprite [" + c + "] at Index: " + inDef + " has been selected.");
         }
 
         void OnWordSelection(string word, int firstCharacterIndex, int length)
         {
-            Debug.Log("Word [" + word + "] with first character index of " + firstCharacterIndex + " and length of " + length + " has been selected.");
+            Debug.Log("Word [" + word + "] with first character inDef of " + firstCharacterIndex + " and length of " + length + " has been selected.");
         }
 
         void OnLineSelection(string lineText, int firstCharacterIndex, int length)
         {
-            Debug.Log("Line [" + lineText + "] with first character index of " + firstCharacterIndex + " and length of " + length + " has been selected.");
+            Debug.Log("Line [" + lineText + "] with first character inDef of " + firstCharacterIndex + " and length of " + length + " has been selected.");
         }
 
         void OnLinkSelection(string linkID, string linkText, int linkIndex)

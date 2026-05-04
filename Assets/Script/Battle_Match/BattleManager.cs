@@ -261,7 +261,7 @@ public class BattleManager : NetworkBehaviour
         }
 
         Transform[] gridArray = isPlayer ? playerGridPositions : enemyGridPositions;
-        int index = isPlayer ? nextPlayerSpawnIndex : nextEnemySpawnIndex;
+        int inDef = isPlayer ? nextPlayerSpawnIndex : nextEnemySpawnIndex;
 
         if (gridArray == null || gridArray.Length == 0)
         {
@@ -269,13 +269,13 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        if (index >= gridArray.Length)
+        if (inDef >= gridArray.Length)
         {
             Debug.LogWarning("[BM] Spawn için boş slot kalmadı!");
             return;
         }
 
-        Transform slot = gridArray[index];
+        Transform slot = gridArray[inDef];
         if (isPlayer) nextPlayerSpawnIndex++; else nextEnemySpawnIndex++;
 
         var prefabToUse = ResolvePrefab(card);
@@ -632,7 +632,7 @@ public class BattleManager : NetworkBehaviour
         Character attacker = attackers[0];
         Character defender = defenders[0];
 
-        int damage = Mathf.Max(1, attacker.cardData.baseDamage);
+        int damage = Mathf.Max(1, attacker.cardData.baseStr);
         defender.GetComponent<HealthSystem>().TakeDamageServerRpc(damage);
 
         Debug.Log($"⚔️ {attacker.cardData.cardName} → {defender.cardData.cardName} | -{damage} HP");
