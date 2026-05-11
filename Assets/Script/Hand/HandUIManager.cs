@@ -52,15 +52,15 @@ public class HandUIManager : MonoBehaviour
             DrawCard();
 
         // Attack butonu
-        if (attackButton != null)
-        {
-            attackButton.onClick.RemoveAllListeners();
-            attackButton.onClick.AddListener(OnAttackPressed);
-        }
-        else
-        {
-            Debug.LogWarning("[HandUI] attackButton atanmamış!");
-        }
+       // if (attackButton != null)
+       // {
+       //     attackButton.onClick.RemoveAllListeners();
+       //     attackButton.onClick.AddListener(OnAttackPressed);
+       // }
+       // else
+       // {
+       //     Debug.LogWarning("[HandUI] attackButton atanmamış!");
+       // }
     }
 
     /// <summary>

@@ -67,6 +67,18 @@ public class BattleManager : NetworkBehaviour
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
 
+        // ✅ Saldır butonu artık sahadaki karakter saldırısı için BattleManager'a bağlı
+        if (attackButton != null)
+        {
+            attackButton.onClick.RemoveAllListeners();
+            attackButton.onClick.AddListener(OnFieldAttackButtonPressed);
+            Debug.Log("[BM] AttackButton BattleManager'a bağlandı.");
+        }
+        else
+        {
+            Debug.LogWarning("[BM] attackButton atanmamış!");
+        }
+
         // Sunucu değilsek burada erken çık (tek cihaz testinde Host'sun zaten)
         if (!IsServer) return;
 
@@ -85,7 +97,7 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
         // Oyuncu tarafının kart UI'larını göster
-        //SpawnPlayerCards(playerCards);
+        // SpawnPlayerCards(playerCards);
 
         // Kart listelerini aldıktan sonra: elde 5 kart göster
         var handUI = FindObjectOfType<HandUIManager>(true);
@@ -105,12 +117,20 @@ public class BattleManager : NetworkBehaviour
         {
             Debug.LogWarning("[BM] HandUIManager bulunamadı!");
         }
+
         // 🧪 DENEME: Tüm karakterleri anında sahaya basmak istersen açık bırak,
         // kart seçerek spawn akışı deneyeceksen bu satırı YORUM SATIRI yap.
         // SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+    }
+
+    public void OnFieldAttackButtonPressed()
+    {
+        Debug.Log("[BM] Saldır butonuna basıldı. Sahadaki karakter saldırısı çalışıyor.");
+
+        ResolveAttack(true);
     }
 
     // ---------------------------------------------------------------------
@@ -558,44 +578,90 @@ public class BattleManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void SpawnCharacterAtPositionServerRpc(string cardId, Vector3 position, ServerRpcParams rpcParams = default)
     {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+
         var card = DeckManagerObject.Instance.GetCardById(cardId);
         if (card == null)
         {
             Debug.LogError("Spawn edilecek kart bulunamadı: " + cardId);
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { senderId }
+                }
+            });
+
             return;
         }
 
-        ulong senderId = rpcParams.Receive.SenderClientId;
-        bool isPlayer = senderId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+        bool isPlayer = senderId == NetworkManager.ServerClientId;
 
-        // --- SAHA KONTROLÜ (BoxCollider) ---
         Collider zone = isPlayer ? playerZone : enemyZone;
+
+        Debug.Log($"Spawn isteyen senderId: {senderId}, isPlayer: {isPlayer}, seçilen zone: {zone.name}, position: {position}");
+
         if (zone == null)
         {
             Debug.LogError("❌ PlayerZone/EnemyZone Collider atanmadı!");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { senderId }
+                }
+            });
+
             return;
         }
 
-        if (!zone.bounds.Contains(position))
+        Bounds b = zone.bounds;
+
+        bool insideXZ =
+            position.x >= b.min.x && position.x <= b.max.x &&
+            position.z >= b.min.z && position.z <= b.max.z;
+
+        if (!insideXZ)
         {
-            Debug.LogWarning($"❌ {card.cardName} yanlış bölgeye spawn edilmeye çalışıldı.");
+            Debug.LogWarning($"❌ {card.cardName} yanlış bölgeye spawn edilmeye çalışıldı. Pos: {position}, Zone: {zone.name}");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { senderId }
+                }
+            });
+
             return;
         }
-        // -----------------------------------
 
         var prefabToUse = ResolvePrefab(card);
         if (prefabToUse == null)
         {
             Debug.LogError($"[BM] Prefab yok: {card?.cardName}");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { senderId }
+                }
+            });
+
             return;
         }
 
         Vector3 spawnPos = position;
+
         Quaternion spawnRot = isPlayer
             ? Quaternion.Euler(-33f, 0f, 0f)
             : Quaternion.Euler(0f, 180f, 0f);
 
         var obj = Instantiate(prefabToUse, spawnPos, spawnRot);
+
         var net = obj.GetComponent<NetworkObject>();
 
         if (net && IsServer)
@@ -604,6 +670,7 @@ public class BattleManager : NetworkBehaviour
         obj.transform.localScale = Vector3.one;
 
         var ch = obj.GetComponent<Character>();
+
         if (ch != null)
         {
             ch.Setup(card);
@@ -612,10 +679,124 @@ public class BattleManager : NetworkBehaviour
         }
 
         Debug.Log($"✅ {card.cardName} spawn edildi → {(isPlayer ? "Oyuncu" : "Düşman")} bölgesi");
+
+        // ✅ Oyuncu kart koyduysa karşı tarafa otomatik 1 düşman koy
+        if (isPlayer)
+        {
+            SpawnRandomEnemyFromDeck();
+        }
+
+        PlacementResultClientRpc(true, new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { senderId }
+            }
+        });
+    }
+
+
+    private void SpawnRandomEnemyFromDeck()
+    {
+        var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
+
+        if (enemyCards == null || enemyCards.Count == 0)
+        {
+            Debug.LogWarning("[BM] Düşman destesi boş, enemy spawn edilemedi.");
+            return;
+        }
+
+        if (enemyGridPositions == null || enemyGridPositions.Length == 0)
+        {
+            Debug.LogWarning("[BM] Enemy Grid Positions atanmadı.");
+            return;
+        }
+
+        if (nextEnemySpawnIndex >= enemyGridPositions.Length)
+        {
+            Debug.LogWarning("[BM] Düşman spawn slotu kalmadı.");
+            return;
+        }
+
+        CardData enemyCard = enemyCards[Random.Range(0, enemyCards.Count)];
+        Transform slot = enemyGridPositions[nextEnemySpawnIndex];
+        nextEnemySpawnIndex++;
+
+        GameObject prefabToUse = ResolvePrefab(enemyCard);
+
+        if (prefabToUse == null)
+        {
+            Debug.LogWarning($"[BM] Düşman prefab bulunamadı: {enemyCard.cardName}");
+            return;
+        }
+
+        GameObject obj = Instantiate(prefabToUse, slot.position, Quaternion.Euler(0f, 180f, 0f));
+
+        var net = obj.GetComponent<NetworkObject>();
+
+        if (net && IsServer)
+            net.Spawn();
+
+        obj.transform.position = slot.position;
+        obj.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+        obj.transform.localScale = Vector3.one;
+
+        Character ch = obj.GetComponent<Character>();
+
+        if (ch != null)
+        {
+            ch.Setup(enemyCard);
+            ch.isPlayer = false;
+            allCharacters.Add(ch);
+        }
+
+        Debug.Log($"🟥 Düşman otomatik spawn edildi: {enemyCard.cardName}");
+    }
+
+
+
+    [ClientRpc]
+    private void PlacementResultClientRpc(bool success, ClientRpcParams clientRpcParams = default)
+    {
+        if (CharacterPlacer.Instance != null)
+            CharacterPlacer.Instance.PlacementResult(success);
     }
 
     private void ResolveAttack(bool isPlayerTurn)
     {
+        Debug.Log("✅ ResolveAttack ÇALIŞTI");
+        Debug.Log("🔥 ResolveAttack içine girdim - VFX test başlangıcı");
+
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayVFX("Fireball", Vector3.zero);
+            Debug.Log("🔥 VFXManager bulundu, Fireball Vector3.zero noktasına çağrıldı");
+        }
+        else
+        {
+            Debug.LogError("❌ VFXManager.Instance NULL");
+        }
+
+
+        Debug.Log($"👥 allCharacters COUNT: {allCharacters.Count}");
+
+        foreach (var c in allCharacters)
+        {
+            if (c == null)
+            {
+                Debug.Log("❌ NULL character");
+                continue;
+            }
+
+            var hp = c.GetComponent<HealthSystem>();
+
+            Debug.Log(
+                $"CHAR => {c.cardData.cardName} | isPlayer={c.isPlayer} | HP={(hp != null ? hp.currentHP.Value.ToString() : "NO HP")}"
+            );
+        }
+
+
         var attackers = allCharacters
             .Where(c => c != null && c.GetComponent<HealthSystem>().currentHP.Value > 0
                    && (isPlayerTurn ? c.isPlayer : !c.isPlayer))
@@ -627,13 +808,27 @@ public class BattleManager : NetworkBehaviour
             .ToList();
 
         if (attackers.Count == 0 || defenders.Count == 0)
+        {
+            Debug.LogWarning("[BM] Saldırı için attacker veya defender yok.");
             return;
+        }
 
         Character attacker = attackers[0];
         Character defender = defenders[0];
 
         int damage = Mathf.Max(1, attacker.cardData.baseStr);
         defender.GetComponent<HealthSystem>().TakeDamageServerRpc(damage);
+
+        Debug.Log("🔥 VFX TEST: Fireball çağrıldı");
+
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayVFX("Fireball", defender.transform);
+        }
+        else
+        {
+            Debug.LogError("❌ VFXManager.Instance NULL");
+        }
 
         Debug.Log($"⚔️ {attacker.cardData.cardName} → {defender.cardData.cardName} | -{damage} HP");
 
@@ -645,5 +840,4 @@ public class BattleManager : NetworkBehaviour
             CheckVictory();
         }
     }
-
 }

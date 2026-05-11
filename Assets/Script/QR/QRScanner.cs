@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class QRScanner : MonoBehaviour
 {
     private WebCamTexture camTexture;
+    private IBarcodeReader reader;
 
     [Header("UI")]
     public RawImage cameraView;
@@ -12,35 +13,52 @@ public class QRScanner : MonoBehaviour
     public GameObject placeholderImage;
 
     [Header("Behavior")]
-    public bool autoStart = false;                 // ← QR panelinde biz başlatacağız
-    public bool showRestartWhenIdle = true;        // ← Kamera kapalıyken buton görünsün
+    public bool autoStart = false;
+    public bool showRestartWhenIdle = true;
 
     private bool scanned = false;
 
     void Start()
     {
-        if (autoStart) StartCamera();
+        reader = new BarcodeReader();
+
+        if (autoStart)
+            StartCamera();
 
         if (restartScanButton != null)
         {
+            restartScanButton.onClick.RemoveListener(RestartScan);
             restartScanButton.onClick.AddListener(RestartScan);
 
-            // Kamera şu an çalışmıyorsa butonu göster:
             bool cameraIdle = camTexture == null || !camTexture.isPlaying;
             restartScanButton.gameObject.SetActive(showRestartWhenIdle && cameraIdle);
         }
 
-        // Kamera başlamadıysa placeholder açık kalsın
         if (placeholderImage != null && (camTexture == null || !camTexture.isPlaying))
             placeholderImage.SetActive(true);
     }
 
     void Update()
     {
-        if (camTexture != null && camTexture.isPlaying && camTexture.didUpdateThisFrame && !scanned)
+        if (scanned) return;
+        if (camTexture == null) return;
+        if (!camTexture.isPlaying) return;
+        if (!camTexture.didUpdateThisFrame) return;
+
+        // Kamera daha hazır değilse bekle
+        if (camTexture.width < 100 || camTexture.height < 100) return;
+
+        try
         {
-            IBarcodeReader reader = new BarcodeReader();
-            var result = reader.Decode(camTexture.GetPixels32(), camTexture.width, camTexture.height);
+            Color32[] pixels = camTexture.GetPixels32();
+
+            if (pixels == null || pixels.Length == 0) return;
+
+            var result = reader.Decode(
+                pixels,
+                camTexture.width,
+                camTexture.height
+            );
 
             if (result != null)
             {
@@ -48,24 +66,32 @@ public class QRScanner : MonoBehaviour
                 Debug.Log("✅ QR okundu: " + result.Text);
 
                 QRDataManager.Instance?.ParseQRData(result.Text);
-                StopCamera(); // tarayınca durdur
 
-                // Tara butonu tekrar görünsün
+                StopCamera();
+
                 if (restartScanButton != null)
                     restartScanButton.gameObject.SetActive(true);
             }
         }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("QR okuma hatası: " + e.Message);
+        }
     }
 
-    // Panel açılırken UI durumunu hazırlamak için (butona bağlayabilirsin)
     public void OnPanelOpened()
     {
-        if (placeholderImage != null) placeholderImage.SetActive(true);
+        if (placeholderImage != null)
+            placeholderImage.SetActive(true);
+
         if (restartScanButton != null && showRestartWhenIdle)
             restartScanButton.gameObject.SetActive(true);
     }
 
-    public void StartScanning() => StartCamera();
+    public void StartScanning()
+    {
+        StartCamera();
+    }
 
     public void RestartScan()
     {
@@ -82,19 +108,27 @@ public class QRScanner : MonoBehaviour
             camTexture = null;
         }
 
-        camTexture = new WebCamTexture();
+        WebCamDevice[] devices = WebCamTexture.devices;
+
+        if (devices.Length == 0)
+        {
+            Debug.LogError("Kamera bulunamadı.");
+            return;
+        }
+
+        camTexture = new WebCamTexture(devices[0].name);
+        camTexture.Play();
 
         if (cameraView != null)
         {
             cameraView.texture = camTexture;
-            if (cameraView.material != null)            // ← NRE koruması
+
+            if (cameraView.material != null)
                 cameraView.material.mainTexture = camTexture;
         }
 
-        camTexture.Play();
         scanned = false;
 
-        // Taramadayken butonu gizle
         if (restartScanButton != null)
             restartScanButton.gameObject.SetActive(false);
 
@@ -109,16 +143,28 @@ public class QRScanner : MonoBehaviour
         if (camTexture != null)
         {
             camTexture.Stop();
+
             if (cameraView != null)
             {
                 cameraView.texture = null;
+
                 if (cameraView.material != null)
                     cameraView.material.mainTexture = null;
             }
+
             Debug.Log("🛑 Kamera durduruldu");
         }
 
         if (placeholderImage != null)
             placeholderImage.SetActive(true);
+    }
+
+    void OnDestroy()
+    {
+        if (camTexture != null)
+        {
+            camTexture.Stop();
+            camTexture = null;
+        }
     }
 }
