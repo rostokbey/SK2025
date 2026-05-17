@@ -30,15 +30,27 @@ public class DeckSelectPopup : MonoBehaviour
 
     void AddCardToDeck(int deckIndex)
     {
-        var dm = DeckManagerObject.Instance ?? FindObjectOfType<DeckManagerObject>(true);
-        if (dm == null) { Debug.LogError("DeckManagerObject bulunamadı!"); if (popupPanel) popupPanel.SetActive(false); return; }
+        var dm = DeckManagerObject.Instance
+                 ?? Object.FindFirstObjectByType<DeckManagerObject>(FindObjectsInactive.Include);
 
-        bool ok = dm.AddToDeck(deckIndex, pendingCard); // sprite oto-doldur + limit kontrol içeride
+        if (dm == null)
+        {
+            Debug.LogError("DeckManagerObject bulunamadı!");
+
+            if (popupPanel)
+                popupPanel.SetActive(false);
+
+            return;
+        }
+
+        bool ok = dm.AddToDeck(deckIndex, pendingCard);
+
         if (ok)
         {
             Debug.Log($"✅ {pendingCard.cardName} -> {deckIndex + 1}. deste");
         }
-        // Başarılı/başarısız fark etmeksizin pop-up kapanıyor (istersen şartlı yap)
-        if (popupPanel) popupPanel.SetActive(false);
+
+        if (popupPanel)
+            popupPanel.SetActive(false);
     }
 }

@@ -97,10 +97,10 @@ namespace TMPro.Examples
                 {
                     m_lastIndex = charIndex;
 
-                    // Get the inDef of the material / sub text object used by this character.
+                    // Get the index of the material / sub text object used by this character.
                     int materialIndex = m_TextMeshPro.textInfo.characterInfo[charIndex].materialReferenceIndex;
 
-                    // Get the inDef of the first vertex of the selected character.
+                    // Get the index of the first vertex of the selected character.
                     int vertexIndex = m_TextMeshPro.textInfo.characterInfo[charIndex].vertexIndex;
 
                     // Get a reference to the vertices array.
@@ -151,14 +151,14 @@ namespace TMPro.Examples
                     // Get a reference to the meshInfo of the selected character.
                     TMP_MeshInfo meshInfo = m_TextMeshPro.textInfo.meshInfo[materialIndex];
 
-                    // Get the inDef of the last character's vertex attributes.
+                    // Get the index of the last character's vertex attributes.
                     int lastVertexIndex = vertices.Length - 4;
 
                     // Swap the current character's vertex attributes with those of the last element in the vertex attribute arrays.
                     // We do this to make sure this character is rendered last and over other characters.
                     meshInfo.SwapVertexData(vertexIndex, lastVertexIndex);
 
-                    // Need to update the appropriate 
+                    // Need to update the appropriate
                     m_TextMeshPro.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
                 }
                 #endregion
@@ -178,10 +178,10 @@ namespace TMPro.Examples
                     {
                         int characterIndex = wInfo.firstCharacterIndex + i;
 
-                        // Get the inDef of the material / sub text object used by this character.
+                        // Get the index of the material / sub text object used by this character.
                         int meshIndex = m_TextMeshPro.textInfo.characterInfo[characterIndex].materialReferenceIndex;
 
-                        // Get the inDef of the first vertex of this character.
+                        // Get the index of the first vertex of this character.
                         int vertexIndex = m_TextMeshPro.textInfo.characterInfo[characterIndex].vertexIndex;
 
                         // Get a reference to the vertex color
@@ -286,7 +286,7 @@ namespace TMPro.Examples
                     m_lastIndex = -1;
                 }
             }
-            
+
         }
 
 
@@ -453,15 +453,15 @@ namespace TMPro.Examples
         }
 
 
-        void RestoreCachedVertexAttributes(int inDef)
+        void RestoreCachedVertexAttributes(int index)
         {
-            if (inDef == -1 || inDef > m_TextMeshPro.textInfo.characterCount - 1) return;
+            if (index == -1 || index > m_TextMeshPro.textInfo.characterCount - 1) return;
 
-            // Get the inDef of the material / sub text object used by this character.
-            int materialIndex = m_TextMeshPro.textInfo.characterInfo[inDef].materialReferenceIndex;
+            // Get the index of the material / sub text object used by this character.
+            int materialIndex = m_TextMeshPro.textInfo.characterInfo[index].materialReferenceIndex;
 
-            // Get the inDef of the first vertex of the selected character.
-            int vertexIndex = m_TextMeshPro.textInfo.characterInfo[inDef].vertexIndex;
+            // Get the index of the first vertex of the selected character.
+            int vertexIndex = m_TextMeshPro.textInfo.characterInfo[index].vertexIndex;
 
             // Restore Vertices
             // Get a reference to the cached / original vertices.
@@ -491,8 +491,8 @@ namespace TMPro.Examples
 
             // Restore UV0S
             // UVS0
-            Vector2[] src_uv0s = m_cachedMeshInfoVertexData[materialIndex].uvs0;
-            Vector2[] dst_uv0s = m_TextMeshPro.textInfo.meshInfo[materialIndex].uvs0;
+            Vector4[] src_uv0s = m_cachedMeshInfoVertexData[materialIndex].uvs0;
+            Vector4[] dst_uv0s = m_TextMeshPro.textInfo.meshInfo[materialIndex].uvs0;
             dst_uv0s[vertexIndex + 0] = src_uv0s[vertexIndex + 0];
             dst_uv0s[vertexIndex + 1] = src_uv0s[vertexIndex + 1];
             dst_uv0s[vertexIndex + 2] = src_uv0s[vertexIndex + 2];
@@ -540,7 +540,7 @@ namespace TMPro.Examples
             dst_uv2s[lastIndex + 2] = src_uv2s[lastIndex + 2];
             dst_uv2s[lastIndex + 3] = src_uv2s[lastIndex + 3];
 
-            // Need to update the appropriate 
+            // Need to update the appropriate
             m_TextMeshPro.UpdateVertexData(TMP_VertexDataUpdateFlags.All);
         }
     }

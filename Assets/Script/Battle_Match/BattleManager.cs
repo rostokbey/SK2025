@@ -100,7 +100,7 @@ public class BattleManager : NetworkBehaviour
         // SpawnPlayerCards(playerCards);
 
         // Kart listelerini aldıktan sonra: elde 5 kart göster
-        var handUI = FindObjectOfType<HandUIManager>(true);
+        var handUI = Object.FindFirstObjectByType<HandUIManager>(FindObjectsInactive.Include);
         if (handUI != null)
         {
             var deck = StartBattleManager.Instance != null ? StartBattleManager.Instance.selectedMatchCards : null;
@@ -346,7 +346,9 @@ public class BattleManager : NetworkBehaviour
 
     public void StartBattle()
     {
-        turnOrder = new List<Character>(FindObjectsOfType<Character>());
+        turnOrder = new List<Character>(
+    Object.FindObjectsByType<Character>(FindObjectsSortMode.None)
+);
         currentIndex = 0;
         AssignTurn();
     }
@@ -449,7 +451,7 @@ public class BattleManager : NetworkBehaviour
         var deck1 = playerSubmittedCardIds[players[0]];
         var deck2 = playerSubmittedCardIds[players[1]];
 
-        var deckManager = FindObjectOfType<DeckManagerObject>();
+        var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
 
         var playerCards = deck1.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
         var enemyCards = deck2.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
@@ -474,7 +476,8 @@ public class BattleManager : NetworkBehaviour
     {
         ulong senderClientId = rpcParams.Receive.SenderClientId;
 
-        var card = FindObjectOfType<DeckManagerObject>().GetCardById(cardId);
+        var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
+        var card = deckManager != null ? deckManager.GetCardById(cardId) : null;
         if (card == null)
         {
             Debug.LogWarning("Kart bulunamadı: " + cardId);
@@ -517,8 +520,10 @@ public class BattleManager : NetworkBehaviour
     {
         bool isLocalPlayerWinner = (NetworkManager.Singleton.LocalClientId == winnerId);
 
-        var usedCards = FindObjectOfType<DeckManagerObject>().currentMatchDeck;
-        var xpManager = FindObjectOfType<MatchEndXPManager>();
+        var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
+        var usedCards = deckManager != null ? deckManager.currentMatchDeck : null;
+
+        var xpManager = Object.FindFirstObjectByType<MatchEndXPManager>();
 
         if (xpManager != null)
         {

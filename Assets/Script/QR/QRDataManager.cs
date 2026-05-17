@@ -35,6 +35,8 @@ public class QRDataManager : MonoBehaviour
             return;
         }
 
+        Debug.Log("QR JTI: " + p.jti);
+
         CardData dbCard = CardDatabase.AllCards.FirstOrDefault(c => c.id == p.id);
         CardData card;
 

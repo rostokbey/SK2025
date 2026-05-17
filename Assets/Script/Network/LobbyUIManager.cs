@@ -1,9 +1,10 @@
 ﻿using System;
 using TMPro;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;           // UnityTransport + RelayServerData
+using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
-using Unity.Services.Core;                   // UnityServices.InitializeAsync
+using Unity.Services.Core;
+using Unity.Services.Authentication;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
@@ -17,53 +18,70 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private TMP_InputField joinCodeInput;
 
     [Header("Optional")]
-    [SerializeField] private JoinCodeUI joinCodeUI;                // Join code göster/kopyala paneli
-    [SerializeField] private SceneUIController sceneUIController;  // Panel geçişleri için (Inspector’dan ver)
+    [SerializeField] private JoinCodeUI joinCodeUI;
+    [SerializeField] private SceneUIController sceneUIController;
+
+    [Header("Battle Room")]
+    [SerializeField] private GameObject battleRoomPanel;
+    [SerializeField] private TMP_Text hostNameText;
+    [SerializeField] private TMP_Text clientNameText;
 
     [Header("Relay")]
-    [Tooltip("Oda başına maksimum bağlanacak oyuncu sayısı (host hariç).")]
-    [SerializeField] private int maxConnections = 3;               // 1v1 için 1; 2v2 için 3; 3v3 için 5 vb.
+    [Tooltip("Host hariç bağlanabilecek maksimum oyuncu sayısı.")]
+    [SerializeField] private int maxConnections = 3;
 
     private UnityTransport _transport;
+    private static bool _servicesInitialized = false;
 
-    void Awake()
+    private void Awake()
     {
-        if (hostButton) hostButton.onClick.AddListener(HostGame);
-        if (joinButton) joinButton.onClick.AddListener(JoinGame);
+        if (hostButton)
+            hostButton.onClick.AddListener(HostGame);
 
-        _transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+        if (joinButton)
+            joinButton.onClick.AddListener(JoinGame);
 
-        // Sahne referansı verilmemişse bulmaya çalış
+        if (NetworkManager.Singleton != null)
+            _transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+
         if (sceneUIController == null)
             sceneUIController = FindObjectOfType<SceneUIController>(true);
+
+        if (battleRoomPanel != null)
+            battleRoomPanel.SetActive(false);
     }
 
-    // -------------------------
-    // HOST: Oda/Lobi oluşturur
-    // -------------------------
     public async void HostGame()
     {
         try
         {
             await EnsureUnityServices();
 
-            // 1) Relay allocation & join code
-            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
-            string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Allocation allocation =
+                await RelayService.Instance.CreateAllocationAsync(maxConnections);
 
-            // 2) UnityTransport'u Relay'e bağla
-            var relayServerData = new RelayServerData(allocation, "dtls");
+            string joinCode =
+                await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+
+            RelayServerData relayServerData =
+                new RelayServerData(allocation, "dtls");
+
             _transport.SetRelayServerData(relayServerData);
 
-            // 3) Netcode başlat (host)
             NetworkManager.Singleton.StartHost();
+
             Debug.Log($"[Lobby] Host started. JoinCode = {joinCode}");
 
-            // 4) Join code'u UI'de göster
             joinCodeUI?.SetCode(joinCode);
 
-            // 5) İstediğin panele yönlendir (ör. DeckBuilder)
-            sceneUIController?.ShowOnly(SceneUIController.TargetPanel.DeckBuilder);
+            if (battleRoomPanel != null)
+                battleRoomPanel.SetActive(true);
+
+            if (hostNameText != null)
+                hostNameText.text = GetTemporaryPlayerName();
+
+            if (clientNameText != null)
+                clientNameText.text = "Oyuncu bekleniyor...";
         }
         catch (Exception e)
         {
@@ -71,38 +89,45 @@ public class LobbyUIManager : MonoBehaviour
         }
     }
 
-    // -----------------------------------
-    // JOIN: Mevcut lobiye katılım yapar
-    // -----------------------------------
     public async void JoinGame()
     {
         try
         {
             await EnsureUnityServices();
 
-            string joinCode = (joinCodeInput ? joinCodeInput.text : "").Trim().ToUpperInvariant();
+            string joinCode =
+                (joinCodeInput ? joinCodeInput.text : "")
+                .Trim()
+                .ToUpperInvariant();
+
             if (string.IsNullOrEmpty(joinCode))
             {
-                Debug.LogWarning("[Lobby] JoinGame: join code boş.");
+                Debug.LogWarning("[Lobby] Join code boş.");
                 return;
             }
 
-            // 1) Relay join allocation
-            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+            JoinAllocation joinAllocation =
+                await RelayService.Instance.JoinAllocationAsync(joinCode);
 
-            // 2) UnityTransport'u Relay'e bağla
-            var relayServerData = new RelayServerData(joinAllocation, "dtls");
+            RelayServerData relayServerData =
+                new RelayServerData(joinAllocation, "dtls");
+
             _transport.SetRelayServerData(relayServerData);
 
-            // 3) Netcode başlat (client)
             NetworkManager.Singleton.StartClient();
+
             Debug.Log($"[Lobby] Joined game with code: {joinCode}");
 
-            // 4) (İsteğe bağlı) Oyuncunun girdiği kodu göster
             joinCodeUI?.SetCode(joinCode);
 
-            // 5) İstediğin panele yönlendir (ör. DeckBuilder)
-            sceneUIController?.ShowOnly(SceneUIController.TargetPanel.DeckBuilder);
+            if (battleRoomPanel != null)
+                battleRoomPanel.SetActive(true);
+
+            if (hostNameText != null)
+                hostNameText.text = "Host";
+
+            if (clientNameText != null)
+                clientNameText.text = GetTemporaryPlayerName();
         }
         catch (Exception e)
         {
@@ -110,25 +135,58 @@ public class LobbyUIManager : MonoBehaviour
         }
     }
 
-    // Çıkış/Disconnect anında çağır—Join Code panelini gizler
     public void ClearJoinCodeUI()
     {
         joinCodeUI?.Clear();
+
+        if (battleRoomPanel != null)
+            battleRoomPanel.SetActive(false);
+
+        if (hostNameText != null)
+            hostNameText.text = "";
+
+        if (clientNameText != null)
+            clientNameText.text = "";
     }
 
-    // Unity Services init guard
-    private static bool _servicesInitialized = false;
     private async System.Threading.Tasks.Task EnsureUnityServices()
     {
-        if (_servicesInitialized) return;
+        if (_servicesInitialized)
+            return;
+
         try
         {
             await UnityServices.InitializeAsync();
+
+            Debug.Log("[UnityServices] Initialized");
+
+            if (!AuthenticationService.Instance.IsSignedIn)
+            {
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+                Debug.Log("[Auth] Signed in anonymously");
+                Debug.Log("[Auth] PlayerID: " +
+                          AuthenticationService.Instance.PlayerId);
+            }
+
+            _servicesInitialized = true;
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // zaten init edilmiş olabilir; sorun değil
+            Debug.LogError("[UnityServices] Init/Auth error: " + e);
         }
-        _servicesInitialized = true;
+    }
+
+    private string GetTemporaryPlayerName()
+    {
+        string playerId = AuthenticationService.Instance.PlayerId;
+
+        if (string.IsNullOrEmpty(playerId))
+            return "Player000000";
+
+        int hash = Mathf.Abs(playerId.GetHashCode());
+        int number = hash % 1000000;
+
+        return "Player" + number.ToString("000000");
     }
 }

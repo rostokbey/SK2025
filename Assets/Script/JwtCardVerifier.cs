@@ -23,6 +23,8 @@ public class CardPayload
 
     public long iat;
     public long exp;
+
+    public string jti;
 }
 
 public static class JwtCardVerifier

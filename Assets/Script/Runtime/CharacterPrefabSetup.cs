@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+
+using UnityEngine;
+using UnityEditor;
 using System.IO;
 
 public class CharacterPrefabSetup : MonoBehaviour
@@ -16,12 +19,14 @@ public class CharacterPrefabSetup : MonoBehaviour
         }
 
         string[] prefabPaths = Directory.GetFiles(sourceFolder, "*.prefab", SearchOption.AllDirectories);
+
         foreach (string path in prefabPaths)
         {
-            GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (prefab == null) continue;
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
 
-            // Animator veya Collider gibi bileşenleri kontrol et
+            if (prefab == null)
+                continue;
+
             if (prefab.GetComponent<Animator>() == null)
                 prefab.AddComponent<Animator>();
 
@@ -31,7 +36,16 @@ public class CharacterPrefabSetup : MonoBehaviour
             if (applyScaleFix)
                 prefab.transform.localScale = Vector3.one;
 
+            EditorUtility.SetDirty(prefab);
+
             Debug.Log($"✅ Fixed prefab: {Path.GetFileName(path)}");
         }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log("✅ Character prefab setup completed.");
     }
 }
+
+#endif
