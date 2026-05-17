@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -42,8 +42,8 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
-  m_GIWorkflowMode: 1
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -66,9 +66,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 1
@@ -260,7 +257,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 0.5254902}
+  m_Color: {r: 0.1, g: 0.1, b: 0.1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -374,7 +371,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.3301887, g: 0.13238698, b: 0.19529732, a: 0}
+  m_BackGroundColor: {r: 0.5849056, g: 0.5382996, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -677,6 +674,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -1177,8 +1175,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 942813746
-  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 0.21960784}
+    rgba: 4278250495
+  m_fontColor: {r: 1, g: 0.9203187, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1206,20 +1204,23 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
+  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 1
   m_isCullingEnabled: 0
@@ -1772,6 +1773,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1793,9 +1799,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1401163496
 MeshFilter:
@@ -2195,7 +2203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 0.5254902}
+  m_Color: {r: 0.1, g: 0.1, b: 0.1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2286,8 +2294,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 942813746
-  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 0.21960784}
+    rgba: 4278245375
+  m_fontColor: {r: 1, g: 0.8431373, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2304,31 +2312,34 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 48
-  m_fontSizeBase: 48
+  m_fontSize: 52
+  m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
+  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 1
   m_isCullingEnabled: 0
@@ -2622,15 +2633,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2111532410}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 13
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 0.9977701, g: 1, b: 0.8537736, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 0
     m_Resolution: -1
@@ -2674,8 +2684,12 @@ Light:
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
-  m_ShadowRadius: 0
+  m_ForceVisible: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!4 &2111532412
 Transform:
   m_ObjectHideFlags: 0
@@ -2849,99 +2863,99 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1255061891}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[0]
+      propertyPath: 'enemyGridPositions.Array.data[0]'
       value: 
       objectReference: {fileID: 777953419}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[1]
+      propertyPath: 'enemyGridPositions.Array.data[1]'
       value: 
       objectReference: {fileID: 1663857584}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[2]
+      propertyPath: 'enemyGridPositions.Array.data[2]'
       value: 
       objectReference: {fileID: 1611087484}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[3]
+      propertyPath: 'enemyGridPositions.Array.data[3]'
       value: 
       objectReference: {fileID: 8167835}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[4]
+      propertyPath: 'enemyGridPositions.Array.data[4]'
       value: 
       objectReference: {fileID: 977203249}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[5]
+      propertyPath: 'enemyGridPositions.Array.data[5]'
       value: 
       objectReference: {fileID: 195100990}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[6]
+      propertyPath: 'enemyGridPositions.Array.data[6]'
       value: 
       objectReference: {fileID: 649647211}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[7]
+      propertyPath: 'enemyGridPositions.Array.data[7]'
       value: 
       objectReference: {fileID: 1271805636}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[8]
+      propertyPath: 'enemyGridPositions.Array.data[8]'
       value: 
       objectReference: {fileID: 1788573368}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[9]
+      propertyPath: 'enemyGridPositions.Array.data[9]'
       value: 
       objectReference: {fileID: 1474256246}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[10]
+      propertyPath: 'enemyGridPositions.Array.data[10]'
       value: 
       objectReference: {fileID: 505311393}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: enemyGridPositions.Array.data[11]
+      propertyPath: 'enemyGridPositions.Array.data[11]'
       value: 
       objectReference: {fileID: 1195165983}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[0]
+      propertyPath: 'playerGridPositions.Array.data[0]'
       value: 
       objectReference: {fileID: 509844626}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[1]
+      propertyPath: 'playerGridPositions.Array.data[1]'
       value: 
       objectReference: {fileID: 748449278}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[2]
+      propertyPath: 'playerGridPositions.Array.data[2]'
       value: 
       objectReference: {fileID: 1468173319}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[3]
+      propertyPath: 'playerGridPositions.Array.data[3]'
       value: 
       objectReference: {fileID: 81816025}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[4]
+      propertyPath: 'playerGridPositions.Array.data[4]'
       value: 
       objectReference: {fileID: 771987927}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[5]
+      propertyPath: 'playerGridPositions.Array.data[5]'
       value: 
       objectReference: {fileID: 1389700614}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[6]
+      propertyPath: 'playerGridPositions.Array.data[6]'
       value: 
       objectReference: {fileID: 2014667927}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[7]
+      propertyPath: 'playerGridPositions.Array.data[7]'
       value: 
       objectReference: {fileID: 1605283059}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[8]
+      propertyPath: 'playerGridPositions.Array.data[8]'
       value: 
       objectReference: {fileID: 1238806423}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[9]
+      propertyPath: 'playerGridPositions.Array.data[9]'
       value: 
       objectReference: {fileID: 307693479}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[10]
+      propertyPath: 'playerGridPositions.Array.data[10]'
       value: 
       objectReference: {fileID: 308719439}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
-      propertyPath: playerGridPositions.Array.data[11]
+      propertyPath: 'playerGridPositions.Array.data[11]'
       value: 
       objectReference: {fileID: 1271637163}
     m_RemovedComponents: []

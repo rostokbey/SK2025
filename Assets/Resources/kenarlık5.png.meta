@@ -1,0 +1,5525 @@
+fileFormatVersion: 2
+guid: 51bbc964ef122ea46b15c5c954723f79
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -738130928462744225
+    second: "kenarl\u0131k5_0"
+  - first:
+      213: -6787198884796041167
+    second: "kenarl\u0131k5_1"
+  - first:
+      213: -2015626321733634037
+    second: "kenarl\u0131k5_2"
+  - first:
+      213: -7885493639485791022
+    second: "kenarl\u0131k5_3"
+  - first:
+      213: -8777103769644383905
+    second: "kenarl\u0131k5_4"
+  - first:
+      213: 5352693881271715473
+    second: "kenarl\u0131k5_5"
+  - first:
+      213: -6476130480508692907
+    second: "kenarl\u0131k5_6"
+  - first:
+      213: -153274038339215753
+    second: "kenarl\u0131k5_7"
+  - first:
+      213: 6550258877440338920
+    second: "kenarl\u0131k5_8"
+  - first:
+      213: 1609172157242441653
+    second: "kenarl\u0131k5_9"
+  - first:
+      213: 3382515593795567914
+    second: "kenarl\u0131k5_10"
+  - first:
+      213: 2045977522893142017
+    second: "kenarl\u0131k5_11"
+  - first:
+      213: -511016389469041567
+    second: "kenarl\u0131k5_12"
+  - first:
+      213: 4566392779862487167
+    second: "kenarl\u0131k5_13"
+  - first:
+      213: 1820086383529429552
+    second: "kenarl\u0131k5_14"
+  - first:
+      213: 1455273786455257619
+    second: "kenarl\u0131k5_15"
+  - first:
+      213: -8345326961012791952
+    second: "kenarl\u0131k5_16"
+  - first:
+      213: -5142512628764355549
+    second: "kenarl\u0131k5_17"
+  - first:
+      213: -4277855497342035916
+    second: "kenarl\u0131k5_18"
+  - first:
+      213: -2376217435959827976
+    second: "kenarl\u0131k5_19"
+  - first:
+      213: -3527082633981786106
+    second: "kenarl\u0131k5_20"
+  - first:
+      213: -3553252921294429824
+    second: "kenarl\u0131k5_21"
+  - first:
+      213: -8992342357230821844
+    second: "kenarl\u0131k5_22"
+  - first:
+      213: 3346475875135515051
+    second: "kenarl\u0131k5_23"
+  - first:
+      213: -2244015774816121715
+    second: "kenarl\u0131k5_24"
+  - first:
+      213: 6496936853885476762
+    second: "kenarl\u0131k5_25"
+  - first:
+      213: 4811323911973192895
+    second: "kenarl\u0131k5_26"
+  - first:
+      213: -6894815573114360670
+    second: "kenarl\u0131k5_27"
+  - first:
+      213: -6850457655197853599
+    second: "kenarl\u0131k5_28"
+  - first:
+      213: -8423672763690539898
+    second: "kenarl\u0131k5_29"
+  - first:
+      213: -1261304046518862853
+    second: "kenarl\u0131k5_30"
+  - first:
+      213: 7258850982270165882
+    second: "kenarl\u0131k5_31"
+  - first:
+      213: -7585864198478094391
+    second: "kenarl\u0131k5_32"
+  - first:
+      213: -3580681048045511037
+    second: "kenarl\u0131k5_33"
+  - first:
+      213: -1250748661270916844
+    second: "kenarl\u0131k5_34"
+  - first:
+      213: 1665668789485818501
+    second: "kenarl\u0131k5_35"
+  - first:
+      213: 3262963274684959777
+    second: "kenarl\u0131k5_36"
+  - first:
+      213: 4021345279915004859
+    second: "kenarl\u0131k5_37"
+  - first:
+      213: 8062479597698665577
+    second: "kenarl\u0131k5_38"
+  - first:
+      213: 325164184437055966
+    second: "kenarl\u0131k5_39"
+  - first:
+      213: -2358302929642215236
+    second: "kenarl\u0131k5_40"
+  - first:
+      213: 2330391331238134715
+    second: "kenarl\u0131k5_41"
+  - first:
+      213: 1887951403344677082
+    second: "kenarl\u0131k5_42"
+  - first:
+      213: 6065047367654277696
+    second: "kenarl\u0131k5_43"
+  - first:
+      213: -7007937108731875908
+    second: "kenarl\u0131k5_44"
+  - first:
+      213: 2842300705498443030
+    second: "kenarl\u0131k5_45"
+  - first:
+      213: -4522285375532418359
+    second: "kenarl\u0131k5_46"
+  - first:
+      213: 6422489903699637545
+    second: "kenarl\u0131k5_47"
+  - first:
+      213: 1849771718458377335
+    second: "kenarl\u0131k5_48"
+  - first:
+      213: -5386972243243103792
+    second: "kenarl\u0131k5_49"
+  - first:
+      213: -5099125965476032750
+    second: "kenarl\u0131k5_50"
+  - first:
+      213: -1084907191713547235
+    second: "kenarl\u0131k5_51"
+  - first:
+      213: 5653646787008536470
+    second: "kenarl\u0131k5_52"
+  - first:
+      213: 1199170236971490165
+    second: "kenarl\u0131k5_53"
+  - first:
+      213: 3060629141261979151
+    second: "kenarl\u0131k5_54"
+  - first:
+      213: -818380253988098252
+    second: "kenarl\u0131k5_55"
+  - first:
+      213: 7882554577802653301
+    second: "kenarl\u0131k5_56"
+  - first:
+      213: -1312602089802959843
+    second: "kenarl\u0131k5_57"
+  - first:
+      213: -6268512774414564721
+    second: "kenarl\u0131k5_58"
+  - first:
+      213: -5818654381140022432
+    second: "kenarl\u0131k5_59"
+  - first:
+      213: 5210055135651015574
+    second: "kenarl\u0131k5_60"
+  - first:
+      213: 4734459646438170693
+    second: "kenarl\u0131k5_61"
+  - first:
+      213: 5152098298141285614
+    second: "kenarl\u0131k5_62"
+  - first:
+      213: -7191916537455061427
+    second: "kenarl\u0131k5_63"
+  - first:
+      213: 4141331785553845638
+    second: "kenarl\u0131k5_64"
+  - first:
+      213: 6131841914120238255
+    second: "kenarl\u0131k5_65"
+  - first:
+      213: 7989232297128091720
+    second: "kenarl\u0131k5_66"
+  - first:
+      213: 4492926782110748776
+    second: "kenarl\u0131k5_67"
+  - first:
+      213: -6942396344407604443
+    second: "kenarl\u0131k5_68"
+  - first:
+      213: 4797656605513874083
+    second: "kenarl\u0131k5_69"
+  - first:
+      213: 1622696284348305024
+    second: "kenarl\u0131k5_70"
+  - first:
+      213: -2861919102118070793
+    second: "kenarl\u0131k5_71"
+  - first:
+      213: 2455945756349871962
+    second: "kenarl\u0131k5_72"
+  - first:
+      213: -3781177242317102339
+    second: "kenarl\u0131k5_73"
+  - first:
+      213: -4673402133371336038
+    second: "kenarl\u0131k5_74"
+  - first:
+      213: 7835262325219025820
+    second: "kenarl\u0131k5_75"
+  - first:
+      213: -630046387420472474
+    second: "kenarl\u0131k5_76"
+  - first:
+      213: -9124884026074653963
+    second: "kenarl\u0131k5_77"
+  - first:
+      213: -6664708380529663820
+    second: "kenarl\u0131k5_78"
+  - first:
+      213: 9073367805277892152
+    second: "kenarl\u0131k5_79"
+  - first:
+      213: 3501746043021310468
+    second: "kenarl\u0131k5_80"
+  - first:
+      213: -2472189085508701086
+    second: "kenarl\u0131k5_81"
+  - first:
+      213: -7539420512381249371
+    second: "kenarl\u0131k5_82"
+  - first:
+      213: 391342321506723886
+    second: "kenarl\u0131k5_83"
+  - first:
+      213: 3599841373677498351
+    second: "kenarl\u0131k5_84"
+  - first:
+      213: 376716200417492352
+    second: "kenarl\u0131k5_85"
+  - first:
+      213: 3813893350560568186
+    second: "kenarl\u0131k5_86"
+  - first:
+      213: 3898204692498105388
+    second: "kenarl\u0131k5_87"
+  - first:
+      213: 5305468631427435018
+    second: "kenarl\u0131k5_88"
+  - first:
+      213: -3775205678543511023
+    second: "kenarl\u0131k5_89"
+  - first:
+      213: -810502775322667165
+    second: "kenarl\u0131k5_90"
+  - first:
+      213: -2935343276210416013
+    second: "kenarl\u0131k5_91"
+  - first:
+      213: 2599820007104218980
+    second: "kenarl\u0131k5_92"
+  - first:
+      213: -67205446369028705
+    second: "kenarl\u0131k5_93"
+  - first:
+      213: 8191242380288680334
+    second: "kenarl\u0131k5_94"
+  - first:
+      213: 5952130827739956675
+    second: "kenarl\u0131k5_95"
+  - first:
+      213: 1240391642035903230
+    second: "kenarl\u0131k5_96"
+  - first:
+      213: -8580723648503548219
+    second: "kenarl\u0131k5_97"
+  - first:
+      213: 6968086929719617515
+    second: "kenarl\u0131k5_98"
+  - first:
+      213: 5452547619417007817
+    second: "kenarl\u0131k5_99"
+  - first:
+      213: -7640794094935597598
+    second: "kenarl\u0131k5_100"
+  - first:
+      213: -6699293983127915491
+    second: "kenarl\u0131k5_101"
+  - first:
+      213: -6423958679729928525
+    second: "kenarl\u0131k5_102"
+  - first:
+      213: -3996696674897108093
+    second: "kenarl\u0131k5_103"
+  - first:
+      213: -5642393539901267111
+    second: "kenarl\u0131k5_104"
+  - first:
+      213: 8775108216082368930
+    second: "kenarl\u0131k5_105"
+  - first:
+      213: -997005251598728326
+    second: "kenarl\u0131k5_106"
+  - first:
+      213: -1775836500710952128
+    second: "kenarl\u0131k5_107"
+  - first:
+      213: -7018246698334389179
+    second: "kenarl\u0131k5_108"
+  - first:
+      213: -7480394027601300515
+    second: "kenarl\u0131k5_109"
+  - first:
+      213: -2908902171809606294
+    second: "kenarl\u0131k5_110"
+  - first:
+      213: 1363212653492987343
+    second: "kenarl\u0131k5_111"
+  - first:
+      213: 3997601928229475876
+    second: "kenarl\u0131k5_112"
+  - first:
+      213: 6320291980873418474
+    second: "kenarl\u0131k5_113"
+  - first:
+      213: -1567815831384660381
+    second: "kenarl\u0131k5_114"
+  - first:
+      213: 3382889857338516014
+    second: "kenarl\u0131k5_115"
+  - first:
+      213: 9106547203327678153
+    second: "kenarl\u0131k5_116"
+  - first:
+      213: 6491976635234163962
+    second: "kenarl\u0131k5_117"
+  - first:
+      213: 5449320419236590466
+    second: "kenarl\u0131k5_118"
+  - first:
+      213: -5925290842004553051
+    second: "kenarl\u0131k5_119"
+  - first:
+      213: -3938422095347122328
+    second: "kenarl\u0131k5_120"
+  - first:
+      213: -907766390356000972
+    second: "kenarl\u0131k5_121"
+  - first:
+      213: -8189296301123039539
+    second: "kenarl\u0131k5_122"
+  - first:
+      213: -4993996034834198386
+    second: "kenarl\u0131k5_123"
+  - first:
+      213: -2536747679674495736
+    second: "kenarl\u0131k5_124"
+  - first:
+      213: -7371908623071861485
+    second: "kenarl\u0131k5_125"
+  - first:
+      213: -6150848564912816818
+    second: "kenarl\u0131k5_126"
+  - first:
+      213: 2259499723886852974
+    second: "kenarl\u0131k5_127"
+  - first:
+      213: 7693048877221687668
+    second: "kenarl\u0131k5_128"
+  - first:
+      213: 7101234694102052771
+    second: "kenarl\u0131k5_129"
+  - first:
+      213: -7172472772677489535
+    second: "kenarl\u0131k5_130"
+  - first:
+      213: 7439929976180823534
+    second: "kenarl\u0131k5_131"
+  - first:
+      213: -2582731896377453463
+    second: "kenarl\u0131k5_132"
+  - first:
+      213: -5596352104752659142
+    second: "kenarl\u0131k5_133"
+  - first:
+      213: -5818283641212780291
+    second: "kenarl\u0131k5_134"
+  - first:
+      213: -7116379448092063189
+    second: "kenarl\u0131k5_135"
+  - first:
+      213: -8149687695357374534
+    second: "kenarl\u0131k5_136"
+  - first:
+      213: -4285322595022735980
+    second: "kenarl\u0131k5_137"
+  - first:
+      213: 7307948738742091023
+    second: "kenarl\u0131k5_138"
+  - first:
+      213: -1653018186160223615
+    second: "kenarl\u0131k5_139"
+  - first:
+      213: 3837340194481460176
+    second: "kenarl\u0131k5_140"
+  - first:
+      213: -6520854654623619529
+    second: "kenarl\u0131k5_141"
+  - first:
+      213: 5441198248779808551
+    second: "kenarl\u0131k5_142"
+  - first:
+      213: 676231442996601516
+    second: "kenarl\u0131k5_143"
+  - first:
+      213: 4419111606911331456
+    second: "kenarl\u0131k5_144"
+  - first:
+      213: 1580881960986272667
+    second: "kenarl\u0131k5_145"
+  - first:
+      213: 996810044905621001
+    second: "kenarl\u0131k5_146"
+  - first:
+      213: -7464792495204968622
+    second: "kenarl\u0131k5_147"
+  - first:
+      213: -3502971615366267910
+    second: "kenarl\u0131k5_148"
+  - first:
+      213: -2363354529278972042
+    second: "kenarl\u0131k5_149"
+  - first:
+      213: -2730343229309941915
+    second: "kenarl\u0131k5_150"
+  - first:
+      213: 8402579076134054537
+    second: "kenarl\u0131k5_151"
+  - first:
+      213: 17219878884484409
+    second: "kenarl\u0131k5_152"
+  - first:
+      213: -2246297270487566979
+    second: "kenarl\u0131k5_153"
+  - first:
+      213: -6945388451830054315
+    second: "kenarl\u0131k5_154"
+  - first:
+      213: -148445031438669225
+    second: "kenarl\u0131k5_155"
+  - first:
+      213: 5522064161323178147
+    second: "kenarl\u0131k5_156"
+  - first:
+      213: 2646310882299735275
+    second: "kenarl\u0131k5_157"
+  - first:
+      213: 7002078303294491625
+    second: "kenarl\u0131k5_158"
+  - first:
+      213: 8596627373553912163
+    second: "kenarl\u0131k5_159"
+  - first:
+      213: -5527010563453132816
+    second: "kenarl\u0131k5_160"
+  - first:
+      213: -5704272119607605549
+    second: "kenarl\u0131k5_161"
+  - first:
+      213: 5247976413722314070
+    second: "kenarl\u0131k5_162"
+  - first:
+      213: 3162967747813878541
+    second: "kenarl\u0131k5_163"
+  - first:
+      213: 8948999489225699195
+    second: "kenarl\u0131k5_164"
+  - first:
+      213: -4578308052128949010
+    second: "kenarl\u0131k5_165"
+  - first:
+      213: -6249950376842044263
+    second: "kenarl\u0131k5_166"
+  - first:
+      213: 5194468615844394168
+    second: "kenarl\u0131k5_167"
+  - first:
+      213: 2213168195316844292
+    second: "kenarl\u0131k5_168"
+  - first:
+      213: 6418369003216245693
+    second: "kenarl\u0131k5_169"
+  - first:
+      213: 1406003098356792855
+    second: "kenarl\u0131k5_170"
+  - first:
+      213: 7797000726182876222
+    second: "kenarl\u0131k5_171"
+  - first:
+      213: -6170623312489428032
+    second: "kenarl\u0131k5_172"
+  - first:
+      213: -4858955572681308411
+    second: "kenarl\u0131k5_173"
+  - first:
+      213: 1329896462570262281
+    second: "kenarl\u0131k5_174"
+  - first:
+      213: -4226781277055844711
+    second: "kenarl\u0131k5_175"
+  - first:
+      213: -7748294922388344061
+    second: "kenarl\u0131k5_176"
+  - first:
+      213: -9162308452268674533
+    second: "kenarl\u0131k5_177"
+  - first:
+      213: -3665859187691357012
+    second: "kenarl\u0131k5_178"
+  - first:
+      213: 2378798057079931324
+    second: "kenarl\u0131k5_179"
+  - first:
+      213: -808044891748400459
+    second: "kenarl\u0131k5_180"
+  - first:
+      213: 7712679162827058350
+    second: "kenarl\u0131k5_181"
+  - first:
+      213: 5279806757111425872
+    second: "kenarl\u0131k5_182"
+  - first:
+      213: -6387109633214087605
+    second: "kenarl\u0131k5_183"
+  - first:
+      213: 3504769468195493743
+    second: "kenarl\u0131k5_184"
+  - first:
+      213: -7234910020274141190
+    second: "kenarl\u0131k5_185"
+  - first:
+      213: 1680332172179834199
+    second: "kenarl\u0131k5_186"
+  - first:
+      213: -2387108420662059193
+    second: "kenarl\u0131k5_187"
+  - first:
+      213: 3466623896224030782
+    second: "kenarl\u0131k5_188"
+  - first:
+      213: -1459245340537164908
+    second: "kenarl\u0131k5_189"
+  - first:
+      213: -6463354606648894186
+    second: "kenarl\u0131k5_190"
+  - first:
+      213: -7132564697111337950
+    second: "kenarl\u0131k5_191"
+  - first:
+      213: 6875459996186003390
+    second: "kenarl\u0131k5_192"
+  - first:
+      213: -3894783524742826111
+    second: "kenarl\u0131k5_193"
+  - first:
+      213: 6223577898123254174
+    second: "kenarl\u0131k5_194"
+  - first:
+      213: -498567850294599282
+    second: "kenarl\u0131k5_195"
+  - first:
+      213: 1014910125138921152
+    second: "kenarl\u0131k5_196"
+  - first:
+      213: 8302315873357771351
+    second: "kenarl\u0131k5_197"
+  - first:
+      213: -4047591878251740001
+    second: "kenarl\u0131k5_198"
+  - first:
+      213: -3405226579023840922
+    second: "kenarl\u0131k5_199"
+  - first:
+      213: -4508098660676600461
+    second: "kenarl\u0131k5_200"
+  - first:
+      213: -394501669440401492
+    second: "kenarl\u0131k5_201"
+  - first:
+      213: -8973077245811978976
+    second: "kenarl\u0131k5_202"
+  - first:
+      213: 7233182825978435126
+    second: "kenarl\u0131k5_203"
+  - first:
+      213: -5462423418495578786
+    second: "kenarl\u0131k5_204"
+  - first:
+      213: -5706986248972902184
+    second: "kenarl\u0131k5_205"
+  - first:
+      213: -3431882285759366182
+    second: "kenarl\u0131k5_206"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_0"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 987
+        width: 515
+        height: 544
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f55bf33d4d1a1c5f0800000000000000
+      internalID: -738130928462744225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_1"
+      rect:
+        serializedVersion: 2
+        x: 459
+        y: 1497
+        width: 70
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 138fdcb03960fc1a0800000000000000
+      internalID: -6787198884796041167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_2"
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 847
+        width: 528
+        height: 685
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b08b3252a8e0704e0800000000000000
+      internalID: -2015626321733634037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_3"
+      rect:
+        serializedVersion: 2
+        x: 767
+        y: 1523
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d4e8d36059119290800000000000000
+      internalID: -7885493639485791022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_4"
+      rect:
+        serializedVersion: 2
+        x: 536
+        y: 1507
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f51ca95ef96713680800000000000000
+      internalID: -8777103769644383905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_5"
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1483
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1968b98a9b6984a40800000000000000
+      internalID: 5352693881271715473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_6"
+      rect:
+        serializedVersion: 2
+        x: 694
+        y: 1471
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5561336d3a92026a0800000000000000
+      internalID: -6476130480508692907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_7"
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 1443
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77e508ff2167fddf0800000000000000
+      internalID: -153274038339215753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_8"
+      rect:
+        serializedVersion: 2
+        x: 685
+        y: 1443
+        width: 11
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8eb2ea88eb137ea50800000000000000
+      internalID: 6550258877440338920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_9"
+      rect:
+        serializedVersion: 2
+        x: 695
+        y: 1450
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bf72ee1d8de45610800000000000000
+      internalID: 1609172157242441653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_10"
+      rect:
+        serializedVersion: 2
+        x: 571
+        y: 1431
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a21876fd20c11fe20800000000000000
+      internalID: 3382515593795567914
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_11"
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 1404
+        width: 9
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 108ba7e87b5c46c10800000000000000
+      internalID: 2045977522893142017
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_12"
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 1403
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16c8b4f1d4188e8f0800000000000000
+      internalID: -511016389469041567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_13"
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 1367
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f70bc9c1a061f5f30800000000000000
+      internalID: 4566392779862487167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_14"
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 1353
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03a0cce2cee324910800000000000000
+      internalID: 1820086383529429552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_15"
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 1351
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3127a946ccb223410800000000000000
+      internalID: 1455273786455257619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_16"
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 1353
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 075a75a28517f2c80800000000000000
+      internalID: -8345326961012791952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_17"
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 1352
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3245a85a20022a8b0800000000000000
+      internalID: -5142512628764355549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_18"
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 1351
+        width: 17
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 438d978171102a4c0800000000000000
+      internalID: -4277855497342035916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_19"
+      rect:
+        serializedVersion: 2
+        x: 509
+        y: 1355
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f1668ce4daf50fd0800000000000000
+      internalID: -2376217435959827976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_20"
+      rect:
+        serializedVersion: 2
+        x: 518
+        y: 1353
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 608011c18094d0fc0800000000000000
+      internalID: -3527082633981786106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_21"
+      rect:
+        serializedVersion: 2
+        x: 526
+        y: 1353
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08160254b4f40bec0800000000000000
+      internalID: -3553252921294429824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_22"
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 1352
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2ede820548c43380800000000000000
+      internalID: -8992342357230821844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_23"
+      rect:
+        serializedVersion: 2
+        x: 538
+        y: 1351
+        width: 20
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba9eddaf312117e20800000000000000
+      internalID: 3346475875135515051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_24"
+      rect:
+        serializedVersion: 2
+        x: 502
+        y: 1345
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8c46b7ca87abd0e0800000000000000
+      internalID: -2244015774816121715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_25"
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 1264
+        width: 14
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9fdcf775a1c92a50800000000000000
+      internalID: 6496936853885476762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_26"
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 1259
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb441804b9145c240800000000000000
+      internalID: 4811323911973192895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_27"
+      rect:
+        serializedVersion: 2
+        x: 114
+        y: 1259
+        width: 15
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2acefac34c1b050a0800000000000000
+      internalID: -6894815573114360670
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_28"
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 1259
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1689311de094ee0a0800000000000000
+      internalID: -6850457655197853599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_29"
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 1259
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 684a710804a191b80800000000000000
+      internalID: -8423672763690539898
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_30"
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 1259
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfbfa7107a2fe7ee0800000000000000
+      internalID: -1261304046518862853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_31"
+      rect:
+        serializedVersion: 2
+        x: 465
+        y: 1257
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7365b3628e9cb460800000000000000
+      internalID: 7258850982270165882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_32"
+      rect:
+        serializedVersion: 2
+        x: 754
+        y: 1259
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cf1c5ff3b899b690800000000000000
+      internalID: -7585864198478094391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_33"
+      rect:
+        serializedVersion: 2
+        x: 766
+        y: 1259
+        width: 11
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38e164dde8dde4ec0800000000000000
+      internalID: -3580681048045511037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_34"
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 1259
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 411d6a528b274aee0800000000000000
+      internalID: -1250748661270916844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_35"
+      rect:
+        serializedVersion: 2
+        x: 839
+        y: 1255
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 582d1ce50f4ad1710800000000000000
+      internalID: 1665668789485818501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_36"
+      rect:
+        serializedVersion: 2
+        x: 912
+        y: 1259
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12c0eb67fcf584d20800000000000000
+      internalID: 3262963274684959777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_37"
+      rect:
+        serializedVersion: 2
+        x: 891
+        y: 1253
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb31780e930bec730800000000000000
+      internalID: 4021345279915004859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_38"
+      rect:
+        serializedVersion: 2
+        x: 182
+        y: 1231
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96cc9ad2a7ea3ef60800000000000000
+      internalID: 8062479597698665577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_39"
+      rect:
+        serializedVersion: 2
+        x: 878
+        y: 1229
+        width: 20
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed1ec0b5a17338400800000000000000
+      internalID: 325164184437055966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_40"
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 1207
+        width: 19
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb8a9e5faff954fd0800000000000000
+      internalID: -2358302929642215236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_41"
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 1207
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb3491e9196375020800000000000000
+      internalID: 2330391331238134715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_42"
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 1210
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad84f8d6cc9533a10800000000000000
+      internalID: 1887951403344677082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_43"
+      rect:
+        serializedVersion: 2
+        x: 126
+        y: 1207
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04283f662706b2450800000000000000
+      internalID: 6065047367654277696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_44"
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 1208
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbd22c9445ecebe90800000000000000
+      internalID: -7007937108731875908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_45"
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 1207
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61da318be61e17720800000000000000
+      internalID: 2842300705498443030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_46"
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 1207
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ca327a396d9d31c0800000000000000
+      internalID: -4522285375532418359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_47"
+      rect:
+        serializedVersion: 2
+        x: 510
+        y: 1207
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 925bc832a84412950800000000000000
+      internalID: 6422489903699637545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_48"
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 1208
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7748642d395bba910800000000000000
+      internalID: 1849771718458377335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_49"
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 1207
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d90b924941ad35b0800000000000000
+      internalID: -5386972243243103792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_50"
+      rect:
+        serializedVersion: 2
+        x: 592
+        y: 1208
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21f84d263f34c39b0800000000000000
+      internalID: -5099125965476032750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_51"
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 1211
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1cb5af38a2a1f0f0800000000000000
+      internalID: -1084907191713547235
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_52"
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 1211
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69f1c296cc9c57e40800000000000000
+      internalID: 5653646787008536470
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_53"
+      rect:
+        serializedVersion: 2
+        x: 781
+        y: 1207
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57b18ef1afe44a010800000000000000
+      internalID: 1199170236971490165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_54"
+      rect:
+        serializedVersion: 2
+        x: 792
+        y: 1205
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0e0122fcf9897a20800000000000000
+      internalID: 3060629141261979151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_55"
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 1205
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43f68d5be7784a4f0800000000000000
+      internalID: -818380253988098252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_56"
+      rect:
+        serializedVersion: 2
+        x: 822
+        y: 1207
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57e6e8cff95746d60800000000000000
+      internalID: 7882554577802653301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_57"
+      rect:
+        serializedVersion: 2
+        x: 830
+        y: 1211
+        width: 16
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d14fbd19a53b8cde0800000000000000
+      internalID: -1312602089802959843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_58"
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 1211
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f82850bf7d4c109a0800000000000000
+      internalID: -6268512774414564721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_59"
+      rect:
+        serializedVersion: 2
+        x: 850
+        y: 1203
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06be06d3bacff3fa0800000000000000
+      internalID: -5818654381140022432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_60"
+      rect:
+        serializedVersion: 2
+        x: 870
+        y: 1207
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69bada4ba85dd4840800000000000000
+      internalID: 5210055135651015574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_61"
+      rect:
+        serializedVersion: 2
+        x: 876
+        y: 1207
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5406e55d6fd24b140800000000000000
+      internalID: 4734459646438170693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_62"
+      rect:
+        serializedVersion: 2
+        x: 893
+        y: 1207
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eec1b9cea1eef7740800000000000000
+      internalID: 5152098298141285614
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_63"
+      rect:
+        serializedVersion: 2
+        x: 902
+        y: 1207
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d46dbba730e213c90800000000000000
+      internalID: -7191916537455061427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_64"
+      rect:
+        serializedVersion: 2
+        x: 910
+        y: 1211
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68d98f63157f87930800000000000000
+      internalID: 4141331785553845638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_65"
+      rect:
+        serializedVersion: 2
+        x: 917
+        y: 1207
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa4fcf5abbda81550800000000000000
+      internalID: 6131841914120238255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_66"
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 1210
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 840e56a02747fde60800000000000000
+      internalID: 7989232297128091720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_67"
+      rect:
+        serializedVersion: 2
+        x: 932
+        y: 1214
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 860dc819a151a5e30800000000000000
+      internalID: 4492926782110748776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_68"
+      rect:
+        serializedVersion: 2
+        x: 936
+        y: 1210
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5234d91ae47a7af90800000000000000
+      internalID: -6942396344407604443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_69"
+      rect:
+        serializedVersion: 2
+        x: 789
+        y: 1207
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3aaf5fd7343b49240800000000000000
+      internalID: 4797656605513874083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_70"
+      rect:
+        serializedVersion: 2
+        x: 842
+        y: 1207
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08e4de65ca9f48610800000000000000
+      internalID: 1622696284348305024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_71"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 514
+        width: 1024
+        height: 687
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f5f85e5dbb6848d0800000000000000
+      internalID: -2861919102118070793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_72"
+      rect:
+        serializedVersion: 2
+        x: 767
+        y: 1199
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a57bcda37a5451220800000000000000
+      internalID: 2455945756349871962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_73"
+      rect:
+        serializedVersion: 2
+        x: 936
+        y: 1157
+        width: 26
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df2e5e6e45f868bc0800000000000000
+      internalID: -3781177242317102339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_74"
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 1161
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9a49db358db42fb0800000000000000
+      internalID: -4673402133371336038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_75"
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 1161
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c936ea062917cbc60800000000000000
+      internalID: 7835262325219025820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_76"
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 1158
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66bd8c51620a147f0800000000000000
+      internalID: -630046387420472474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_77"
+      rect:
+        serializedVersion: 2
+        x: 947
+        y: 1151
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fa1f21f256ed5180800000000000000
+      internalID: -9124884026074653963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_78"
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 1135
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b0e5fef9033283a0800000000000000
+      internalID: -6664708380529663820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_79"
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 1135
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83eed0632f31bed70800000000000000
+      internalID: 9073367805277892152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_80"
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 1135
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40a3aeb1973b89030800000000000000
+      internalID: 3501746043021310468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_81"
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 1135
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 264f7acff1501bdd0800000000000000
+      internalID: -2472189085508701086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_82"
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 1114
+        width: 15
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a8d8335df89e5790800000000000000
+      internalID: -7539420512381249371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_83"
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 1114
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e282cfa94c35e6500800000000000000
+      internalID: 391342321506723886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_84"
+      rect:
+        serializedVersion: 2
+        x: 962
+        y: 1114
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fef2dc518a435f130800000000000000
+      internalID: 3599841373677498351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_85"
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 1114
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08df40b636d5a3500800000000000000
+      internalID: 376716200417492352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_86"
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 1083
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a731363abcbade430800000000000000
+      internalID: 3813893350560568186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_87"
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 1074
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c244c16a384391630800000000000000
+      internalID: 3898204692498105388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_88"
+      rect:
+        serializedVersion: 2
+        x: 992
+        y: 1087
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0ac5375c9fc0a940800000000000000
+      internalID: 5305468631427435018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_89"
+      rect:
+        serializedVersion: 2
+        x: 949
+        y: 1079
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1126060ff66cb9bc0800000000000000
+      internalID: -3775205678543511023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_90"
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 1055
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3679c63250480c4f0800000000000000
+      internalID: -810502775322667165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_91"
+      rect:
+        serializedVersion: 2
+        x: 55
+        y: 1042
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37695a7a7d09347d0800000000000000
+      internalID: -2935343276210416013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_92"
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 1034
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4678663a58a641420800000000000000
+      internalID: 2599820007104218980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_93"
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 1042
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f95d33aa00d311ff0800000000000000
+      internalID: -67205446369028705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_94"
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 1035
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e816b3abb832da170800000000000000
+      internalID: 8191242380288680334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_95"
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 1035
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c5871cb3773a9250800000000000000
+      internalID: 5952130827739956675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_96"
+      rect:
+        serializedVersion: 2
+        x: 928
+        y: 1002
+        width: 40
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efad9e560a1c63110800000000000000
+      internalID: 1240391642035903230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_97"
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 1013
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c6f627ed452be880800000000000000
+      internalID: -8580723648503548219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_98"
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 1019
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be7eaf1e42e93b060800000000000000
+      internalID: 6968086929719617515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_99"
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 1018
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c6a048cb275bab40800000000000000
+      internalID: 5452547619417007817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_100"
+      rect:
+        serializedVersion: 2
+        x: 969
+        y: 1018
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ed1679d04276f590800000000000000
+      internalID: -7640794094935597598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_101"
+      rect:
+        serializedVersion: 2
+        x: 939
+        y: 996
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d14bfb1ed935703a0800000000000000
+      internalID: -6699293983127915491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_102"
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 943
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b609eacd9389d6a0800000000000000
+      internalID: -6423958679729928525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_103"
+      rect:
+        serializedVersion: 2
+        x: 951
+        y: 952
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 383e5c1bc81e888c0800000000000000
+      internalID: -3996696674897108093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_104"
+      rect:
+        serializedVersion: 2
+        x: 954
+        y: 929
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 953e93b58f032b1b0800000000000000
+      internalID: -5642393539901267111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_105"
+      rect:
+        serializedVersion: 2
+        x: 979
+        y: 918
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a983351e6277c970800000000000000
+      internalID: 8775108216082368930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_106"
+      rect:
+        serializedVersion: 2
+        x: 983
+        y: 902
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a73424b810de922f0800000000000000
+      internalID: -997005251598728326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_107"
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 911
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04373f38c16fa57e0800000000000000
+      internalID: -1775836500710952128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_108"
+      rect:
+        serializedVersion: 2
+        x: 997
+        y: 918
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54c78b7efcd2a9e90800000000000000
+      internalID: -7018246698334389179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_109"
+      rect:
+        serializedVersion: 2
+        x: 986
+        y: 890
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd3fed4c34d403890800000000000000
+      internalID: -7480394027601300515
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_110"
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 864
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a651de203e081a7d0800000000000000
+      internalID: -2908902171809606294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_111"
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 848
+        width: 15
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc564cc8faa1be210800000000000000
+      internalID: 1363212653492987343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_112"
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 854
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 426d88506c55a7730800000000000000
+      internalID: 3997601928229475876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_113"
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 835
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae6c5bcf11036b750800000000000000
+      internalID: 6320291980873418474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_114"
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 827
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3666519decffd3ae0800000000000000
+      internalID: -1567815831384660381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_115"
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 821
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e222fe4e66072fe20800000000000000
+      internalID: 3382889857338516014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_116"
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 832
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c65ca0de64f06e70800000000000000
+      internalID: 9106547203327678153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_117"
+      rect:
+        serializedVersion: 2
+        x: 839
+        y: 829
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afc94419a52281a50800000000000000
+      internalID: 6491976635234163962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_118"
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 807
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28331efac00ef9b40800000000000000
+      internalID: 5449320419236590466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_119"
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 815
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a2817b6f5325cda0800000000000000
+      internalID: -5925290842004553051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_120"
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 815
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86ff84f88f9e759c0800000000000000
+      internalID: -3938422095347122328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_121"
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 814
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43fbacb0747f663f0800000000000000
+      internalID: -907766390356000972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_122"
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 815
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dce04232766c95e80800000000000000
+      internalID: -8189296301123039539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_123"
+      rect:
+        serializedVersion: 2
+        x: 398
+        y: 805
+        width: 24
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e809ffdc013c1bab0800000000000000
+      internalID: -4993996034834198386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_124"
+      rect:
+        serializedVersion: 2
+        x: 838
+        y: 814
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80d8434fc69abccd0800000000000000
+      internalID: -2536747679674495736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_125"
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 815
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 315a9255a28b1b990800000000000000
+      internalID: -7371908623071861485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_126"
+      rect:
+        serializedVersion: 2
+        x: 961
+        y: 799
+        width: 8
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4d762d91dbc3aaa0800000000000000
+      internalID: -6150848564912816818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_127"
+      rect:
+        serializedVersion: 2
+        x: 969
+        y: 801
+        width: 8
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6b7e5c070b5b5f10800000000000000
+      internalID: 2259499723886852974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_128"
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 783
+        width: 27
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 471348eb13333ca60800000000000000
+      internalID: 7693048877221687668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_129"
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 806
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3afe1a09457ac8260800000000000000
+      internalID: 7101234694102052771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_130"
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 799
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18ca56fb302467c90800000000000000
+      internalID: -7172472772677489535
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_131"
+      rect:
+        serializedVersion: 2
+        x: 302
+        y: 799
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee5d90815e0ff3760800000000000000
+      internalID: 7439929976180823534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_132"
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 795
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 964d95e260b482cd0800000000000000
+      internalID: -2582731896377453463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_133"
+      rect:
+        serializedVersion: 2
+        x: 856
+        y: 798
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3545365963c552b0800000000000000
+      internalID: -5596352104752659142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_134"
+      rect:
+        serializedVersion: 2
+        x: 958
+        y: 799
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df0cb0bdadd414fa0800000000000000
+      internalID: -5818283641212780291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_135"
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 784
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2a059d989a8d3d90800000000000000
+      internalID: -7116379448092063189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_136"
+      rect:
+        serializedVersion: 2
+        x: 119
+        y: 773
+        width: 36
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: abf0adf483e76ee80800000000000000
+      internalID: -8149687695357374534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_137"
+      rect:
+        serializedVersion: 2
+        x: 954
+        y: 779
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 495f6bfedc97784c0800000000000000
+      internalID: -4285322595022735980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_138"
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 301
+        width: 641
+        height: 469
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0d7c71a8ac0b6560800000000000000
+      internalID: 7307948738742091023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_139"
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 769
+        width: 26
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18ac8aeb7bc4f09e0800000000000000
+      internalID: -1653018186160223615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_140"
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 763
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d355666398f04530800000000000000
+      internalID: 3837340194481460176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_141"
+      rect:
+        serializedVersion: 2
+        x: 840
+        y: 767
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 736e4379d354185a0800000000000000
+      internalID: -6520854654623619529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_142"
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 761
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72f7ff28af4038b40800000000000000
+      internalID: 5441198248779808551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_143"
+      rect:
+        serializedVersion: 2
+        x: 653
+        y: 581
+        width: 278
+        height: 185
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca223c12ae4726900800000000000000
+      internalID: 676231442996601516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_144"
+      rect:
+        serializedVersion: 2
+        x: 842
+        y: 758
+        width: 16
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08c61c0d796d35d30800000000000000
+      internalID: 4419111606911331456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_145"
+      rect:
+        serializedVersion: 2
+        x: 974
+        y: 658
+        width: 33
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b93e86484cb60f510800000000000000
+      internalID: 1580881960986272667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_146"
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 528
+        width: 26
+        height: 76
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 906042b547165dd00800000000000000
+      internalID: 996810044905621001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_147"
+      rect:
+        serializedVersion: 2
+        x: 963
+        y: 546
+        width: 39
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2575e4996cab76890800000000000000
+      internalID: -7464792495204968622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_148"
+      rect:
+        serializedVersion: 2
+        x: 963
+        y: 591
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afb31d710e1f26fc0800000000000000
+      internalID: -3502971615366267910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_149"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 443
+        width: 50
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67f2404c39da33fd0800000000000000
+      internalID: -2363354529278972042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_150"
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 442
+        width: 15
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56786168c4fdb1ad0800000000000000
+      internalID: -2730343229309941915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_151"
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 465
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98aa916a625fb9470800000000000000
+      internalID: 8402579076134054537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_152"
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 443
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9352cfb736d2d3000800000000000000
+      internalID: 17219878884484409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_153"
+      rect:
+        serializedVersion: 2
+        x: 610
+        y: 436
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d75b8aca88c83d0e0800000000000000
+      internalID: -2246297270487566979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_154"
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 466
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 552c19550060d9f90800000000000000
+      internalID: -6945388451830054315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_155"
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 467
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75a2d68c70e90fdf0800000000000000
+      internalID: -148445031438669225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_156"
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 439
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a8559af81052ac40800000000000000
+      internalID: 5522064161323178147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_157"
+      rect:
+        serializedVersion: 2
+        x: 637
+        y: 223
+        width: 387
+        height: 352
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bece9b80ab599b420800000000000000
+      internalID: 2646310882299735275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_158"
+      rect:
+        serializedVersion: 2
+        x: 642
+        y: 443
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9eb86554e116c2160800000000000000
+      internalID: 7002078303294491625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_159"
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 466
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3698413ac0b5d4770800000000000000
+      internalID: 8596627373553912163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_160"
+      rect:
+        serializedVersion: 2
+        x: 650
+        y: 443
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ff5b870d2d1c43b0800000000000000
+      internalID: -5527010563453132816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_161"
+      rect:
+        serializedVersion: 2
+        x: 1002
+        y: 443
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d6cf90daba56d0b0800000000000000
+      internalID: -5704272119607605549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_162"
+      rect:
+        serializedVersion: 2
+        x: 1009
+        y: 441
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6550c894ebe84d840800000000000000
+      internalID: 5247976413722314070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_163"
+      rect:
+        serializedVersion: 2
+        x: 1017
+        y: 443
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0ba674986e15eb20800000000000000
+      internalID: 3162967747813878541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_164"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 415
+        width: 21
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7f23722f9b313c70800000000000000
+      internalID: 8948999489225699195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_165"
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 343
+        width: 48
+        height: 99
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eec1b8065159670c0800000000000000
+      internalID: -4578308052128949010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_166"
+      rect:
+        serializedVersion: 2
+        x: 618
+        y: 415
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99cd284fe37b349a0800000000000000
+      internalID: -6249950376842044263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_167"
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 415
+        width: 21
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b4f1544fa5761840800000000000000
+      internalID: 5194468615844394168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_168"
+      rect:
+        serializedVersion: 2
+        x: 622
+        y: 419
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4078d0e6fb0c6be10800000000000000
+      internalID: 2213168195316844292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_169"
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 415
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db3151a3a90a21950800000000000000
+      internalID: 6418369003216245693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_170"
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 399
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71eb7ae5e50238310800000000000000
+      internalID: 1406003098356792855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_171"
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 393
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e34d795a9d2843c60800000000000000
+      internalID: 7797000726182876222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_172"
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 375
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cbc2586aca8d5aa0800000000000000
+      internalID: -6170623312489428032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_173"
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 381
+        width: 15
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5070de686a5819cb0800000000000000
+      internalID: -4858955572681308411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_174"
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 383
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90f8c8f59cdb47210800000000000000
+      internalID: 1329896462570262281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_175"
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 389
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99e70dda2d47755c0800000000000000
+      internalID: -4226781277055844711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_176"
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 371
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 303741002d6887490800000000000000
+      internalID: -7748294922388344061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_177"
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 371
+        width: 8
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1277f3b101f8d080800000000000000
+      internalID: -9162308452268674533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_178"
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 378
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cacfd09cd70402dc0800000000000000
+      internalID: -3665859187691357012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_179"
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 371
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb183a0ca30330120800000000000000
+      internalID: 2378798057079931324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_180"
+      rect:
+        serializedVersion: 2
+        x: 869
+        y: 284
+        width: 57
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b284c0c37f39c4f0800000000000000
+      internalID: -808044891748400459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_181"
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 360
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eac2dd6c5d0f80b60800000000000000
+      internalID: 7712679162827058350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_182"
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 343
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05b6550a544a54940800000000000000
+      internalID: 5279806757111425872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_183"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1024
+        height: 339
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4e7cc201ad6c57a0800000000000000
+      internalID: -6387109633214087605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_184"
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 332
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f675d63234173a030800000000000000
+      internalID: 3504769468195493743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_185"
+      rect:
+        serializedVersion: 2
+        x: 974
+        y: 287
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af745a33baf689b90800000000000000
+      internalID: -7234910020274141190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_186"
+      rect:
+        serializedVersion: 2
+        x: 975
+        y: 279
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7558073353db15710800000000000000
+      internalID: 1680332172179834199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_187"
+      rect:
+        serializedVersion: 2
+        x: 999
+        y: 239
+        width: 10
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74f1812f9894fded0800000000000000
+      internalID: -2387108420662059193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_188"
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 167
+        width: 119
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e306050111ceb1030800000000000000
+      internalID: 3466623896224030782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_189"
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 175
+        width: 30
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49b632d1818bfbbe0800000000000000
+      internalID: -1459245340537164908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_190"
+      rect:
+        serializedVersion: 2
+        x: 979
+        y: 154
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61dde45ca3d8d46a0800000000000000
+      internalID: -6463354606648894186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_191"
+      rect:
+        serializedVersion: 2
+        x: 986
+        y: 153
+        width: 15
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 224ef2ba23a040d90800000000000000
+      internalID: -7132564697111337950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_192"
+      rect:
+        serializedVersion: 2
+        x: 975
+        y: 130
+        width: 21
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb74314507a8a6f50800000000000000
+      internalID: 6875459996186003390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_193"
+      rect:
+        serializedVersion: 2
+        x: 984
+        y: 123
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 187f8aa0503f2f9c0800000000000000
+      internalID: -3894783524742826111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_194"
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 123
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e99db99df179e5650800000000000000
+      internalID: 6223577898123254174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_195"
+      rect:
+        serializedVersion: 2
+        x: 995
+        y: 130
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e81a2c28e2bb419f0800000000000000
+      internalID: -498567850294599282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_196"
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 107
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c64adfa16fa51e00800000000000000
+      internalID: 1014910125138921152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_197"
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 107
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 752b39c9c40c73370800000000000000
+      internalID: 8302315873357771351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_198"
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 107
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f948c0db1a014d7c0800000000000000
+      internalID: -4047591878251740001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_199"
+      rect:
+        serializedVersion: 2
+        x: 978
+        y: 107
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 669b091d7743eb0d0800000000000000
+      internalID: -3405226579023840922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_200"
+      rect:
+        serializedVersion: 2
+        x: 984
+        y: 103
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 37df4fd27240071c0800000000000000
+      internalID: -4508098660676600461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_201"
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 107
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cafc4b162d2768af0800000000000000
+      internalID: -394501669440401492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_202"
+      rect:
+        serializedVersion: 2
+        x: 1002
+        y: 107
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02d8c3d49c9397380800000000000000
+      internalID: -8973077245811978976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_203"
+      rect:
+        serializedVersion: 2
+        x: 1018
+        y: 107
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63696e9057d616460800000000000000
+      internalID: 7233182825978435126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_204"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 80
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5dcbcf87d29134b0800000000000000
+      internalID: -5462423418495578786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_205"
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 80
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d06ee35e36bcc0b0800000000000000
+      internalID: -5706986248972902184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "kenarl\u0131k5_206"
+      rect:
+        serializedVersion: 2
+        x: 980
+        y: 80
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adb7b567e318f50d0800000000000000
+      internalID: -3431882285759366182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "kenarl\u0131k5_0": -738130928462744225
+      "kenarl\u0131k5_1": -6787198884796041167
+      "kenarl\u0131k5_10": 3382515593795567914
+      "kenarl\u0131k5_100": -7640794094935597598
+      "kenarl\u0131k5_101": -6699293983127915491
+      "kenarl\u0131k5_102": -6423958679729928525
+      "kenarl\u0131k5_103": -3996696674897108093
+      "kenarl\u0131k5_104": -5642393539901267111
+      "kenarl\u0131k5_105": 8775108216082368930
+      "kenarl\u0131k5_106": -997005251598728326
+      "kenarl\u0131k5_107": -1775836500710952128
+      "kenarl\u0131k5_108": -7018246698334389179
+      "kenarl\u0131k5_109": -7480394027601300515
+      "kenarl\u0131k5_11": 2045977522893142017
+      "kenarl\u0131k5_110": -2908902171809606294
+      "kenarl\u0131k5_111": 1363212653492987343
+      "kenarl\u0131k5_112": 3997601928229475876
+      "kenarl\u0131k5_113": 6320291980873418474
+      "kenarl\u0131k5_114": -1567815831384660381
+      "kenarl\u0131k5_115": 3382889857338516014
+      "kenarl\u0131k5_116": 9106547203327678153
+      "kenarl\u0131k5_117": 6491976635234163962
+      "kenarl\u0131k5_118": 5449320419236590466
+      "kenarl\u0131k5_119": -5925290842004553051
+      "kenarl\u0131k5_12": -511016389469041567
+      "kenarl\u0131k5_120": -3938422095347122328
+      "kenarl\u0131k5_121": -907766390356000972
+      "kenarl\u0131k5_122": -8189296301123039539
+      "kenarl\u0131k5_123": -4993996034834198386
+      "kenarl\u0131k5_124": -2536747679674495736
+      "kenarl\u0131k5_125": -7371908623071861485
+      "kenarl\u0131k5_126": -6150848564912816818
+      "kenarl\u0131k5_127": 2259499723886852974
+      "kenarl\u0131k5_128": 7693048877221687668
+      "kenarl\u0131k5_129": 7101234694102052771
+      "kenarl\u0131k5_13": 4566392779862487167
+      "kenarl\u0131k5_130": -7172472772677489535
+      "kenarl\u0131k5_131": 7439929976180823534
+      "kenarl\u0131k5_132": -2582731896377453463
+      "kenarl\u0131k5_133": -5596352104752659142
+      "kenarl\u0131k5_134": -5818283641212780291
+      "kenarl\u0131k5_135": -7116379448092063189
+      "kenarl\u0131k5_136": -8149687695357374534
+      "kenarl\u0131k5_137": -4285322595022735980
+      "kenarl\u0131k5_138": 7307948738742091023
+      "kenarl\u0131k5_139": -1653018186160223615
+      "kenarl\u0131k5_14": 1820086383529429552
+      "kenarl\u0131k5_140": 3837340194481460176
+      "kenarl\u0131k5_141": -6520854654623619529
+      "kenarl\u0131k5_142": 5441198248779808551
+      "kenarl\u0131k5_143": 676231442996601516
+      "kenarl\u0131k5_144": 4419111606911331456
+      "kenarl\u0131k5_145": 1580881960986272667
+      "kenarl\u0131k5_146": 996810044905621001
+      "kenarl\u0131k5_147": -7464792495204968622
+      "kenarl\u0131k5_148": -3502971615366267910
+      "kenarl\u0131k5_149": -2363354529278972042
+      "kenarl\u0131k5_15": 1455273786455257619
+      "kenarl\u0131k5_150": -2730343229309941915
+      "kenarl\u0131k5_151": 8402579076134054537
+      "kenarl\u0131k5_152": 17219878884484409
+      "kenarl\u0131k5_153": -2246297270487566979
+      "kenarl\u0131k5_154": -6945388451830054315
+      "kenarl\u0131k5_155": -148445031438669225
+      "kenarl\u0131k5_156": 5522064161323178147
+      "kenarl\u0131k5_157": 2646310882299735275
+      "kenarl\u0131k5_158": 7002078303294491625
+      "kenarl\u0131k5_159": 8596627373553912163
+      "kenarl\u0131k5_16": -8345326961012791952
+      "kenarl\u0131k5_160": -5527010563453132816
+      "kenarl\u0131k5_161": -5704272119607605549
+      "kenarl\u0131k5_162": 5247976413722314070
+      "kenarl\u0131k5_163": 3162967747813878541
+      "kenarl\u0131k5_164": 8948999489225699195
+      "kenarl\u0131k5_165": -4578308052128949010
+      "kenarl\u0131k5_166": -6249950376842044263
+      "kenarl\u0131k5_167": 5194468615844394168
+      "kenarl\u0131k5_168": 2213168195316844292
+      "kenarl\u0131k5_169": 6418369003216245693
+      "kenarl\u0131k5_17": -5142512628764355549
+      "kenarl\u0131k5_170": 1406003098356792855
+      "kenarl\u0131k5_171": 7797000726182876222
+      "kenarl\u0131k5_172": -6170623312489428032
+      "kenarl\u0131k5_173": -4858955572681308411
+      "kenarl\u0131k5_174": 1329896462570262281
+      "kenarl\u0131k5_175": -4226781277055844711
+      "kenarl\u0131k5_176": -7748294922388344061
+      "kenarl\u0131k5_177": -9162308452268674533
+      "kenarl\u0131k5_178": -3665859187691357012
+      "kenarl\u0131k5_179": 2378798057079931324
+      "kenarl\u0131k5_18": -4277855497342035916
+      "kenarl\u0131k5_180": -808044891748400459
+      "kenarl\u0131k5_181": 7712679162827058350
+      "kenarl\u0131k5_182": 5279806757111425872
+      "kenarl\u0131k5_183": -6387109633214087605
+      "kenarl\u0131k5_184": 3504769468195493743
+      "kenarl\u0131k5_185": -7234910020274141190
+      "kenarl\u0131k5_186": 1680332172179834199
+      "kenarl\u0131k5_187": -2387108420662059193
+      "kenarl\u0131k5_188": 3466623896224030782
+      "kenarl\u0131k5_189": -1459245340537164908
+      "kenarl\u0131k5_19": -2376217435959827976
+      "kenarl\u0131k5_190": -6463354606648894186
+      "kenarl\u0131k5_191": -7132564697111337950
+      "kenarl\u0131k5_192": 6875459996186003390
+      "kenarl\u0131k5_193": -3894783524742826111
+      "kenarl\u0131k5_194": 6223577898123254174
+      "kenarl\u0131k5_195": -498567850294599282
+      "kenarl\u0131k5_196": 1014910125138921152
+      "kenarl\u0131k5_197": 8302315873357771351
+      "kenarl\u0131k5_198": -4047591878251740001
+      "kenarl\u0131k5_199": -3405226579023840922
+      "kenarl\u0131k5_2": -2015626321733634037
+      "kenarl\u0131k5_20": -3527082633981786106
+      "kenarl\u0131k5_200": -4508098660676600461
+      "kenarl\u0131k5_201": -394501669440401492
+      "kenarl\u0131k5_202": -8973077245811978976
+      "kenarl\u0131k5_203": 7233182825978435126
+      "kenarl\u0131k5_204": -5462423418495578786
+      "kenarl\u0131k5_205": -5706986248972902184
+      "kenarl\u0131k5_206": -3431882285759366182
+      "kenarl\u0131k5_21": -3553252921294429824
+      "kenarl\u0131k5_22": -8992342357230821844
+      "kenarl\u0131k5_23": 3346475875135515051
+      "kenarl\u0131k5_24": -2244015774816121715
+      "kenarl\u0131k5_25": 6496936853885476762
+      "kenarl\u0131k5_26": 4811323911973192895
+      "kenarl\u0131k5_27": -6894815573114360670
+      "kenarl\u0131k5_28": -6850457655197853599
+      "kenarl\u0131k5_29": -8423672763690539898
+      "kenarl\u0131k5_3": -7885493639485791022
+      "kenarl\u0131k5_30": -1261304046518862853
+      "kenarl\u0131k5_31": 7258850982270165882
+      "kenarl\u0131k5_32": -7585864198478094391
+      "kenarl\u0131k5_33": -3580681048045511037
+      "kenarl\u0131k5_34": -1250748661270916844
+      "kenarl\u0131k5_35": 1665668789485818501
+      "kenarl\u0131k5_36": 3262963274684959777
+      "kenarl\u0131k5_37": 4021345279915004859
+      "kenarl\u0131k5_38": 8062479597698665577
+      "kenarl\u0131k5_39": 325164184437055966
+      "kenarl\u0131k5_4": -8777103769644383905
+      "kenarl\u0131k5_40": -2358302929642215236
+      "kenarl\u0131k5_41": 2330391331238134715
+      "kenarl\u0131k5_42": 1887951403344677082
+      "kenarl\u0131k5_43": 6065047367654277696
+      "kenarl\u0131k5_44": -7007937108731875908
+      "kenarl\u0131k5_45": 2842300705498443030
+      "kenarl\u0131k5_46": -4522285375532418359
+      "kenarl\u0131k5_47": 6422489903699637545
+      "kenarl\u0131k5_48": 1849771718458377335
+      "kenarl\u0131k5_49": -5386972243243103792
+      "kenarl\u0131k5_5": 5352693881271715473
+      "kenarl\u0131k5_50": -5099125965476032750
+      "kenarl\u0131k5_51": -1084907191713547235
+      "kenarl\u0131k5_52": 5653646787008536470
+      "kenarl\u0131k5_53": 1199170236971490165
+      "kenarl\u0131k5_54": 3060629141261979151
+      "kenarl\u0131k5_55": -818380253988098252
+      "kenarl\u0131k5_56": 7882554577802653301
+      "kenarl\u0131k5_57": -1312602089802959843
+      "kenarl\u0131k5_58": -6268512774414564721
+      "kenarl\u0131k5_59": -5818654381140022432
+      "kenarl\u0131k5_6": -6476130480508692907
+      "kenarl\u0131k5_60": 5210055135651015574
+      "kenarl\u0131k5_61": 4734459646438170693
+      "kenarl\u0131k5_62": 5152098298141285614
+      "kenarl\u0131k5_63": -7191916537455061427
+      "kenarl\u0131k5_64": 4141331785553845638
+      "kenarl\u0131k5_65": 6131841914120238255
+      "kenarl\u0131k5_66": 7989232297128091720
+      "kenarl\u0131k5_67": 4492926782110748776
+      "kenarl\u0131k5_68": -6942396344407604443
+      "kenarl\u0131k5_69": 4797656605513874083
+      "kenarl\u0131k5_7": -153274038339215753
+      "kenarl\u0131k5_70": 1622696284348305024
+      "kenarl\u0131k5_71": -2861919102118070793
+      "kenarl\u0131k5_72": 2455945756349871962
+      "kenarl\u0131k5_73": -3781177242317102339
+      "kenarl\u0131k5_74": -4673402133371336038
+      "kenarl\u0131k5_75": 7835262325219025820
+      "kenarl\u0131k5_76": -630046387420472474
+      "kenarl\u0131k5_77": -9124884026074653963
+      "kenarl\u0131k5_78": -6664708380529663820
+      "kenarl\u0131k5_79": 9073367805277892152
+      "kenarl\u0131k5_8": 6550258877440338920
+      "kenarl\u0131k5_80": 3501746043021310468
+      "kenarl\u0131k5_81": -2472189085508701086
+      "kenarl\u0131k5_82": -7539420512381249371
+      "kenarl\u0131k5_83": 391342321506723886
+      "kenarl\u0131k5_84": 3599841373677498351
+      "kenarl\u0131k5_85": 376716200417492352
+      "kenarl\u0131k5_86": 3813893350560568186
+      "kenarl\u0131k5_87": 3898204692498105388
+      "kenarl\u0131k5_88": 5305468631427435018
+      "kenarl\u0131k5_89": -3775205678543511023
+      "kenarl\u0131k5_9": 1609172157242441653
+      "kenarl\u0131k5_90": -810502775322667165
+      "kenarl\u0131k5_91": -2935343276210416013
+      "kenarl\u0131k5_92": 2599820007104218980
+      "kenarl\u0131k5_93": -67205446369028705
+      "kenarl\u0131k5_94": 8191242380288680334
+      "kenarl\u0131k5_95": 5952130827739956675
+      "kenarl\u0131k5_96": 1240391642035903230
+      "kenarl\u0131k5_97": -8580723648503548219
+      "kenarl\u0131k5_98": 6968086929719617515
+      "kenarl\u0131k5_99": 5452547619417007817
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -54,6 +54,21 @@ public class StartBattleManager : MonoBehaviour
         Debug.Log($"🟥 StartBattleManager: {enemyMatchCards.Count} düşman kartı oluşturuldu.");
 
         // Battle sahnesine geçiş
-        SceneManager.LoadScene("BattleScene");
+        if (Unity.Netcode.NetworkManager.Singleton != null &&
+    Unity.Netcode.NetworkManager.Singleton.IsServer)
+        {
+            Debug.Log("🌐 Network BattleScene yükleniyor...");
+
+            Unity.Netcode.NetworkManager.Singleton.SceneManager.LoadScene(
+                "BattleScene",
+                UnityEngine.SceneManagement.LoadSceneMode.Single
+            );
+        }
+        else
+        {
+            Debug.Log("🧪 Offline BattleScene yükleniyor...");
+
+            SceneManager.LoadScene("BattleScene");
+        }
     }
 }
