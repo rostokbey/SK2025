@@ -11811,7 +11811,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   mainMenuMusic: {fileID: 8300000, guid: 364bb85d589cfc94aaa04585e65a633a, type: 3}
   battleMusic: {fileID: 8300000, guid: 37229191b80d2aa479a535ea1f8b4acd, type: 3}
-  musicSource: {fileID: 0}
+  musicSource: {fileID: 958746682}
+  sfxSource: {fileID: 0}
 --- !u!4 &958746684
 Transform:
   m_ObjectHideFlags: 0

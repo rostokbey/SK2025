@@ -55,6 +55,14 @@ public class VFXManager : MonoBehaviour
 
         Debug.Log($"✅ VFX SPAWN EDİLDİ: {abilityName} | Pos: {position}");
 
+        // =========================
+        // SFX ÇAL
+        // =========================
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(abilityName);
+        }
+
         Destroy(effect, defaultDestroyTime);
     }
 
