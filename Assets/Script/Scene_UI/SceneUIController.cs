@@ -14,7 +14,8 @@ public class SceneUIController : MonoBehaviour
         Season,
         Friends,
         Clan,
-        Anamenu
+        Anamenu,
+        Settings
     }
 
     [Header("Panels")]
@@ -28,6 +29,7 @@ public class SceneUIController : MonoBehaviour
     public GameObject friendsPanel;
     public GameObject clanPanel;
     public GameObject anamenuPanel;
+    public GameObject settingsPanel;
 
     [Header("Global UI")]
     public GameObject bottomNav;
@@ -56,6 +58,7 @@ public class SceneUIController : MonoBehaviour
         SafeSetActive(friendsPanel, false);
         SafeSetActive(clanPanel, false);
         SafeSetActive(anamenuPanel, false);
+        SafeSetActive(settingsPanel, false);
 
         SafeSetActive(bottomNav, false);
         SafeSetActive(backToMenuButton, false);
@@ -70,41 +73,35 @@ public class SceneUIController : MonoBehaviour
             case TargetPanel.Login:
                 SafeSetActive(loginPanel, true);
                 break;
-
             case TargetPanel.Lobby:
                 SafeSetActive(lobbyPanel, true);
                 break;
-
             case TargetPanel.QR:
                 SafeSetActive(qrPanel, true);
                 break;
-
             case TargetPanel.DeckBuilder:
                 SafeSetActive(deckBuilderPanel, true);
                 break;
-
             case TargetPanel.DeckSelect:
                 SafeSetActive(deckSelectPanel, true);
                 break;
-
             case TargetPanel.BattleRoom:
                 SafeSetActive(battleRoomPanel, true);
                 break;
-
             case TargetPanel.Season:
                 SafeSetActive(seasonPanel, true);
                 break;
-
             case TargetPanel.Friends:
                 SafeSetActive(friendsPanel, true);
                 break;
-
             case TargetPanel.Clan:
                 SafeSetActive(clanPanel, true);
                 break;
-
             case TargetPanel.Anamenu:
                 SafeSetActive(anamenuPanel, true);
+                break;
+            case TargetPanel.Settings:
+                SafeSetActive(settingsPanel, true);
                 break;
         }
 
@@ -123,6 +120,7 @@ public class SceneUIController : MonoBehaviour
         SafeSetActive(friendsPanel, false);
         SafeSetActive(clanPanel, false);
         SafeSetActive(anamenuPanel, false);
+        SafeSetActive(settingsPanel, false);
     }
 
     private void UpdateGlobalUI(TargetPanel target)
@@ -132,7 +130,8 @@ public class SceneUIController : MonoBehaviour
 
         bool shouldShowBackButton =
             (target == TargetPanel.Season ||
-             target == TargetPanel.BattleRoom) &&
+             target == TargetPanel.BattleRoom ||
+             target == TargetPanel.Settings) &&
             _modalDepth == 0;
 
         SafeSetActive(bottomNav, shouldShowBottomNav);
@@ -169,6 +168,7 @@ public class SceneUIController : MonoBehaviour
         if (IsPanelActive(friendsPanel)) return TargetPanel.Friends;
         if (IsPanelActive(clanPanel)) return TargetPanel.Clan;
         if (IsPanelActive(anamenuPanel)) return TargetPanel.Anamenu;
+        if (IsPanelActive(settingsPanel)) return TargetPanel.Settings;
 
         return TargetPanel.Login;
     }
@@ -178,7 +178,6 @@ public class SceneUIController : MonoBehaviour
         return panel != null && panel.activeSelf;
     }
 
-    // Navigation Methods
     public void GoToLogin() => ShowOnly(TargetPanel.Login);
     public void GoToLobby() => ShowOnly(TargetPanel.Lobby);
     public void GoToQR() => ShowOnly(TargetPanel.QR);
@@ -188,5 +187,7 @@ public class SceneUIController : MonoBehaviour
     public void GoToSeason() => ShowOnly(TargetPanel.Season);
     public void GoToFriends() => ShowOnly(TargetPanel.Friends);
     public void GoToClan() => ShowOnly(TargetPanel.Clan);
+
     public void GoToAnamenu() => ShowOnly(TargetPanel.Anamenu);
+    public void GoToSettings() => ShowOnly(TargetPanel.Settings);
 }

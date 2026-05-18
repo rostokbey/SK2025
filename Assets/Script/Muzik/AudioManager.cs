@@ -13,6 +13,10 @@ public class AudioManager : MonoBehaviour
     public AudioSource musicSource;
     public AudioSource sfxSource;
 
+    [Header("Volume Settings")]
+    [Range(0f, 1f)]
+    public float sfxVolume = 0.25f;
+
     private string currentMusicName = "";
 
     private void Awake()
@@ -104,6 +108,6 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        sfxSource.PlayOneShot(clip);
+        sfxSource.PlayOneShot(clip, sfxVolume);
     }
 }
