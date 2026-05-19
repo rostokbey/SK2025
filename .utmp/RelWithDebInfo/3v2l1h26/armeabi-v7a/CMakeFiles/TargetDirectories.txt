@@ -1,0 +1,5 @@
+D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/armeabi-v7a/FramePacing/CMakeFiles/swappywrapper.dir
+D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/armeabi-v7a/FramePacing/CMakeFiles/edit_cache.dir
+D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/armeabi-v7a/FramePacing/CMakeFiles/rebuild_cache.dir

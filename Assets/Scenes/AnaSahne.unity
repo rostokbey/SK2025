@@ -2820,6 +2820,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1534535565}
+        m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
+        m_MethodName: SetSelectedDeck
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &193804318
 GameObject:
   m_ObjectHideFlags: 0
@@ -3898,7 +3910,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1534535565}
         m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
-        m_MethodName: ShowAllDecks
+        m_MethodName: ShowSelectedDeck
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4908,15 +4920,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5136075649473698959, guid: 365e6fbcf93caae4bb8298c39245edb6, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 5136075649473698959, guid: 365e6fbcf93caae4bb8298c39245edb6, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 5136075649473698959, guid: 365e6fbcf93caae4bb8298c39245edb6, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 5136075649473698959, guid: 365e6fbcf93caae4bb8298c39245edb6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -5223,6 +5235,18 @@ MonoBehaviour:
       - m_Target: {fileID: 1775321797}
         m_TargetAssemblyTypeName: DeckManagerObject, Assembly-CSharp
         m_MethodName: SelectDeckForBattle
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 4
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1534535565}
+        m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
+        m_MethodName: SetSelectedDeck
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -17641,6 +17665,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1534535565}
+        m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
+        m_MethodName: SetSelectedDeck
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1296115124
 GameObject:
   m_ObjectHideFlags: 0
@@ -22774,6 +22810,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1534535565}
+        m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
+        m_MethodName: SetSelectedDeck
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1679907730
 GameObject:
   m_ObjectHideFlags: 0
@@ -22792,7 +22840,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1679907731
 RectTransform:
   m_ObjectHideFlags: 0
@@ -27187,6 +27235,18 @@ MonoBehaviour:
       - m_Target: {fileID: 1775321797}
         m_TargetAssemblyTypeName: DeckManagerObject, Assembly-CSharp
         m_MethodName: SelectDeckForBattle
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1534535565}
+        m_TargetAssemblyTypeName: DeckViewerUIManager, Assembly-CSharp
+        m_MethodName: SetSelectedDeck
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

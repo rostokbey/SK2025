@@ -22,16 +22,28 @@ public class MatchReadyButton : MonoBehaviour
     void OnReadyClicked()
     {
         var deckManager = FindObjectOfType<DeckManagerObject>();
+
         if (deckManager == null)
         {
             Debug.LogError("❌ DeckManagerObject bulunamadı!");
             return;
         }
 
-        List<string> selectedIds = new List<string>();
-        foreach (var card in deckManager.fullDeck)
+        // Oyuncunun savaş için seçtiği deste
+        List<CardData> selectedDeck = deckManager.GetSelectedCards();
+
+        if (selectedDeck == null || selectedDeck.Count == 0)
         {
-            selectedIds.Add(card.id);
+            Debug.LogWarning("⚠ Seçili deste boş.");
+            return;
+        }
+
+        List<string> selectedIds = new List<string>();
+
+        foreach (var card in selectedDeck)
+        {
+            if (card != null)
+                selectedIds.Add(card.id);
         }
 
         deckManager.PrepareMatchDeck(selectedIds);
