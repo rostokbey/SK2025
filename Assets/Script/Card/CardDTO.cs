@@ -4,7 +4,6 @@
 public class CardDTO
 {
     public string id;
-    public string jti;
     public string cardName;
 
     public int baseHP;

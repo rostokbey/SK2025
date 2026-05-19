@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 2cee06aa3c9fd9b4b82d7e6337af7cee
+guid: 1ae828d9066368a4784ebe3f8abf6a54
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4973987150901781967
-    second: Stylized fantasy card_0
+      213: -3324952067138070215
+    second: KartSecme_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Stylized fantasy card_0
+      name: KartSecme_0
       rect:
         serializedVersion: 2
         x: 0
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 13a54212a09d8fab0800000000000000
-      internalID: -4973987150901781967
+      spriteID: 939d80716b56bd1d0800000000000000
+      internalID: -3324952067138070215
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Stylized fantasy card_0: -4973987150901781967
+      KartSecme_0: -3324952067138070215
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

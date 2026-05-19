@@ -16,7 +16,6 @@ public class CardData
 
     // ---------------- KİMLİK ----------------
     public string id;
-    public string jti;
     public string cardId;
     public string cardName;
 

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0d533375080d89e43a13ebd5ab28796c
+guid: 0ba8db7c99f20954bb9af7ff3db4ac57
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7587442758238174281
-    second: Epic fantasy mobile card_0
+      213: -553100940560633892
+    second: DeckBuildd_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Epic fantasy mobile card_0
+      name: DeckBuildd_0
       rect:
         serializedVersion: 2
         x: 0
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 94c75661df20c4960800000000000000
-      internalID: 7587442758238174281
+      spriteID: cdfe2f000adf258f0800000000000000
+      internalID: -553100940560633892
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Epic fantasy mobile card_0: 7587442758238174281
+      DeckBuildd_0: -553100940560633892
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
