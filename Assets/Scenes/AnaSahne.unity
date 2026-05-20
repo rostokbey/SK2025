@@ -14209,8 +14209,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1689572403}
   m_HandleRect: {fileID: 1689572402}
   m_Direction: 0
-  m_Value: -0.00002504022
-  m_Size: 0.9799177
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -16324,7 +16324,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1221149130}
   m_HandleRect: {fileID: 1221149129}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -28834,12 +28834,12 @@ SceneRoots:
   - {fileID: 345693944}
   - {fileID: 348044194}
   - {fileID: 1780110702}
+  - {fileID: 856925930}
   - {fileID: 1413342462}
   - {fileID: 1473036698}
   - {fileID: 1188977038}
   - {fileID: 1057812599}
   - {fileID: 34511173}
-  - {fileID: 856925930}
   - {fileID: 699030281}
   - {fileID: 1493074854}
   - {fileID: 209839287}

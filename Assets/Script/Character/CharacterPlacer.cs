@@ -64,19 +64,48 @@ public class CharacterPlacer : MonoBehaviour
         }
 
         if (mainCamera == null)
-        {
             mainCamera = Camera.main;
+
+        if (mainCamera == null)
+        {
+            Debug.LogError("❌ Main Camera bulunamadı! Kameranın Tag değeri MainCamera olmalı.");
+            return;
         }
 
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 500f, battlefieldLayer))
-        {
-            Debug.Log($"Hit Object: {hit.collider.name}, Position: {hit.point}");
+        Debug.Log(
+            $"🖱️ Tıklama Screen Pos: {Input.mousePosition} | " +
+            $"Ray Origin: {ray.origin} | Ray Direction: {ray.direction}"
+        );
 
+        // Önce her şeye ray atalım, gerçekten neye çarpıyor görelim
+        if (Physics.Raycast(ray, out RaycastHit debugHit, 5000f))
+        {
+            Debug.Log(
+                $"🎯 DEBUG HIT: {debugHit.collider.name} | " +
+                $"Layer: {LayerMask.LayerToName(debugHit.collider.gameObject.layer)} | " +
+                $"World Pos: {debugHit.point}"
+            );
+        }
+        else
+        {
+            Debug.LogWarning("❌ DEBUG: Ray hiçbir objeye çarpmadı.");
+        }
+
+        // Asıl yerleştirme raycast'i
+        if (Physics.Raycast(ray, out RaycastHit hit, 5000f, battlefieldLayer))
+        {
+            Debug.Log(
+                $"✅ BATTLEFIELD HIT: {hit.collider.name} | " +
+                $"Layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)} | " +
+                $"Spawn Pos: {hit.point}"
+            );
 
             Vector3 placementPosition = hit.point + Vector3.up * spawnYOffset;
             placementPosition.z += spawnZOffset;
+
+            Debug.Log($"📍 Karakter spawn konumu: {placementPosition}");
 
             isWaitingServerResult = true;
 
@@ -84,7 +113,7 @@ public class CharacterPlacer : MonoBehaviour
         }
         else
         {
-            Debug.Log("Geçersiz yer. Lütfen savaş alanına tıklayın.");
+            Debug.LogWarning("❌ Geçersiz yer. Battlefield layer üzerinde bir yere tıklanmadı.");
         }
     }
 
