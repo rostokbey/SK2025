@@ -145,6 +145,8 @@ public class BattleManager : NetworkBehaviour
 
     private void InitLocalHandUI()
     {
+        Debug.Log($"[BM] InitLocalHandUI çağrıldı. LocalClientId: {NetworkManager.Singleton.LocalClientId}, IsHost: {NetworkManager.Singleton.IsHost}, IsClient: {NetworkManager.Singleton.IsClient}");
+
         var handUI = Object.FindFirstObjectByType<HandUIManager>(FindObjectsInactive.Include);
 
         if (handUI == null)
@@ -153,15 +155,35 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        var deck = StartBattleManager.Instance != null
-            ? StartBattleManager.Instance.selectedMatchCards
-            : null;
+        List<CardData> deck = null;
+
+        if (StartBattleManager.Instance != null &&
+            StartBattleManager.Instance.selectedMatchCards != null &&
+            StartBattleManager.Instance.selectedMatchCards.Count > 0)
+        {
+            deck = StartBattleManager.Instance.selectedMatchCards;
+        }
+        else if (DeckManagerObject.Instance != null &&
+                 DeckManagerObject.Instance.currentMatchDeck != null &&
+                 DeckManagerObject.Instance.currentMatchDeck.Count > 0)
+        {
+            deck = DeckManagerObject.Instance.currentMatchDeck;
+        }
+
+        int deckCount = deck != null ? deck.Count : 0;
+
+        Debug.Log($"[BM] Local deck kart sayısı: {deckCount}");
 
         if (deck == null || deck.Count == 0)
         {
             Debug.LogError("[BM] Local deck boş! HandUI başlatılamadı.");
             return;
         }
+
+        handUI.gameObject.SetActive(true);
+
+        if (handUI.handArea != null)
+            handUI.handArea.gameObject.SetActive(true);
 
         handUI.Init(deck);
 
@@ -625,14 +647,7 @@ public class BattleManager : NetworkBehaviour
         return null;
     }
 
-    private void ShowWarning(string message)
-    {
-        Debug.LogWarning(message);
-
-        if (warningText != null)
-            warningText.text = message;
-    }
-
+   
 
     #region UI
 

@@ -9,6 +9,7 @@ public class DeckSelectController : MonoBehaviour
     public Button[] deckButtons;          // 1..5 “Deste” butonların
     public Button readyButton;            // HAZIRIM
     public TMP_Text feedbackText;         // opsiyonel uyarı/log alanı
+    public SeasonModeDialog seasonModeDialog;
 
     [Header("Ayarlar")]
     public int minCardsToFight = 5;       // min kart sayısı (örneğin 5) yoksa savaş başlatılamaz
@@ -67,10 +68,14 @@ public class DeckSelectController : MonoBehaviour
         deckManager.SelectDeckForBattle(selectedDeckIndex);
         Info($"✅ Deste {selectedDeckIndex + 1} kaydedildi. Savaşa hazırsın!");
 
-        // Burada sadece seçimi kaydediyoruz. Savaşı başlatmak için
-        // mevcut “SAVAŞ BAŞLAT” butonun zaten StartBattleManager.StartBattle() çağırıyor.
-        // İstersen burada direkt sahneye geçiş de yapabilirsin:
-        // StartBattleManager.Instance?.StartBattle();
+        if (seasonModeDialog != null)
+        {
+            seasonModeDialog.Open();
+        }
+        else
+        {
+            Warn("SeasonModeDialog atanmadı.");
+        }
     }
 
     private int GetDeckCount(int idx)

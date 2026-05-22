@@ -46,7 +46,7 @@ public class HandUIManager : MonoBehaviour
         Debug.Log($"[HandUI] Başlatıldı. Toplam deste: {deck.Count}, elde: {handCards.Count}");
     }
 
-    private void DrawCard()
+    public void DrawCard()
     {
         if (remainingDeck == null || remainingDeck.Count == 0)
             return;
@@ -56,6 +56,8 @@ public class HandUIManager : MonoBehaviour
 
         CardData card = remainingDeck.Dequeue();
         AddCardToHand(card);
+
+        Debug.Log("[HandUI] Ele kart eklendi: " + card.cardName);
     }
 
     private void AddCardToHand(CardData card)

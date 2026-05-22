@@ -33,6 +33,9 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private TMP_Text hostTeamText;
     [SerializeField] private TMP_Text clientTeamText;
 
+    [Header("Warning UI")]
+    [SerializeField] private TMP_Text warningText;
+
     [Header("Relay")]
     [SerializeField] private int maxConnections = 5;
 
@@ -63,10 +66,15 @@ public class LobbyUIManager : MonoBehaviour
 
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
+
+        ShowWarning("");
     }
 
     public async void HostGame()
     {
+        if (!HasEnoughCardsForBattle())
+            return;
+
         try
         {
             await EnsureUnityServices();
@@ -101,12 +109,16 @@ public class LobbyUIManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            ShowWarning("Host oluşturulamadı.");
             Debug.LogError("[Lobby] HostGame hata: " + e);
         }
     }
 
     public async void JoinGame()
     {
+        if (!HasEnoughCardsForBattle())
+            return;
+
         try
         {
             await EnsureUnityServices();
@@ -117,7 +129,7 @@ public class LobbyUIManager : MonoBehaviour
 
             if (string.IsNullOrEmpty(joinCode))
             {
-                Debug.LogWarning("[Lobby] Join code boş.");
+                ShowWarning("Join code boş.");
                 return;
             }
 
@@ -148,8 +160,45 @@ public class LobbyUIManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            ShowWarning("Oyuna katılım başarısız.");
             Debug.LogError("[Lobby] JoinGame hata: " + e);
         }
+    }
+
+    private bool HasEnoughCardsForBattle()
+    {
+        var deckManager = DeckManagerObject.Instance
+            ?? FindObjectOfType<DeckManagerObject>(true);
+
+        if (deckManager == null)
+        {
+            ShowWarning("DeckManagerObject bulunamadı.");
+            return false;
+        }
+
+        var selectedDeck = deckManager.GetSelectedCards();
+
+        int count = selectedDeck != null ? selectedDeck.Count : 0;
+
+        if (count < 5)
+        {
+            ShowWarning(
+                $"Maça girmek için en az 5 kart gerekli. Şu an: {count}/5"
+            );
+
+            return false;
+        }
+
+        ShowWarning("");
+        return true;
+    }
+
+    private void ShowWarning(string message)
+    {
+        Debug.LogWarning(message);
+
+        if (warningText != null)
+            warningText.text = message;
     }
 
     private void SetRoomTexts(bool isHost)
@@ -179,6 +228,8 @@ public class LobbyUIManager : MonoBehaviour
 
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
+
+        ShowWarning("");
     }
 
     private async System.Threading.Tasks.Task EnsureUnityServices()
