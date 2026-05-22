@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using TMPro;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+
 
 public class BattleManager : NetworkBehaviour
 {
@@ -25,6 +27,9 @@ public class BattleManager : NetworkBehaviour
     public Transform enemyCardParent;
     public GameObject cardSlotPrefab;
 
+    [Header("Uyarı UI")]
+    public TMP_Text warningText;
+
     [Tooltip("İstersen sahneden bağla; bağlanmazsa da OnStartBattleButton() çağrılabilir.")]
     public Button startBattleButton;
 
@@ -34,6 +39,8 @@ public class BattleManager : NetworkBehaviour
     [Header("Saha Alanları")]
     public Collider playerZone;
     public Collider enemyZone;
+
+    
 
 
     // --- RUNTIME ---
@@ -79,7 +86,10 @@ public class BattleManager : NetworkBehaviour
             Debug.LogWarning("[BM] attackButton atanmamış!");
         }
 
-        // Sunucu değilsek burada erken çık (tek cihaz testinde Host'sun zaten)
+        // ✅ Her client kendi elindeki kart destesini görsün
+        InitLocalHandUI();
+
+        // Sunucu değilsek server işlemlerine devam etme
         if (!IsServer) return;
 
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
@@ -96,30 +106,7 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟩 Oyuncu kartları sayısı: {playerCards.Count}");
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
-        // Oyuncu tarafının kart UI'larını göster
-        // SpawnPlayerCards(playerCards);
-
-        // Kart listelerini aldıktan sonra: elde 5 kart göster
-        var handUI = Object.FindFirstObjectByType<HandUIManager>(FindObjectsInactive.Include);
-        if (handUI != null)
-        {
-            var deck = StartBattleManager.Instance != null ? StartBattleManager.Instance.selectedMatchCards : null;
-            if (deck != null && deck.Count > 0)
-            {
-                handUI.Init(deck);
-            }
-            else
-            {
-                Debug.LogError("[BM] Deck null veya boş! HandUIManager başlatılamadı.");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[BM] HandUIManager bulunamadı!");
-        }
-
-        // 🧪 DENEME: Tüm karakterleri anında sahaya basmak istersen açık bırak,
-        // kart seçerek spawn akışı deneyeceksen bu satırı YORUM SATIRI yap.
+        
         // SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
@@ -155,6 +142,41 @@ public class BattleManager : NetworkBehaviour
 
     #endregion
     // ---------------------------------------------------------------------
+
+    private void InitLocalHandUI()
+    {
+        var handUI = Object.FindFirstObjectByType<HandUIManager>(FindObjectsInactive.Include);
+
+        if (handUI == null)
+        {
+            Debug.LogWarning("[BM] HandUIManager bulunamadı!");
+            return;
+        }
+
+        var deck = StartBattleManager.Instance != null
+            ? StartBattleManager.Instance.selectedMatchCards
+            : null;
+
+        if (deck == null || deck.Count == 0)
+        {
+            Debug.LogError("[BM] Local deck boş! HandUI başlatılamadı.");
+            return;
+        }
+
+        handUI.Init(deck);
+
+        Debug.Log($"[BM] Local HandUI başlatıldı. Kart sayısı: {deck.Count}");
+    }
+
+
+    private void ShowWarning(string message)
+    {
+        Debug.LogWarning(message);
+
+        if (warningText != null)
+            warningText.text = message;
+    }
+
 
     #region Oyuncu Kart UI
 
@@ -255,7 +277,7 @@ public class BattleManager : NetworkBehaviour
                 obj.transform.SetParent(grid, false);
 
             obj.transform.localPosition = Vector3.zero;
-            obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // rakip bize dönsün
+            obj.transform.localRotation = Quaternion.Euler(20f, 180f, 0f); // rakip bize dönsün
             obj.transform.localScale = Vector3.one;
 
             var ch = obj.GetComponent<Character>();
@@ -445,18 +467,66 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
+    private bool CanStartBattleWithDecks(List<CardData> hostDeck, List<CardData> clientDeck)
+    {
+        int minCardCount = 5;
+
+        int hostCount = hostDeck != null ? hostDeck.Count : 0;
+        int clientCount = clientDeck != null ? clientDeck.Count : 0;
+
+        if (hostCount < minCardCount || clientCount < minCardCount)
+        {
+            ShowWarning(
+                $"Oyuncuların birinde destesinden 5 karttan az kart var! " +
+                $"Host: {hostCount}, Join: {clientCount}"
+            );
+
+            return false;
+        }
+
+        ShowWarning("");
+
+        return true;
+    }
+
     private void SpawnCharactersFromSubmittedDecks()
     {
         var players = new List<ulong>(playerSubmittedCardIds.Keys);
+
+        if (players.Count < 2)
+        {
+            ShowWarning("İki oyuncu deste göndermeden savaş başlayamaz.");
+            return;
+        }
+
         var deck1 = playerSubmittedCardIds[players[0]];
         var deck2 = playerSubmittedCardIds[players[1]];
 
         var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
 
-        var playerCards = deck1.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
-        var enemyCards = deck2.Select(id => deckManager.GetCardById(id)).Where(c => c != null).ToList();
+        if (deckManager == null)
+        {
+            ShowWarning("DeckManagerObject bulunamadı.");
+            return;
+        }
 
-        //SpawnCharacters(playerCards, enemyCards);
+        var hostCards = deck1
+            .Select(id => deckManager.GetCardById(id))
+            .Where(c => c != null)
+            .ToList();
+
+        var joinCards = deck2
+            .Select(id => deckManager.GetCardById(id))
+            .Where(c => c != null)
+            .ToList();
+
+        if (!CanStartBattleWithDecks(hostCards, joinCards))
+            return;
+
+        ShowWarning("");
+
+        Debug.Log("İki oyuncunun da en az 5 kartı var. Savaş başlatılıyor.");
+
         StartBattle();
     }
 
@@ -554,6 +624,15 @@ public class BattleManager : NetworkBehaviour
         Debug.LogError("[BM] Prefab seçilemedi: characterPrefab da atanmadı!");
         return null;
     }
+
+    private void ShowWarning(string message)
+    {
+        Debug.LogWarning(message);
+
+        if (warningText != null)
+            warningText.text = message;
+    }
+
 
     #region UI
 
@@ -659,11 +738,13 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        Vector3 spawnPos = position;
+        Vector3 spawnPos = isPlayer
+            ? position + new Vector3(0f, 0f, -50f)
+            : position + new Vector3(0f, 0f, -90f);
 
         Quaternion spawnRot = isPlayer
-            ? Quaternion.Euler(-33f, 0f, 0f)
-            : Quaternion.Euler(0f, 180f, 0f);
+            ? Quaternion.Euler(-30f, 0f, 0f)
+            : Quaternion.Euler(50f, 180f, 0f);
 
         var obj = Instantiate(prefabToUse, spawnPos, spawnRot);
 
@@ -724,6 +805,7 @@ public class BattleManager : NetworkBehaviour
         }
 
         CardData enemyCard = enemyCards[Random.Range(0, enemyCards.Count)];
+
         Transform slot = enemyGridPositions[nextEnemySpawnIndex];
         nextEnemySpawnIndex++;
 
@@ -735,16 +817,17 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        GameObject obj = Instantiate(prefabToUse, slot.position, Quaternion.Euler(0f, 180f, 0f));
+        Vector3 spawnPos = slot.position + new Vector3(0f, -234.5f, -68f);
+
+        Quaternion spawnRot = Quaternion.Euler(50f, 180f, 0f);
+
+        GameObject obj = Instantiate(prefabToUse, spawnPos, spawnRot);
 
         var net = obj.GetComponent<NetworkObject>();
 
         if (net && IsServer)
             net.Spawn();
 
-        obj.transform.position = slot.position;
-        obj.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-        obj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
         obj.transform.localScale = Vector3.one;
 
         Character ch = obj.GetComponent<Character>();

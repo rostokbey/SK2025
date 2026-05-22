@@ -11,8 +11,7 @@ public class DeckSelectController : MonoBehaviour
     public TMP_Text feedbackText;         // opsiyonel uyarı/log alanı
 
     [Header("Ayarlar")]
-    public int minCardsToFight = 2;       // test için 2; istersen 25 yap
-
+    public int minCardsToFight = 5;       // min kart sayısı (örneğin 5) yoksa savaş başlatılamaz
     private int selectedDeckIndex = -1;   // 0..4
 
     void Awake()

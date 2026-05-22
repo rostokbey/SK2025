@@ -12,45 +12,51 @@ using UnityEngine.UI;
 
 public class LobbyUIManager : MonoBehaviour
 {
-    [Header("UI")]
+    [Header("Ana Butonlar")]
     [SerializeField] private Button hostButton;
     [SerializeField] private Button joinButton;
+
+    [Header("Join Alanı")]
     [SerializeField] private TMP_InputField joinCodeInput;
 
-    [Header("Optional")]
-    [SerializeField] private JoinCodeUI joinCodeUI;
-    [SerializeField] private SceneUIController sceneUIController;
-
-    [Header("Battle Room")]
+    [Header("Panel Alanları")]
+    [SerializeField] private GameObject joinCodePanel;
     [SerializeField] private GameObject battleRoomPanel;
+    [SerializeField] private GameObject matchButtonsPanel;
+
+    [Header("Kod UI")]
+    [SerializeField] private JoinCodeUI joinCodeUI;
+
+    [Header("Battle Room Yazıları")]
     [SerializeField] private TMP_Text hostNameText;
     [SerializeField] private TMP_Text clientNameText;
     [SerializeField] private TMP_Text hostTeamText;
     [SerializeField] private TMP_Text clientTeamText;
 
-    [Header("Match Buttons")]
-    [SerializeField] private GameObject matchButtonsPanel;
-
     [Header("Relay")]
-    [Tooltip("Host hariç bağlanabilecek maksimum oyuncu sayısı. 1v1 için 1, 2v2 için 3, 3v3 için 5.")]
     [SerializeField] private int maxConnections = 5;
 
-    private UnityTransport _transport;
-    private static bool _servicesInitialized = false;
+    private UnityTransport transport;
+    private static bool servicesInitialized = false;
 
     private void Awake()
     {
-        if (hostButton)
+        if (hostButton != null)
             hostButton.onClick.AddListener(HostGame);
 
-        if (joinButton)
+        if (joinButton != null)
             joinButton.onClick.AddListener(JoinGame);
 
         if (NetworkManager.Singleton != null)
-            _transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
-        if (sceneUIController == null)
-            sceneUIController = FindObjectOfType<SceneUIController>(true);
+        SetLobbyStartState();
+    }
+
+    private void SetLobbyStartState()
+    {
+        if (joinCodePanel != null)
+            joinCodePanel.SetActive(false);
 
         if (battleRoomPanel != null)
             battleRoomPanel.SetActive(false);
@@ -74,13 +80,14 @@ public class LobbyUIManager : MonoBehaviour
             RelayServerData relayServerData =
                 new RelayServerData(allocation, "dtls");
 
-            _transport.SetRelayServerData(relayServerData);
+            transport.SetRelayServerData(relayServerData);
 
             NetworkManager.Singleton.StartHost();
 
-            Debug.Log($"[Lobby] Host started. JoinCode = {joinCode}");
-
             joinCodeUI?.SetCode(joinCode);
+
+            if (joinCodePanel != null)
+                joinCodePanel.SetActive(true);
 
             if (battleRoomPanel != null)
                 battleRoomPanel.SetActive(true);
@@ -88,21 +95,13 @@ public class LobbyUIManager : MonoBehaviour
             if (matchButtonsPanel != null)
                 matchButtonsPanel.SetActive(true);
 
-            if (hostNameText != null)
-                hostNameText.text = GetTemporaryPlayerName();
+            SetRoomTexts(true);
 
-            if (clientNameText != null)
-                clientNameText.text = "Oyuncu bekleniyor...";
-
-            if (hostTeamText != null)
-                hostTeamText.text = "A Takımı";
-
-            if (clientTeamText != null)
-                clientTeamText.text = "B Takımı";
+            Debug.Log("[Lobby] Host başladı. Join Code: " + joinCode);
         }
         catch (Exception e)
         {
-            Debug.LogError("[Lobby] HostGame error: " + e);
+            Debug.LogError("[Lobby] HostGame hata: " + e);
         }
     }
 
@@ -112,10 +111,9 @@ public class LobbyUIManager : MonoBehaviour
         {
             await EnsureUnityServices();
 
-            string joinCode =
-                (joinCodeInput ? joinCodeInput.text : "")
-                .Trim()
-                .ToUpperInvariant();
+            string joinCode = joinCodeInput != null
+                ? joinCodeInput.text.Trim().ToUpperInvariant()
+                : "";
 
             if (string.IsNullOrEmpty(joinCode))
             {
@@ -129,88 +127,73 @@ public class LobbyUIManager : MonoBehaviour
             RelayServerData relayServerData =
                 new RelayServerData(joinAllocation, "dtls");
 
-            _transport.SetRelayServerData(relayServerData);
+            transport.SetRelayServerData(relayServerData);
 
             NetworkManager.Singleton.StartClient();
 
-            Debug.Log($"[Lobby] Joined game with code: {joinCode}");
-
             joinCodeUI?.SetCode(joinCode);
+
+            if (joinCodePanel != null)
+                joinCodePanel.SetActive(false);
 
             if (battleRoomPanel != null)
                 battleRoomPanel.SetActive(true);
 
-            // Client savaş başlatamaz, sadece host başlatır.
             if (matchButtonsPanel != null)
                 matchButtonsPanel.SetActive(false);
 
-            if (hostNameText != null)
-                hostNameText.text = "Host";
+            SetRoomTexts(false);
 
-            if (clientNameText != null)
-                clientNameText.text = GetTemporaryPlayerName();
-
-            if (hostTeamText != null)
-                hostTeamText.text = "A Takımı";
-
-            if (clientTeamText != null)
-                clientTeamText.text = "B Takımı";
+            Debug.Log("[Lobby] Join başarılı. Kod: " + joinCode);
         }
         catch (Exception e)
         {
-            Debug.LogError("[Lobby] JoinGame error: " + e);
+            Debug.LogError("[Lobby] JoinGame hata: " + e);
         }
+    }
+
+    private void SetRoomTexts(bool isHost)
+    {
+        if (hostNameText != null)
+            hostNameText.text = isHost ? GetTemporaryPlayerName() : "Host";
+
+        if (clientNameText != null)
+            clientNameText.text = isHost ? "Oyuncu bekleniyor..." : GetTemporaryPlayerName();
+
+        if (hostTeamText != null)
+            hostTeamText.text = "A Takımı";
+
+        if (clientTeamText != null)
+            clientTeamText.text = "B Takımı";
     }
 
     public void ClearJoinCodeUI()
     {
         joinCodeUI?.Clear();
 
+        if (joinCodePanel != null)
+            joinCodePanel.SetActive(false);
+
         if (battleRoomPanel != null)
             battleRoomPanel.SetActive(false);
 
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
-
-        if (hostNameText != null)
-            hostNameText.text = "";
-
-        if (clientNameText != null)
-            clientNameText.text = "";
-
-        if (hostTeamText != null)
-            hostTeamText.text = "";
-
-        if (clientTeamText != null)
-            clientTeamText.text = "";
     }
 
     private async System.Threading.Tasks.Task EnsureUnityServices()
     {
-        if (_servicesInitialized)
+        if (servicesInitialized)
             return;
 
-        try
-        {
-            await UnityServices.InitializeAsync();
+        await UnityServices.InitializeAsync();
 
-            Debug.Log("[UnityServices] Initialized");
+        if (!AuthenticationService.Instance.IsSignedIn)
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
-            if (!AuthenticationService.Instance.IsSignedIn)
-            {
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        servicesInitialized = true;
 
-                Debug.Log("[Auth] Signed in anonymously");
-                Debug.Log("[Auth] PlayerID: " +
-                          AuthenticationService.Instance.PlayerId);
-            }
-
-            _servicesInitialized = true;
-        }
-        catch (Exception e)
-        {
-            Debug.LogError("[UnityServices] Init/Auth error: " + e);
-        }
+        Debug.Log("[UnityServices] Hazır.");
     }
 
     private string GetTemporaryPlayerName()
