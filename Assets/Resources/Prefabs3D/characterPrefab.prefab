@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 9161159168929569340}
   - component: {fileID: 8208630541506225249}
   - component: {fileID: 8587432174379877274}
+  - component: {fileID: -7022411306185991037}
   m_Layer: 0
   m_Name: characterPrefab
   m_TagString: Untagged
@@ -216,3 +217,17 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-7022411306185991037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4555510525080602152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fd3ea65099b9b44bb3fc7ecb74ccdf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterPrefabSetup
+  sourceFolder: Assets/Resources/Prefabs3D
+  applyScaleFix: 1

@@ -754,11 +754,11 @@ public class BattleManager : NetworkBehaviour
         }
 
         Vector3 spawnPos = isPlayer
-            ? position + new Vector3(0f, 0f, -50f)
+            ? position + new Vector3(0f, 108f, -50f)
             : position + new Vector3(0f, 0f, -90f);
 
         Quaternion spawnRot = isPlayer
-            ? Quaternion.Euler(-30f, 0f, 0f)
+            ? Quaternion.Euler(0f, 0f, 0f)
             : Quaternion.Euler(50f, 180f, 0f);
 
         var obj = Instantiate(prefabToUse, spawnPos, spawnRot);
@@ -782,11 +782,11 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"✅ {card.cardName} spawn edildi → {(isPlayer ? "Oyuncu" : "Düşman")} bölgesi");
 
         // ✅ Oyuncu kart koyduysa karşı tarafa otomatik 1 düşman koy
-        if (isPlayer)
-        {
-            SpawnRandomEnemyFromDeck();
-        }
-
+        //if (isPlayer)
+        //{
+       //     SpawnRandomEnemyFromDeck();
+       // }
+       // Elindeki kart kullandıktan sonra kaybolur
         PlacementResultClientRpc(true, new ClientRpcParams
         {
             Send = new ClientRpcSendParams
