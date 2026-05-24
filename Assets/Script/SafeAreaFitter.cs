@@ -27,11 +27,21 @@ public class SafeAreaFitter : MonoBehaviour
 
         Vector2 min = sa.position;
         Vector2 max = sa.position + sa.size;
-        min.x /= Screen.width; min.y /= Screen.height;
-        max.x /= Screen.width; max.y /= Screen.height;
+
+        // NORMALIZE
+        min.x /= Screen.width;
+        min.y /= Screen.height;
+
+        max.x /= Screen.width;
+        max.y /= Screen.height;
+
+        // 🔥 MANUEL OFFSET
+        min.y -= 0.035f; // aşağı indir
+        max.y -= 0.035f;
 
         rt.anchorMin = min;
         rt.anchorMax = max;
+
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
     }

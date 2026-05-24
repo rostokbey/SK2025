@@ -5,6 +5,8 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Globalization;
+using System.Text;
 
 
 public class BattleManager : NetworkBehaviour
@@ -674,15 +676,17 @@ public class BattleManager : NetworkBehaviour
     #endregion
 
 
+    
     [ServerRpc(RequireOwnership = false)]
-    public void SpawnCharacterAtPositionServerRpc(string cardId, Vector3 position, ServerRpcParams rpcParams = default)
+    public void SpawnCharacterAtPositionServerRpc(string cardName, Vector3 position, ServerRpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
 
-        var card = DeckManagerObject.Instance.GetCardById(cardId);
+        var card = FindCardForSpawn(cardName);
+
         if (card == null)
         {
-            Debug.LogError("Spawn edilecek kart bulunamadı: " + cardId);
+            Debug.LogError("Spawn edilecek kart bulunamadı: " + cardName);
 
             PlacementResultClientRpc(false, new ClientRpcParams
             {
@@ -694,6 +698,8 @@ public class BattleManager : NetworkBehaviour
 
             return;
         }
+
+        Debug.Log("TEST CARD => " + card.cardName + " | prefab=" + card.prefab);
 
         bool isPlayer = senderId == NetworkManager.ServerClientId;
 
@@ -753,7 +759,9 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        Vector3 spawnPos = isPlayer
+   
+
+    Vector3 spawnPos = isPlayer
             ? position + new Vector3(0f, 108f, -50f)
             : position + new Vector3(0f, 0f, -90f);
 
@@ -765,7 +773,7 @@ public class BattleManager : NetworkBehaviour
 
         var net = obj.GetComponent<NetworkObject>();
 
-        if (net && IsServer)
+        if (net != null && IsServer)
             net.Spawn();
 
         obj.transform.localScale = Vector3.one;
@@ -781,12 +789,6 @@ public class BattleManager : NetworkBehaviour
 
         Debug.Log($"✅ {card.cardName} spawn edildi → {(isPlayer ? "Oyuncu" : "Düşman")} bölgesi");
 
-        // ✅ Oyuncu kart koyduysa karşı tarafa otomatik 1 düşman koy
-        //if (isPlayer)
-        //{
-       //     SpawnRandomEnemyFromDeck();
-       // }
-       // Elindeki kart kullandıktan sonra kaybolur
         PlacementResultClientRpc(true, new ClientRpcParams
         {
             Send = new ClientRpcSendParams
@@ -794,6 +796,62 @@ public class BattleManager : NetworkBehaviour
                 TargetClientIds = new ulong[] { senderId }
             }
         });
+    }
+
+    private CardData FindCardForSpawn(string key)
+    {
+        if (DeckManagerObject.Instance == null)
+            return null;
+
+        CardData card = DeckManagerObject.Instance.GetCardById(key);
+        if (card != null)
+            return card;
+
+        string normalizedKey = NormalizeCardKey(key);
+
+        if (!string.IsNullOrEmpty(key) && key.StartsWith("CARD-"))
+        {
+            string temp = key.Replace("CARD-", "");
+            int lastDash = temp.LastIndexOf("-");
+
+            if (lastDash > 0)
+                temp = temp.Substring(0, lastDash);
+
+            normalizedKey = NormalizeCardKey(temp);
+        }
+
+        return DeckManagerObject.Instance.fullDeck.Find(c =>
+            c != null &&
+            NormalizeCardKey(c.cardName) == normalizedKey
+        );
+    }
+
+    private string NormalizeCardKey(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "";
+
+        value = value.Trim().ToLowerInvariant();
+        value = value.Replace("_", " ");
+
+        string normalized = value.Normalize(NormalizationForm.FormD);
+        StringBuilder sb = new StringBuilder();
+
+        foreach (char ch in normalized)
+        {
+            UnicodeCategory uc = CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (uc != UnicodeCategory.NonSpacingMark)
+                sb.Append(ch);
+        }
+
+        return sb.ToString()
+            .Normalize(NormalizationForm.FormC)
+            .Replace("ı", "i")
+            .Replace("ğ", "g")
+            .Replace("ü", "u")
+            .Replace("ş", "s")
+            .Replace("ö", "o")
+            .Replace("ç", "c");
     }
 
 
