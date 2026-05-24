@@ -14,6 +14,9 @@ public class DeckManagerObject : MonoBehaviour
     [Header("Veri Kaynağı")]
     public CardCollection masterCardCollection;
 
+    [Header("JSON Veri Kaynağı")]
+    public string jsonResourcePath = "CardDatabase/cards";
+
     public List<CardData> fullDeck = new List<CardData>();
     public List<CardData> currentMatchDeck = new List<CardData>();
     public List<CardData> matchDeck = new List<CardData>();
@@ -29,6 +32,54 @@ public class DeckManagerObject : MonoBehaviour
     {
         public string characterName;
         public Sprite sprite;
+    }
+
+    [System.Serializable]
+    public class CardJsonItem
+    {
+        public string id;
+        public string cardId;
+        public string cardName;
+
+        public int baseHP;
+        public int baseStr;
+        public int baseDef;
+
+        public string rarity;
+        public string ability;
+        public string passive;
+
+        public int level;
+        public int xp;
+        public int skillCooldownMax;
+
+        public string className;
+        public string race;
+        public string combo;
+
+        public string prefab;
+
+        public int damage;
+        public int heal;
+        public int duration;
+
+        public float critChance;
+        public float critDamage;
+        public float reflect;
+
+        public bool stun;
+        public bool banish;
+        public int summonCount;
+        public bool combine;
+        public bool disableAttack;
+
+        public string type;
+    }
+
+    [System.Serializable]
+    public class CardJsonDatabase
+    {
+        public List<CardJsonItem> cards;
     }
 
     public List<CharacterSprite> characterSprites = new List<CharacterSprite>();
@@ -51,6 +102,87 @@ public class DeckManagerObject : MonoBehaviour
     {
         fullDeck.Clear();
 
+        bool loadedFromJson = LoadFullDeckFromJson();
+
+        if (loadedFromJson)
+            return;
+
+        LoadFullDeckFromMasterCollection();
+    }
+
+    private bool LoadFullDeckFromJson()
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>(jsonResourcePath);
+
+        if (jsonFile == null)
+        {
+            Debug.LogWarning("⚠ JSON kart verisi bulunamadı: Resources/" + jsonResourcePath);
+            return false;
+        }
+
+        CardJsonDatabase db = JsonUtility.FromJson<CardJsonDatabase>(jsonFile.text);
+
+        if (db == null || db.cards == null || db.cards.Count == 0)
+        {
+            Debug.LogError("❌ JSON okundu ama kart listesi boş veya hatalı.");
+            return false;
+        }
+
+        foreach (var item in db.cards)
+        {
+            if (item == null || string.IsNullOrEmpty(item.id))
+                continue;
+
+            CardData card = new CardData(
+                item.id,
+                string.IsNullOrEmpty(item.cardName) ? item.id : item.cardName,
+                item.baseHP,
+                item.baseStr,
+                item.baseDef,
+                string.IsNullOrEmpty(item.rarity) ? "Common" : item.rarity,
+                item.ability,
+                item.passive,
+                item.level <= 0 ? 1 : item.level,
+                item.xp,
+                item.skillCooldownMax,
+                null,
+                null,
+                item.prefab
+            );
+
+            card.cardId = string.IsNullOrEmpty(item.cardId) ? item.id : item.cardId;
+
+            card.className = item.className;
+            card.race = item.race;
+            card.combo = item.combo;
+
+            card.damage = item.damage;
+            card.heal = item.heal;
+            card.duration = item.duration;
+
+            card.critChance = item.critChance;
+            card.critDamage = item.critDamage;
+            card.reflect = item.reflect;
+
+            card.stun = item.stun;
+            card.banish = item.banish;
+            card.summonCount = item.summonCount;
+            card.combine = item.combine;
+            card.disableAttack = item.disableAttack;
+
+            card.type = ParseCardType(item.type);
+
+            card.ResetStats();
+
+            fullDeck.Add(card);
+        }
+
+        Debug.Log("✅ JSON Master Deck Yüklendi: " + fullDeck.Count + " kart bulundu.");
+        return true;
+    }
+
+    private void LoadFullDeckFromMasterCollection()
+    {
         if (masterCardCollection == null)
         {
             Debug.LogError("!!! DeckManagerObject: Master Card Collection atanmamış! Kartlar yüklenemedi.");
@@ -66,6 +198,17 @@ public class DeckManagerObject : MonoBehaviour
         }
 
         Debug.Log("✅ Master Deck Yüklendi: " + fullDeck.Count + " kart bulundu.");
+    }
+
+    private CardData.CardType ParseCardType(string typeText)
+    {
+        if (string.IsNullOrEmpty(typeText))
+            return CardData.CardType.Attack;
+
+        if (System.Enum.TryParse(typeText, true, out CardData.CardType result))
+            return result;
+
+        return CardData.CardType.Attack;
     }
 
     private string NormalizeName(string raw)
@@ -130,14 +273,22 @@ public class DeckManagerObject : MonoBehaviour
             return null;
         }
 
-        var card = fullDeck.FirstOrDefault(c => c != null && c.id == id);
+        var card = fullDeck.FirstOrDefault(c =>
+            c != null &&
+            (c.id == id || c.cardId == id)
+        );
 
         if (card == null)
         {
             var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
 
             if (inv != null)
-                card = inv.myCards.FirstOrDefault(c => c != null && c.id == id);
+            {
+                card = inv.myCards.FirstOrDefault(c =>
+                    c != null &&
+                    (c.id == id || c.cardId == id)
+                );
+            }
         }
 
         if (card == null)

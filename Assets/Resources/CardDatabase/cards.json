@@ -1,0 +1,18 @@
+{
+  "cards": [
+    {
+      "id": "Efsanevi_Fisildayici",
+      "cardName": "Efsanevi_Fisildayici",
+      "baseHP": 100,
+      "baseStr": 25,
+      "baseDef": 10,
+      "rarity": "Legendary",
+      "ability": "Fısıltı",
+      "passive": "",
+      "level": 1,
+      "xp": 0,
+      "skillCooldownMax": 0,
+      "prefab": "Prefabs3D/Efsanevi_Fisildayici3D"
+    }
+  ]
+}

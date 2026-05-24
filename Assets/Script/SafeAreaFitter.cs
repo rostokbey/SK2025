@@ -36,8 +36,8 @@ public class SafeAreaFitter : MonoBehaviour
         max.y /= Screen.height;
 
         // 🔥 MANUEL OFFSET
-        min.y -= 0.035f; // aşağı indir
-        max.y -= 0.035f;
+        min.y -= 0.01f; // aşağı indir
+        max.y -= 0.01f;
 
         rt.anchorMin = min;
         rt.anchorMax = max;
