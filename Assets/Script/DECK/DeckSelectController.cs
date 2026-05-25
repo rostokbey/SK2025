@@ -51,31 +51,47 @@ public class DeckSelectController : MonoBehaviour
 
     public void OnClickReady()
     {
-        if (selectedDeckIndex < 0)
+        if (deckManager == null)
+            deckManager = FindObjectOfType<DeckManagerObject>();
+
+        if (deckManager == null)
         {
-            Warn("Önce bir deste seçmelisin.");
+            Warn("DeckManagerObject bulunamadı.");
             return;
         }
 
-        int count = GetDeckCount(selectedDeckIndex);
-        if (count < minCardsToFight)
+        if (selectedDeckIndex >= 0)
         {
-            Warn($"Bu destede {count} kart var. En az {minCardsToFight} olmalı.");
-            return;
+            int count = GetDeckCount(selectedDeckIndex);
+
+            if (count < minCardsToFight)
+            {
+                Warn($"Bu destede {count} kart var. En az {minCardsToFight} olmalı.");
+                return;
+            }
+
+            deckManager.SelectDeckForBattle(selectedDeckIndex);
+            Info($"✅ Deste {selectedDeckIndex + 1} kaydedildi. Savaşa hazırsın!");
         }
-
-        // Seçilen desteyi maç için kaydet
-        deckManager.SelectDeckForBattle(selectedDeckIndex);
-        Info($"✅ Deste {selectedDeckIndex + 1} kaydedildi. Savaşa hazırsın!");
-
-        if (seasonModeDialog != null)
+        else if (deckManager.currentMatchDeck != null &&
+                 deckManager.currentMatchDeck.Count >= minCardsToFight)
         {
-            seasonModeDialog.Open();
+            Info($"✅ Hazır seçili deste bulundu. Kart sayısı: {deckManager.currentMatchDeck.Count}");
         }
         else
         {
-            Warn("SeasonModeDialog atanmadı.");
+            int currentCount = deckManager.currentMatchDeck != null
+                ? deckManager.currentMatchDeck.Count
+                : 0;
+
+            Warn($"Önce bir deste seçmelisin. Mevcut seçili kart: {currentCount}/{minCardsToFight}");
+            return;
         }
+
+        if (seasonModeDialog != null)
+            seasonModeDialog.Open();
+        else
+            Warn("SeasonModeDialog atanmadı.");
     }
 
     private int GetDeckCount(int idx)

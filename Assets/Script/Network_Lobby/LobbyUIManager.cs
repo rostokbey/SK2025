@@ -9,6 +9,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class LobbyUIManager : MonoBehaviour
 {
@@ -24,14 +25,12 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private GameObject battleRoomPanel;
     [SerializeField] private GameObject matchButtonsPanel;
 
+    [Header("Battle Start")]
+    [SerializeField] private Button startBattleButton;
+    [SerializeField] private string battleSceneName = "BattleScene";
+
     [Header("Kod UI")]
     [SerializeField] private JoinCodeUI joinCodeUI;
-
-    [Header("Battle Room Yazıları")]
-    [SerializeField] private TMP_Text hostNameText;
-    [SerializeField] private TMP_Text clientNameText;
-    [SerializeField] private TMP_Text hostTeamText;
-    [SerializeField] private TMP_Text clientTeamText;
 
     [Header("Warning UI")]
     [SerializeField] private TMP_Text warningText;
@@ -50,6 +49,9 @@ public class LobbyUIManager : MonoBehaviour
         if (joinButton != null)
             joinButton.onClick.AddListener(JoinGame);
 
+        if (startBattleButton != null)
+            startBattleButton.onClick.AddListener(StartBattleFromLobby);
+
         if (NetworkManager.Singleton != null)
             transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
@@ -66,6 +68,9 @@ public class LobbyUIManager : MonoBehaviour
 
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
+
+        if (startBattleButton != null)
+            startBattleButton.gameObject.SetActive(false);
 
         ShowWarning("");
     }
@@ -103,7 +108,8 @@ public class LobbyUIManager : MonoBehaviour
             if (matchButtonsPanel != null)
                 matchButtonsPanel.SetActive(true);
 
-            SetRoomTexts(true);
+            if (startBattleButton != null)
+                startBattleButton.gameObject.SetActive(true);
 
             Debug.Log("[Lobby] Host başladı. Join Code: " + joinCode);
         }
@@ -154,7 +160,8 @@ public class LobbyUIManager : MonoBehaviour
             if (matchButtonsPanel != null)
                 matchButtonsPanel.SetActive(false);
 
-            SetRoomTexts(false);
+            if (startBattleButton != null)
+                startBattleButton.gameObject.SetActive(false);
 
             Debug.Log("[Lobby] Join başarılı. Kod: " + joinCode);
         }
@@ -162,6 +169,27 @@ public class LobbyUIManager : MonoBehaviour
         {
             ShowWarning("Oyuna katılım başarısız.");
             Debug.LogError("[Lobby] JoinGame hata: " + e);
+        }
+    }
+
+    private void StartBattleFromLobby()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
+        {
+            ShowWarning("Savaşı sadece host başlatabilir.");
+            return;
+        }
+
+        if (NetworkManager.Singleton.SceneManager != null)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(
+                battleSceneName,
+                LoadSceneMode.Single
+            );
+        }
+        else
+        {
+            SceneManager.LoadScene(battleSceneName);
         }
     }
 
@@ -177,15 +205,11 @@ public class LobbyUIManager : MonoBehaviour
         }
 
         var selectedDeck = deckManager.GetSelectedCards();
-
         int count = selectedDeck != null ? selectedDeck.Count : 0;
 
         if (count < 5)
         {
-            ShowWarning(
-                $"Maça girmek için en az 5 kart gerekli. Şu an: {count}/5"
-            );
-
+            ShowWarning($"Maça girmek için en az 5 kart gerekli. Şu an: {count}/5");
             return false;
         }
 
@@ -195,25 +219,11 @@ public class LobbyUIManager : MonoBehaviour
 
     private void ShowWarning(string message)
     {
-        Debug.LogWarning(message);
+        if (!string.IsNullOrEmpty(message))
+            Debug.LogWarning(message);
 
         if (warningText != null)
             warningText.text = message;
-    }
-
-    private void SetRoomTexts(bool isHost)
-    {
-        if (hostNameText != null)
-            hostNameText.text = isHost ? GetTemporaryPlayerName() : "Host";
-
-        if (clientNameText != null)
-            clientNameText.text = isHost ? "Oyuncu bekleniyor..." : GetTemporaryPlayerName();
-
-        if (hostTeamText != null)
-            hostTeamText.text = "A Takımı";
-
-        if (clientTeamText != null)
-            clientTeamText.text = "B Takımı";
     }
 
     public void ClearJoinCodeUI()
@@ -228,6 +238,9 @@ public class LobbyUIManager : MonoBehaviour
 
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
+
+        if (startBattleButton != null)
+            startBattleButton.gameObject.SetActive(false);
 
         ShowWarning("");
     }
@@ -245,18 +258,5 @@ public class LobbyUIManager : MonoBehaviour
         servicesInitialized = true;
 
         Debug.Log("[UnityServices] Hazır.");
-    }
-
-    private string GetTemporaryPlayerName()
-    {
-        string playerId = AuthenticationService.Instance.PlayerId;
-
-        if (string.IsNullOrEmpty(playerId))
-            return "Player000000";
-
-        int hash = Mathf.Abs(playerId.GetHashCode());
-        int number = hash % 1000000;
-
-        return "Player" + number.ToString("000000");
     }
 }
