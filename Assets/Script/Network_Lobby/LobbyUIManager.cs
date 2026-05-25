@@ -24,6 +24,7 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private GameObject joinCodePanel;
     [SerializeField] private GameObject battleRoomPanel;
     [SerializeField] private GameObject matchButtonsPanel;
+    [SerializeField] private GameObject teamPanel;
 
     [Header("Battle Start")]
     [SerializeField] private Button startBattleButton;
@@ -44,7 +45,7 @@ public class LobbyUIManager : MonoBehaviour
     private void Awake()
     {
         if (hostButton != null)
-            hostButton.onClick.AddListener(HostGame);
+            hostButton.onClick.AddListener(OpenMatchSizeSelection);
 
         if (joinButton != null)
             joinButton.onClick.AddListener(JoinGame);
@@ -68,6 +69,29 @@ public class LobbyUIManager : MonoBehaviour
 
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
+
+        if (startBattleButton != null)
+            startBattleButton.gameObject.SetActive(false);
+
+        ShowWarning("");
+    }
+
+    public void OpenMatchSizeSelection()
+    {
+        if (battleRoomPanel != null)
+            battleRoomPanel.SetActive(true);
+
+        if (matchButtonsPanel != null)
+            matchButtonsPanel.SetActive(true);
+
+        if (joinCodePanel != null)
+            joinCodePanel.SetActive(false);
+
+        if (hostButton != null)
+            hostButton.gameObject.SetActive(false);
+
+        if (joinButton != null)
+            joinButton.gameObject.SetActive(false);
 
         if (startBattleButton != null)
             startBattleButton.gameObject.SetActive(false);
@@ -105,11 +129,14 @@ public class LobbyUIManager : MonoBehaviour
             if (battleRoomPanel != null)
                 battleRoomPanel.SetActive(true);
 
+            if (teamPanel != null)
+                teamPanel.SetActive(true);
+
             if (matchButtonsPanel != null)
                 matchButtonsPanel.SetActive(true);
 
-            if (startBattleButton != null)
-                startBattleButton.gameObject.SetActive(true);
+            RefreshStartBattleButton();
+
 
             Debug.Log("[Lobby] Host başladı. Join Code: " + joinCode);
         }
@@ -157,6 +184,9 @@ public class LobbyUIManager : MonoBehaviour
             if (battleRoomPanel != null)
                 battleRoomPanel.SetActive(true);
 
+            if (teamPanel != null)
+                teamPanel.SetActive(true);
+
             if (matchButtonsPanel != null)
                 matchButtonsPanel.SetActive(false);
 
@@ -180,6 +210,18 @@ public class LobbyUIManager : MonoBehaviour
             return;
         }
 
+        if (LobbyTeamManager.Instance == null || !LobbyTeamManager.Instance.AreTeamsReady())
+        {
+            ShowWarning("Savaş başlatılamaz. İki takım da dolu olmalı.");
+            return;
+        }
+
+        if (!LobbyTeamManager.Instance.AreAllPlayersReady())
+        {
+            ShowWarning("Savaş başlatılamaz. Tüm oyuncular Ready olmalı.");
+            return;
+        }
+
         if (NetworkManager.Singleton.SceneManager != null)
         {
             NetworkManager.Singleton.SceneManager.LoadScene(
@@ -191,6 +233,22 @@ public class LobbyUIManager : MonoBehaviour
         {
             SceneManager.LoadScene(battleSceneName);
         }
+    }
+
+    public void RefreshStartBattleButton()
+    {
+        if (startBattleButton == null)
+            return;
+
+        bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+        bool canStart =
+            isHost &&
+            LobbyTeamManager.Instance != null &&
+            LobbyTeamManager.Instance.AreTeamsReady() &&
+            LobbyTeamManager.Instance.AreAllPlayersReady();
+
+        startBattleButton.gameObject.SetActive(isHost);
+        startBattleButton.interactable = canStart;
     }
 
     private bool HasEnoughCardsForBattle()
@@ -215,6 +273,41 @@ public class LobbyUIManager : MonoBehaviour
 
         ShowWarning("");
         return true;
+    }
+
+    public void LeaveRoom()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsClient)
+                NetworkManager.Singleton.Shutdown();
+        }
+
+        if (joinCodeUI != null)
+            joinCodeUI.Clear();
+
+        if (joinCodePanel != null)
+            joinCodePanel.SetActive(false);
+
+        if (battleRoomPanel != null)
+            battleRoomPanel.SetActive(false);
+
+        if (teamPanel != null)
+            teamPanel.SetActive(false);
+
+        if (matchButtonsPanel != null)
+            matchButtonsPanel.SetActive(false);
+
+        if (startBattleButton != null)
+            startBattleButton.gameObject.SetActive(false);
+
+        if (hostButton != null)
+            hostButton.gameObject.SetActive(true);
+
+        if (joinButton != null)
+            joinButton.gameObject.SetActive(true);
+
+        ShowWarning("");
     }
 
     private void ShowWarning(string message)

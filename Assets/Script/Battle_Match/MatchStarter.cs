@@ -10,13 +10,23 @@ public class MatchStarter : MonoBehaviour
     [Header("Köprü")]
     public BattleStartAdapter adapter; // Inspector’dan bağla
 
+    public LobbyUIManager lobbyUIManager;
+    public LobbyTeamManager lobbyTeamManager;
+
     public static bool LastMatchWasSeason { get; private set; }
     public static int LastMatchTeamSize { get; private set; }
 
     void Awake()
     {
-        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
-        else { Destroy(gameObject); }
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     /// <param name="teamSize">1 / 2 / 3</param>
@@ -38,7 +48,37 @@ public class MatchStarter : MonoBehaviour
             return;
         }
 
-        adapter.StartMatch(LastMatchTeamSize, LastMatchWasSeason);
+        if (lobbyTeamManager != null)
+        {
+            lobbyTeamManager.SetMaxPlayersPerTeam(LastMatchTeamSize);
+        }
+
+        if (lobbyUIManager != null)
+        {
+            lobbyUIManager.HostGame();
+        }
+        else
+        {
+            Debug.LogError("[MatchStarter] LobbyUIManager atanmadı.");
+        }
+
         Debug.Log($"[MatchStarter] Start → teamSize={LastMatchTeamSize}, season={LastMatchWasSeason}");
+    }
+
+    // ===== CASUAL BUTTONS =====
+
+    public void StartCasual1v1()
+    {
+        StartMatch(1, false);
+    }
+
+    public void StartCasual2v2()
+    {
+        StartMatch(2, false);
+    }
+
+    public void StartCasual3v3()
+    {
+        StartMatch(3, false);
     }
 }

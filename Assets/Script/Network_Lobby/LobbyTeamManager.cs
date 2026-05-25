@@ -18,9 +18,11 @@ public class LobbyTeamManager : NetworkBehaviour
 
     [Header("Buttons")]
     public Button switchTeamButton;
+    public Button readyButton;
 
     private readonly List<string> ayPlayers = new();
     private readonly List<string> kanPlayers = new();
+    private readonly Dictionary<ulong, bool> readyStates = new();
 
     private void Awake()
     {
@@ -31,6 +33,9 @@ public class LobbyTeamManager : NetworkBehaviour
     {
         if (switchTeamButton != null)
             switchTeamButton.onClick.AddListener(SwitchLocalPlayerTeam);
+
+        if (readyButton != null)
+            readyButton.onClick.AddListener(ToggleLocalReady);
     }
 
     public override void OnNetworkSpawn()
@@ -46,7 +51,7 @@ public class LobbyTeamManager : NetworkBehaviour
         maxPlayersPerTeam = Mathf.Max(1, value);
 
         if (IsServer)
-            SyncTeamsClientRpc(string.Join("|", ayPlayers), string.Join("|", kanPlayers), maxPlayersPerTeam);
+            SyncTeams();
         else if (IsClient)
             SetMaxPlayersPerTeamServerRpc(maxPlayersPerTeam);
     }
@@ -55,7 +60,7 @@ public class LobbyTeamManager : NetworkBehaviour
     private void SetMaxPlayersPerTeamServerRpc(int value)
     {
         maxPlayersPerTeam = Mathf.Max(1, value);
-        SyncTeamsClientRpc(string.Join("|", ayPlayers), string.Join("|", kanPlayers), maxPlayersPerTeam);
+        SyncTeams();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -74,7 +79,9 @@ public class LobbyTeamManager : NetworkBehaviour
         else
             Debug.LogWarning("[LobbyTeam] Takımlar dolu.");
 
-        SyncTeamsClientRpc(string.Join("|", ayPlayers), string.Join("|", kanPlayers), maxPlayersPerTeam);
+        readyStates[clientId] = false;
+
+        SyncTeams();
     }
 
     public void SwitchLocalPlayerTeam()
@@ -105,12 +112,13 @@ public class LobbyTeamManager : NetworkBehaviour
         {
             if (kanPlayers.Count >= maxPlayersPerTeam)
             {
-                SyncTeamsClientRpc(string.Join("|", ayPlayers), string.Join("|", kanPlayers), maxPlayersPerTeam);
+                SyncTeams();
                 return;
             }
 
             ayPlayers.Remove(foundPlayer);
             kanPlayers.Add(foundPlayer);
+            readyStates[clientId] = false;
         }
         else
         {
@@ -127,25 +135,85 @@ public class LobbyTeamManager : NetworkBehaviour
             {
                 if (ayPlayers.Count >= maxPlayersPerTeam)
                 {
-                    SyncTeamsClientRpc(string.Join("|", ayPlayers), string.Join("|", kanPlayers), maxPlayersPerTeam);
+                    SyncTeams();
                     return;
                 }
 
                 kanPlayers.Remove(foundPlayer);
                 ayPlayers.Add(foundPlayer);
+                readyStates[clientId] = false;
             }
         }
 
-        SyncTeamsClientRpc(string.Join("|", ayPlayers), string.Join("|", kanPlayers), maxPlayersPerTeam);
+        SyncTeams();
+    }
+
+    public void ToggleLocalReady()
+    {
+        if (!IsClient) return;
+
+        ToggleReadyServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ToggleReadyServerRpc(ServerRpcParams rpcParams = default)
+    {
+        ulong clientId = rpcParams.Receive.SenderClientId;
+
+        bool current = readyStates.ContainsKey(clientId) && readyStates[clientId];
+        readyStates[clientId] = !current;
+
+        SyncTeams();
+    }
+
+    public bool AreTeamsReady()
+    {
+        return ayPlayers.Count >= maxPlayersPerTeam &&
+               kanPlayers.Count >= maxPlayersPerTeam;
+    }
+
+    public bool AreAllPlayersReady()
+    {
+        if (!AreTeamsReady())
+            return false;
+
+        foreach (string player in ayPlayers)
+        {
+            ulong id = ExtractClientId(player);
+            if (!readyStates.ContainsKey(id) || !readyStates[id])
+                return false;
+        }
+
+        foreach (string player in kanPlayers)
+        {
+            ulong id = ExtractClientId(player);
+            if (!readyStates.ContainsKey(id) || !readyStates[id])
+                return false;
+        }
+
+        return true;
+    }
+
+    private void SyncTeams()
+    {
+        string readyData = BuildReadyData();
+
+        SyncTeamsClientRpc(
+            string.Join("|", ayPlayers),
+            string.Join("|", kanPlayers),
+            readyData,
+            maxPlayersPerTeam
+        );
     }
 
     [ClientRpc]
-    private void SyncTeamsClientRpc(string ayTeamData, string kanTeamData, int teamLimit)
+    private void SyncTeamsClientRpc(string ayTeamData, string kanTeamData, string readyData, int teamLimit)
     {
         maxPlayersPerTeam = Mathf.Max(1, teamLimit);
 
         ayPlayers.Clear();
         kanPlayers.Clear();
+        readyStates.Clear();
 
         if (!string.IsNullOrEmpty(ayTeamData))
             ayPlayers.AddRange(ayTeamData.Split('|'));
@@ -153,7 +221,14 @@ public class LobbyTeamManager : NetworkBehaviour
         if (!string.IsNullOrEmpty(kanTeamData))
             kanPlayers.AddRange(kanTeamData.Split('|'));
 
+        ParseReadyData(readyData);
+
         RefreshUI();
+        UpdateReadyButtonText();
+
+        LobbyUIManager lobby = FindObjectOfType<LobbyUIManager>(true);
+        if (lobby != null)
+            lobby.RefreshStartBattleButton();
     }
 
     private void RefreshUI()
@@ -176,7 +251,12 @@ public class LobbyTeamManager : NetworkBehaviour
 
         TMP_Text text = row.GetComponentInChildren<TMP_Text>();
         if (text != null)
-            text.text = playerName;
+        {
+            ulong id = ExtractClientId(playerName);
+            bool isReady = readyStates.ContainsKey(id) && readyStates[id];
+
+            text.text = $"{playerName} {(isReady ? "✅" : "⏳")}";
+        }
     }
 
     private void ClearContent(Transform content)
@@ -185,6 +265,66 @@ public class LobbyTeamManager : NetworkBehaviour
 
         for (int i = content.childCount - 1; i >= 0; i--)
             Destroy(content.GetChild(i).gameObject);
+    }
+
+    private string BuildReadyData()
+    {
+        List<string> parts = new();
+
+        foreach (var pair in readyStates)
+            parts.Add($"{pair.Key}:{(pair.Value ? 1 : 0)}");
+
+        return string.Join("|", parts);
+    }
+
+    private void ParseReadyData(string readyData)
+    {
+        if (string.IsNullOrEmpty(readyData))
+            return;
+
+        string[] parts = readyData.Split('|');
+
+        foreach (string part in parts)
+        {
+            string[] split = part.Split(':');
+
+            if (split.Length != 2)
+                continue;
+
+            if (ulong.TryParse(split[0], out ulong clientId))
+            {
+                readyStates[clientId] = split[1] == "1";
+            }
+        }
+    }
+
+    private ulong ExtractClientId(string playerName)
+    {
+        int start = playerName.LastIndexOf('(');
+        int end = playerName.LastIndexOf(')');
+
+        if (start < 0 || end < 0 || end <= start)
+            return 999999;
+
+        string idText = playerName.Substring(start + 1, end - start - 1);
+
+        if (ulong.TryParse(idText, out ulong id))
+            return id;
+
+        return 999999;
+    }
+
+    private void UpdateReadyButtonText()
+    {
+        if (readyButton == null || NetworkManager.Singleton == null)
+            return;
+
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+        bool isReady = readyStates.ContainsKey(localId) && readyStates[localId];
+
+        TMP_Text text = readyButton.GetComponentInChildren<TMP_Text>();
+        if (text != null)
+            text.text = isReady ? "READY ✅" : "READY";
     }
 
     private string GetTemporaryLocalName()
