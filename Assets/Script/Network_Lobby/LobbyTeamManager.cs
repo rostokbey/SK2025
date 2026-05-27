@@ -86,6 +86,9 @@ public class LobbyTeamManager : NetworkBehaviour
 
     public void SwitchLocalPlayerTeam()
     {
+        if (AreAllPlayersReady())
+            return;
+
         if (!IsClient) return;
 
         SwitchTeamServerRpc();
@@ -225,6 +228,7 @@ public class LobbyTeamManager : NetworkBehaviour
 
         RefreshUI();
         UpdateReadyButtonText();
+        UpdateSwitchTeamButtonState();
 
         LobbyUIManager lobby = FindObjectOfType<LobbyUIManager>(true);
         if (lobby != null)
@@ -255,7 +259,10 @@ public class LobbyTeamManager : NetworkBehaviour
             ulong id = ExtractClientId(playerName);
             bool isReady = readyStates.ContainsKey(id) && readyStates[id];
 
-            text.text = $"{playerName} {(isReady ? "✅" : "⏳")}";
+            bool isHostPlayer = id == 0;
+            string hostIcon = isHostPlayer ? " 👑" : "";
+
+            text.text = $"{playerName}{hostIcon} {(isReady ? "✅" : "⏳")}";
         }
     }
 
@@ -324,7 +331,17 @@ public class LobbyTeamManager : NetworkBehaviour
 
         TMP_Text text = readyButton.GetComponentInChildren<TMP_Text>();
         if (text != null)
-            text.text = isReady ? "READY ✅" : "READY";
+            text.text = isReady ? "HAZIR ✅" : "HAZIR OL";
+    }
+
+    private void UpdateSwitchTeamButtonState()
+    {
+        if (switchTeamButton == null)
+            return;
+
+        bool allReady = AreAllPlayersReady();
+
+        switchTeamButton.interactable = !allReady;
     }
 
     private string GetTemporaryLocalName()

@@ -39,8 +39,13 @@ public class LobbyUIManager : MonoBehaviour
     [Header("Relay")]
     [SerializeField] private int maxConnections = 5;
 
+    [Header("Countdown UI")]
+    [SerializeField] private TMP_Text countdownText;
+
     private UnityTransport transport;
     private static bool servicesInitialized = false;
+
+    private bool isStartingBattle = false;
 
     private void Awake()
     {
@@ -178,6 +183,12 @@ public class LobbyUIManager : MonoBehaviour
 
             joinCodeUI?.SetCode(joinCode);
 
+            if (hostButton != null)
+                hostButton.gameObject.SetActive(false);
+
+            if (joinButton != null)
+                joinButton.gameObject.SetActive(false);
+
             if (joinCodePanel != null)
                 joinCodePanel.SetActive(false);
 
@@ -204,6 +215,9 @@ public class LobbyUIManager : MonoBehaviour
 
     private void StartBattleFromLobby()
     {
+        if (isStartingBattle)
+            return;
+
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsHost)
         {
             ShowWarning("Savaşı sadece host başlatabilir.");
@@ -218,9 +232,42 @@ public class LobbyUIManager : MonoBehaviour
 
         if (!LobbyTeamManager.Instance.AreAllPlayersReady())
         {
-            ShowWarning("Savaş başlatılamaz. Tüm oyuncular Ready olmalı.");
+            ShowWarning("Savaş başlatılamaz. Tüm oyuncular hazır olmalı.");
             return;
         }
+
+        isStartingBattle = true;
+
+        if (startBattleButton != null)
+            startBattleButton.interactable = false;
+
+        StartCoroutine(StartBattleCountdown());
+    }
+
+    private System.Collections.IEnumerator StartBattleCountdown()
+    {
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(true);
+            countdownText.text = "3";
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        if (countdownText != null)
+            countdownText.text = "2";
+
+        yield return new WaitForSeconds(1f);
+
+        if (countdownText != null)
+            countdownText.text = "1";
+
+        yield return new WaitForSeconds(1f);
+
+        if (countdownText != null)
+            countdownText.text = "SAVAŞ!";
+
+        yield return new WaitForSeconds(0.5f);
 
         if (NetworkManager.Singleton.SceneManager != null)
         {
@@ -277,6 +324,14 @@ public class LobbyUIManager : MonoBehaviour
 
     public void LeaveRoom()
     {
+        isStartingBattle = false;
+
+        if (countdownText != null)
+        {
+            countdownText.text = "";
+            countdownText.gameObject.SetActive(false);
+        }
+
         if (NetworkManager.Singleton != null)
         {
             if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsClient)
@@ -306,6 +361,8 @@ public class LobbyUIManager : MonoBehaviour
 
         if (joinButton != null)
             joinButton.gameObject.SetActive(true);
+
+
 
         ShowWarning("");
     }
@@ -337,6 +394,7 @@ public class LobbyUIManager : MonoBehaviour
 
         ShowWarning("");
     }
+
 
     private async System.Threading.Tasks.Task EnsureUnityServices()
     {
