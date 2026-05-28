@@ -42,8 +42,25 @@ public class LobbyTeamManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+        if (IsServer && NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientDisconnectCallback += HandleClientDisconnected;
+
         if (IsClient)
             SubmitPlayerToLobbyServerRpc(GetTemporaryLocalName());
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (IsServer && NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
+
+        base.OnNetworkDespawn();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     public void SetMaxPlayersPerTeam(int value)
@@ -84,12 +101,32 @@ public class LobbyTeamManager : NetworkBehaviour
         SyncTeams();
     }
 
+    private void HandleClientDisconnected(ulong clientId)
+    {
+        if (!IsServer)
+            return;
+
+        RemovePlayerByClientId(clientId);
+        readyStates.Remove(clientId);
+
+        SyncTeams();
+    }
+
+    private void RemovePlayerByClientId(ulong clientId)
+    {
+        string suffix = $"({clientId})";
+
+        ayPlayers.RemoveAll(player => player.EndsWith(suffix));
+        kanPlayers.RemoveAll(player => player.EndsWith(suffix));
+    }
+
     public void SwitchLocalPlayerTeam()
     {
         if (AreAllPlayersReady())
             return;
 
-        if (!IsClient) return;
+        if (!IsClient)
+            return;
 
         SwitchTeamServerRpc();
     }
@@ -153,7 +190,8 @@ public class LobbyTeamManager : NetworkBehaviour
 
     public void ToggleLocalReady()
     {
-        if (!IsClient) return;
+        if (!IsClient)
+            return;
 
         ToggleReadyServerRpc();
     }
@@ -183,6 +221,7 @@ public class LobbyTeamManager : NetworkBehaviour
         foreach (string player in ayPlayers)
         {
             ulong id = ExtractClientId(player);
+
             if (!readyStates.ContainsKey(id) || !readyStates[id])
                 return false;
         }
@@ -190,6 +229,7 @@ public class LobbyTeamManager : NetworkBehaviour
         foreach (string player in kanPlayers)
         {
             ulong id = ExtractClientId(player);
+
             if (!readyStates.ContainsKey(id) || !readyStates[id])
                 return false;
         }
@@ -231,6 +271,7 @@ public class LobbyTeamManager : NetworkBehaviour
         UpdateSwitchTeamButtonState();
 
         LobbyUIManager lobby = FindObjectOfType<LobbyUIManager>(true);
+
         if (lobby != null)
             lobby.RefreshStartBattleButton();
     }
@@ -249,11 +290,13 @@ public class LobbyTeamManager : NetworkBehaviour
 
     private void CreatePlayerRow(Transform parent, string playerName)
     {
-        if (parent == null || playerRowPrefab == null) return;
+        if (parent == null || playerRowPrefab == null)
+            return;
 
         GameObject row = Instantiate(playerRowPrefab, parent);
 
         TMP_Text text = row.GetComponentInChildren<TMP_Text>();
+
         if (text != null)
         {
             ulong id = ExtractClientId(playerName);
@@ -261,14 +304,16 @@ public class LobbyTeamManager : NetworkBehaviour
 
             bool isHostPlayer = id == 0;
             string hostIcon = isHostPlayer ? " 👑" : "";
+            string readyIcon = isReady ? "✅" : "⏳";
 
-            text.text = $"{playerName}{hostIcon} {(isReady ? "✅" : "⏳")}";
+            text.text = $"{playerName}{hostIcon} {readyIcon}";
         }
     }
 
     private void ClearContent(Transform content)
     {
-        if (content == null) return;
+        if (content == null)
+            return;
 
         for (int i = content.childCount - 1; i >= 0; i--)
             Destroy(content.GetChild(i).gameObject);
@@ -299,9 +344,7 @@ public class LobbyTeamManager : NetworkBehaviour
                 continue;
 
             if (ulong.TryParse(split[0], out ulong clientId))
-            {
                 readyStates[clientId] = split[1] == "1";
-            }
         }
     }
 
@@ -330,6 +373,7 @@ public class LobbyTeamManager : NetworkBehaviour
         bool isReady = readyStates.ContainsKey(localId) && readyStates[localId];
 
         TMP_Text text = readyButton.GetComponentInChildren<TMP_Text>();
+
         if (text != null)
             text.text = isReady ? "HAZIR ✅" : "HAZIR OL";
     }
@@ -339,9 +383,7 @@ public class LobbyTeamManager : NetworkBehaviour
         if (switchTeamButton == null)
             return;
 
-        bool allReady = AreAllPlayersReady();
-
-        switchTeamButton.interactable = !allReady;
+        switchTeamButton.interactable = !AreAllPlayersReady();
     }
 
     private string GetTemporaryLocalName()
@@ -354,7 +396,8 @@ public class LobbyTeamManager : NetworkBehaviour
 
     public bool IsLocalPlayerAyTeam()
     {
-        if (NetworkManager.Singleton == null) return false;
+        if (NetworkManager.Singleton == null)
+            return false;
 
         string suffix = $"({NetworkManager.Singleton.LocalClientId})";
 
@@ -369,7 +412,8 @@ public class LobbyTeamManager : NetworkBehaviour
 
     public bool IsLocalPlayerKanTeam()
     {
-        if (NetworkManager.Singleton == null) return false;
+        if (NetworkManager.Singleton == null)
+            return false;
 
         string suffix = $"({NetworkManager.Singleton.LocalClientId})";
 

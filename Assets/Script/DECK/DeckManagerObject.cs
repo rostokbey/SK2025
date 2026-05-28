@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.IO;
 
 public class DeckManagerObject : MonoBehaviour
 {
@@ -96,6 +97,94 @@ public class DeckManagerObject : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         LoadFullDeckFromCollection();
+        LoadDecks();
+    }
+
+    private string SavePath => Path.Combine(Application.persistentDataPath, "player_decks.json");
+
+    private string GetCardSaveId(CardData card)
+    {
+        if (card == null)
+            return "";
+
+        // Önce gerçek database id
+        if (!string.IsNullOrEmpty(card.cardId))
+            return card.cardId;
+
+        // sonra id
+        if (!string.IsNullOrEmpty(card.id))
+            return card.id;
+
+        // fallback
+        return card.cardName;
+    }
+
+    public void SaveDecks()
+    {
+        DeckSaveData data = new DeckSaveData();
+
+        data.deck1_CardIds = deck1.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
+        data.deck2_CardIds = deck2.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
+        data.deck3_CardIds = deck3.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
+        data.deck4_CardIds = deck4.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
+        data.deck5_CardIds = deck5.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
+
+        string json = JsonUtility.ToJson(data, true);
+        File.WriteAllText(SavePath, json);
+
+        Debug.Log("💾 Desteler kaydedildi: " + SavePath);
+    }
+
+    public void LoadDecks()
+    {
+        if (!File.Exists(SavePath))
+        {
+            Debug.Log("ℹ Kayıtlı deste dosyası yok.");
+            return;
+        }
+
+        string json = File.ReadAllText(SavePath);
+        DeckSaveData data = JsonUtility.FromJson<DeckSaveData>(json);
+
+        if (data == null)
+        {
+            Debug.LogWarning("⚠ Deste kayıt dosyası okunamadı.");
+            return;
+        }
+
+        deck1 = ConvertIdsToDeck(data.deck1_CardIds);
+        deck2 = ConvertIdsToDeck(data.deck2_CardIds);
+        deck3 = ConvertIdsToDeck(data.deck3_CardIds);
+        deck4 = ConvertIdsToDeck(data.deck4_CardIds);
+        deck5 = ConvertIdsToDeck(data.deck5_CardIds);
+
+        Debug.Log("📂 Desteler yüklendi.");
+    }
+
+    private List<CardData> ConvertIdsToDeck(List<string> ids)
+    {
+        List<CardData> result = new List<CardData>();
+
+        if (ids == null) return result;
+
+        foreach (string id in ids)
+        {
+            CardData card = GetCardById(id);
+
+            if (card != null)
+            {
+                if (card.characterSprite == null)
+                    card.characterSprite = GetSpriteByName(card.cardName);
+
+                result.Add(card);
+            }
+            else
+            {
+                Debug.LogWarning("⚠ Kayıttaki kart bulunamadı: " + id);
+            }
+        }
+
+        return result;
     }
 
     private void LoadFullDeckFromCollection()
@@ -356,10 +445,13 @@ public class DeckManagerObject : MonoBehaviour
             return false;
         }
 
+        string newId = GetCardSaveId(card);
+
         bool alreadyInDeck = deck.Exists(x =>
             x != null &&
-            x.cardName == card.cardName
+            GetCardSaveId(x) == newId
         );
+        
 
         if (alreadyInDeck)
         {
@@ -371,6 +463,8 @@ public class DeckManagerObject : MonoBehaviour
             card.characterSprite = GetSpriteByName(card.cardName);
 
         deck.Add(card);
+
+        SaveDecks();
 
         Debug.Log("✅ " + card.cardName + " -> " + (deckIndex + 1) + ". deste (" + deck.Count + "/" + limit + ")");
 

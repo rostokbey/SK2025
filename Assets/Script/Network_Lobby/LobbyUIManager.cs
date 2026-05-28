@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -26,6 +27,9 @@ public class LobbyUIManager : MonoBehaviour
     [SerializeField] private GameObject matchButtonsPanel;
     [SerializeField] private GameObject teamPanel;
 
+    [Header("Join Code Panel")]
+    [SerializeField] private Button joinCodeCloseButton;
+
     [Header("Battle Start")]
     [SerializeField] private Button startBattleButton;
     [SerializeField] private string battleSceneName = "BattleScene";
@@ -44,7 +48,6 @@ public class LobbyUIManager : MonoBehaviour
 
     private UnityTransport transport;
     private static bool servicesInitialized = false;
-
     private bool isStartingBattle = false;
 
     private void Awake()
@@ -66,6 +69,8 @@ public class LobbyUIManager : MonoBehaviour
 
     private void SetLobbyStartState()
     {
+        isStartingBattle = false;
+
         if (joinCodePanel != null)
             joinCodePanel.SetActive(false);
 
@@ -75,8 +80,23 @@ public class LobbyUIManager : MonoBehaviour
         if (matchButtonsPanel != null)
             matchButtonsPanel.SetActive(false);
 
+        if (teamPanel != null)
+            teamPanel.SetActive(false);
+
         if (startBattleButton != null)
+        {
             startBattleButton.gameObject.SetActive(false);
+            startBattleButton.interactable = false;
+        }
+
+        if (joinCodeCloseButton != null)
+            joinCodeCloseButton.gameObject.SetActive(false);
+
+        if (countdownText != null)
+        {
+            countdownText.text = "";
+            countdownText.gameObject.SetActive(false);
+        }
 
         ShowWarning("");
     }
@@ -91,6 +111,9 @@ public class LobbyUIManager : MonoBehaviour
 
         if (joinCodePanel != null)
             joinCodePanel.SetActive(false);
+
+        if (teamPanel != null)
+            teamPanel.SetActive(false);
 
         if (hostButton != null)
             hostButton.gameObject.SetActive(false);
@@ -128,8 +151,17 @@ public class LobbyUIManager : MonoBehaviour
 
             joinCodeUI?.SetCode(joinCode);
 
+            if (hostButton != null)
+                hostButton.gameObject.SetActive(false);
+
+            if (joinButton != null)
+                joinButton.gameObject.SetActive(false);
+
             if (joinCodePanel != null)
                 joinCodePanel.SetActive(true);
+
+            if (joinCodeCloseButton != null)
+                joinCodeCloseButton.gameObject.SetActive(false);
 
             if (battleRoomPanel != null)
                 battleRoomPanel.SetActive(true);
@@ -141,7 +173,6 @@ public class LobbyUIManager : MonoBehaviour
                 matchButtonsPanel.SetActive(true);
 
             RefreshStartBattleButton();
-
 
             Debug.Log("[Lobby] Host başladı. Join Code: " + joinCode);
         }
@@ -204,6 +235,8 @@ public class LobbyUIManager : MonoBehaviour
             if (startBattleButton != null)
                 startBattleButton.gameObject.SetActive(false);
 
+            ShowWarning("");
+
             Debug.Log("[Lobby] Join başarılı. Kod: " + joinCode);
         }
         catch (Exception e)
@@ -244,7 +277,7 @@ public class LobbyUIManager : MonoBehaviour
         StartCoroutine(StartBattleCountdown());
     }
 
-    private System.Collections.IEnumerator StartBattleCountdown()
+    private IEnumerator StartBattleCountdown()
     {
         if (countdownText != null)
         {
@@ -269,7 +302,7 @@ public class LobbyUIManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        if (NetworkManager.Singleton.SceneManager != null)
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
         {
             NetworkManager.Singleton.SceneManager.LoadScene(
                 battleSceneName,
@@ -288,7 +321,9 @@ public class LobbyUIManager : MonoBehaviour
             return;
 
         bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+
         bool canStart =
+            !isStartingBattle &&
             isHost &&
             LobbyTeamManager.Instance != null &&
             LobbyTeamManager.Instance.AreTeamsReady() &&
@@ -341,6 +376,9 @@ public class LobbyUIManager : MonoBehaviour
         if (joinCodeUI != null)
             joinCodeUI.Clear();
 
+        if (joinCodeInput != null)
+            joinCodeInput.text = "";
+
         if (joinCodePanel != null)
             joinCodePanel.SetActive(false);
 
@@ -354,7 +392,10 @@ public class LobbyUIManager : MonoBehaviour
             matchButtonsPanel.SetActive(false);
 
         if (startBattleButton != null)
+        {
             startBattleButton.gameObject.SetActive(false);
+            startBattleButton.interactable = false;
+        }
 
         if (hostButton != null)
             hostButton.gameObject.SetActive(true);
@@ -362,18 +403,7 @@ public class LobbyUIManager : MonoBehaviour
         if (joinButton != null)
             joinButton.gameObject.SetActive(true);
 
-
-
         ShowWarning("");
-    }
-
-    private void ShowWarning(string message)
-    {
-        if (!string.IsNullOrEmpty(message))
-            Debug.LogWarning(message);
-
-        if (warningText != null)
-            warningText.text = message;
     }
 
     public void ClearJoinCodeUI()
@@ -395,6 +425,14 @@ public class LobbyUIManager : MonoBehaviour
         ShowWarning("");
     }
 
+    private void ShowWarning(string message)
+    {
+        if (!string.IsNullOrEmpty(message))
+            Debug.LogWarning(message);
+
+        if (warningText != null)
+            warningText.text = message;
+    }
 
     private async System.Threading.Tasks.Task EnsureUnityServices()
     {
