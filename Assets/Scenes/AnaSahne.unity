@@ -818,6 +818,7 @@ MonoBehaviour:
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -3005,7 +3006,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &193804319
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5850,11 +5851,11 @@ RectTransform:
   - {fileID: 62203696}
   m_Father: {fileID: 1003908562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 240, y: -89.729}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 240, y: 198.48}
   m_SizeDelta: {x: 480, y: 178}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &475831668
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11619,11 +11620,11 @@ RectTransform:
   - {fileID: 277108618}
   m_Father: {fileID: 1003908562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 240, y: -178}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 198.48}
   m_SizeDelta: {x: 480, y: 178}
-  m_Pivot: {x: 0.5, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &889691028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13531,11 +13532,11 @@ RectTransform:
   - {fileID: 1455218359}
   m_Father: {fileID: 1003908562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -239.99997, y: -89}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -240, y: 198.48}
   m_SizeDelta: {x: 480, y: 178}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &998904455
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13792,8 +13793,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -1899.1743}
-  m_SizeDelta: {x: 0, y: -3798.3486}
+  m_AnchoredPosition: {x: 0, y: -1844.093}
+  m_SizeDelta: {x: 0, y: -3777.5369}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1003908563
 CanvasRenderer:
@@ -17275,11 +17276,11 @@ RectTransform:
   - {fileID: 740665634}
   m_Father: {fileID: 1003908562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -240, y: -89}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 198.48}
   m_SizeDelta: {x: 480, y: 178}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 1, y: 0}
 --- !u!114 &1196464156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21166,6 +21167,7 @@ MonoBehaviour:
   battleRoomPanel: {fileID: 1581341568}
   matchButtonsPanel: {fileID: 75329204}
   teamPanel: {fileID: 419707710}
+  joinCodeCloseButton: {fileID: 0}
   startBattleButton: {fileID: 1605565968}
   battleSceneName: BattleScene
   joinCodeUI: {fileID: 1589549203}
@@ -21703,6 +21705,7 @@ MonoBehaviour:
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
