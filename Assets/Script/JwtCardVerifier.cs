@@ -2,6 +2,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
+using Org.BouncyCastle.Asn1.Sec;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto.Signers;
+using Org.BouncyCastle.Math;
 
 [Serializable]
 public class CardPayload
@@ -79,11 +83,18 @@ public static class JwtCardVerifier
     //
     // AŞAĞIDAKİ ANAHTAR YALNIZCA YER TUTUCUDUR / TEST AMAÇLIDIR.
     private const string CardSigningPublicKeyBase64 =
-        "REPLACE_WITH_REAL_PUBLIC_KEY_FROM_export_ec_public_key_py";
+    "eyJ4IjoiMGR0UGFUdkdHbGFMZmdseGR2L00wRzJyWiswR3JONWhNN1FHZC92MWdSdz0iLCJ5IjoiaUd2MjRDbHpVVWhOL3l6K3U5SWRrRE53RUJ0TTFjcjY5c1BraVpsZnUvaz0ifQ==";
 
-    private static ECDsa _cachedPublicKey;
+    [Serializable]
+    private class EcPublicBlob
+    {
+        public string x;
+        public string y;
+    }
 
-    private static ECDsa GetPublicKey()
+    private static ECPublicKeyParameters _cachedPublicKey;
+
+    private static ECPublicKeyParameters GetPublicKey()
     {
         if (_cachedPublicKey != null)
             return _cachedPublicKey;
@@ -91,24 +102,62 @@ public static class JwtCardVerifier
         if (string.IsNullOrEmpty(CardSigningPublicKeyBase64) ||
             CardSigningPublicKeyBase64.StartsWith("REPLACE_WITH_"))
         {
-            Debug.LogError("[JwtCardVerifier] Açık anahtar ayarlanmamış! " +
-                            "export_ec_public_key.py ec_private.pem ile açık " +
-                            "anahtarı üretip CardSigningPublicKeyBase64 alanını " +
-                            "güncelleyin. Anahtar ayarlanana kadar TÜM imzalı " +
-                            "kartlar reddedilecek.");
+            Debug.LogError(
+                "[JwtCardVerifier] Açık anahtar ayarlanmamış.");
             return null;
         }
 
         try
         {
-            var ecdsa = ECDsa.Create();
-            EcKeyPortability.ImportPublicKey(ecdsa, CardSigningPublicKeyBase64);
-            _cachedPublicKey = ecdsa;
+            byte[] jsonBytes =
+                Convert.FromBase64String(CardSigningPublicKeyBase64);
+
+            string json = Encoding.UTF8.GetString(jsonBytes);
+            EcPublicBlob blob =
+                JsonUtility.FromJson<EcPublicBlob>(json);
+
+            if (blob == null ||
+                string.IsNullOrEmpty(blob.x) ||
+                string.IsNullOrEmpty(blob.y))
+            {
+                throw new Exception(
+                    "Açık anahtar X ve Y koordinatlarını içermiyor.");
+            }
+
+            byte[] xBytes = Convert.FromBase64String(blob.x);
+            byte[] yBytes = Convert.FromBase64String(blob.y);
+
+            if (xBytes.Length != 32 || yBytes.Length != 32)
+            {
+                throw new Exception(
+                    "P-256 koordinatları 32 bayt olmalıdır.");
+            }
+
+            var curve = SecNamedCurves.GetByName("secp256r1");
+
+            if (curve == null)
+                throw new Exception("secp256r1 eğrisi bulunamadı.");
+
+            var domain = new ECDomainParameters(
+                curve.Curve,
+                curve.G,
+                curve.N,
+                curve.H,
+                curve.GetSeed());
+
+            var point = curve.Curve.ValidatePoint(
+                new BigInteger(1, xBytes),
+                new BigInteger(1, yBytes));
+
+            _cachedPublicKey =
+                new ECPublicKeyParameters(point, domain);
+
             return _cachedPublicKey;
         }
         catch (Exception ex)
         {
-            Debug.LogError("[JwtCardVerifier] Açık anahtar okunamadı: " + ex.Message);
+            Debug.LogError(
+                "[JwtCardVerifier] Açık anahtar okunamadı:\\n" + ex);
             return null;
         }
     }
@@ -267,30 +316,30 @@ public static class JwtCardVerifier
         }
 
         bool signatureValid;
+
         try
         {
-            // Tercih edilen yol: .NET 5+'ta eklenen, JWT'nin ham (P1363)
-            // imza formatını DOĞRUDAN doğrulayabilen overload.
-            signatureValid = publicKey.VerifyData(
-                signedData, signature, HashAlgorithmName.SHA256,
-                DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
-        }
-        catch (PlatformNotSupportedException)
-        {
-            // Bazı Unity/Mono çalışma zamanlarında yukarıdaki .NET5+ overload'u
-            // yok (RSA.ExportPkcs8PrivateKey'de yaşadığımızla aynı sorun
-            // sınıfı). Bu durumda ham imzayı manuel olarak DER'e çevirip her
-            // yerde desteklenen eski overload ile doğrula.
-            try
+            byte[] hash;
+
+            using (SHA256 sha256 = SHA256.Create())
             {
-                byte[] derSignature = ConvertP1363SignatureToDer(signature);
-                signatureValid = publicKey.VerifyData(signedData, derSignature, HashAlgorithmName.SHA256);
+                hash = sha256.ComputeHash(signedData);
             }
-            catch (Exception ex)
-            {
-                error = "İmza doğrulama hatası (DER fallback): " + ex.Message;
-                return false;
-            }
+
+            byte[] rBytes = new byte[32];
+            byte[] sBytes = new byte[32];
+
+            Buffer.BlockCopy(signature, 0, rBytes, 0, 32);
+            Buffer.BlockCopy(signature, 32, sBytes, 0, 32);
+
+            BigInteger r = new BigInteger(1, rBytes);
+            BigInteger s = new BigInteger(1, sBytes);
+
+            var signer = new ECDsaSigner();
+            signer.Init(false, publicKey);
+
+            signatureValid =
+                signer.VerifySignature(hash, r, s);
         }
         catch (Exception ex)
         {
@@ -343,74 +392,6 @@ public static class JwtCardVerifier
     /// eski (her platformda desteklenen) overload'unun beklediği DER
     /// (ECDSA-Sig-Value ::= SEQUENCE { r INTEGER, s INTEGER }) formatına çevirir.
     /// </summary>
-    private static byte[] ConvertP1363SignatureToDer(byte[] p1363Signature)
-    {
-        int len = p1363Signature.Length / 2;
-        byte[] r = new byte[len];
-        byte[] s = new byte[len];
-        Array.Copy(p1363Signature, 0, r, 0, len);
-        Array.Copy(p1363Signature, len, s, 0, len);
-
-        byte[] rEnc = EncodeDerInteger(r);
-        byte[] sEnc = EncodeDerInteger(s);
-
-        byte[] seqContent = new byte[rEnc.Length + sEnc.Length];
-        Buffer.BlockCopy(rEnc, 0, seqContent, 0, rEnc.Length);
-        Buffer.BlockCopy(sEnc, 0, seqContent, rEnc.Length, sEnc.Length);
-
-        byte[] seqLenEnc = EncodeDerLength(seqContent.Length);
-        byte[] result = new byte[1 + seqLenEnc.Length + seqContent.Length];
-        result[0] = 0x30; // DER SEQUENCE tag
-        Buffer.BlockCopy(seqLenEnc, 0, result, 1, seqLenEnc.Length);
-        Buffer.BlockCopy(seqContent, 0, result, 1 + seqLenEnc.Length, seqContent.Length);
-        return result;
-    }
-
-    private static byte[] EncodeDerInteger(byte[] unsignedBigEndian)
-    {
-        int start = 0;
-        while (start < unsignedBigEndian.Length - 1 && unsignedBigEndian[start] == 0x00)
-            start++;
-
-        int contentLen = unsignedBigEndian.Length - start;
-        bool needsLeadingZero = (unsignedBigEndian[start] & 0x80) != 0;
-
-        int totalLen = contentLen + (needsLeadingZero ? 1 : 0);
-        byte[] lenEnc = EncodeDerLength(totalLen);
-
-        byte[] result = new byte[1 + lenEnc.Length + totalLen];
-        result[0] = 0x02; // DER INTEGER tag
-        Buffer.BlockCopy(lenEnc, 0, result, 1, lenEnc.Length);
-
-        int offset = 1 + lenEnc.Length;
-        if (needsLeadingZero)
-        {
-            result[offset] = 0x00;
-            offset++;
-        }
-        Buffer.BlockCopy(unsignedBigEndian, start, result, offset, contentLen);
-        return result;
-    }
-
-    private static byte[] EncodeDerLength(int length)
-    {
-        if (length < 0x80)
-            return new byte[] { (byte)length };
-
-        // Uzun form (P-256 imzalarının R/S bileşenleri için pratikte hiç
-        // tetiklenmez - en fazla 33 bayt olurlar - ama tam olsun diye var).
-        int byteCount = 0;
-        int tmp = length;
-        while (tmp > 0) { byteCount++; tmp >>= 8; }
-
-        byte[] result = new byte[1 + byteCount];
-        result[0] = (byte)(0x80 | byteCount);
-        for (int i = 0; i < byteCount; i++)
-            result[1 + i] = (byte)(length >> (8 * (byteCount - 1 - i)));
-
-        return result;
-    }
-
     private static byte[] Base64UrlDecode(string input)
     {
         if (string.IsNullOrEmpty(input))

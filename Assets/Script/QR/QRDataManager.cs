@@ -55,14 +55,35 @@ public class QRDataManager : MonoBehaviour
             if (passiveText) passiveText.text = "Passive: " + p.passive;
 
             Sprite listSprite = null;
-            if (!string.IsNullOrEmpty(p.name))
-                listSprite = Resources.Load<Sprite>("Characters/" + p.name);
-            if (!listSprite) listSprite = defaultListSprite;
-            if (characterImage) characterImage.sprite = listSprite;
 
-            
+            var spriteManager =
+                DeckManagerObject.Instance ??
+                FindObjectOfType<DeckManagerObject>();
 
-            
+            if (spriteManager != null)
+                listSprite = spriteManager.GetSpriteByName(p.name);
+
+            if (listSprite == null && !string.IsNullOrEmpty(p.name))
+            {
+                string spriteName = p.name.Trim().Replace(" ", "_");
+                listSprite = Resources.Load<Sprite>(
+                    "Characters/" + spriteName);
+            }
+
+            if (listSprite == null)
+            {
+                Debug.LogError(
+                    "[QR] Karakter görseli bulunamadı. Aranan isim: " +
+                    p.name);
+                return;
+            }
+
+            if (characterImage)
+                characterImage.sprite = listSprite;
+
+
+
+
 
             card = new CardData(
             p.id, p.name,
