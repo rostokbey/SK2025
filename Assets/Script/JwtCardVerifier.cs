@@ -46,16 +46,21 @@ internal class JwtHeader
 /// gibi kabul edilebildiği anlamına geliyordu (istediğiniz HP/STR/DEF/rarity
 /// değerleriyle).
 ///
-/// Bu sürüm RS256 (RSA + SHA-256) imza doğrulaması yapar:
-///   - İmzayı yalnızca özel anahtarı (private key) elinde bulunduran kart
-///     üretim aracı oluşturabilir (bkz. Assets/Script/Editor/CardSigningTool.cs).
+/// Bu sürüm ES256 (ECDSA P-256 + SHA-256) imza doğrulaması yapar
+/// (Python tarafında PyJWT'nin "ES256" algoritmasıyla, ör. mint_qr_tokens.py
+/// ile üretilen kartlarla birebir uyumludur):
+///   - İmzayı yalnızca özel anahtarı (ec_private.pem) elinde bulunduran kart
+///     üretim script'i oluşturabilir.
 ///   - Oyun istemcisi sadece ilgili AÇIK anahtarı (public key) içerir; bu
 ///     anahtar "gizli" olmak zorunda değildir, sadece imza üretmek için
 ///     kullanılamaz, yalnızca doğrulamak için kullanılabilir. Bu yüzden
-///     HMAC (paylaşılan gizli anahtar) yerine RSA (asimetrik) tercih
+///     HMAC (paylaşılan gizli anahtar) yerine ECDSA (asimetrik) tercih
 ///     edildi: HMAC seçilseydi, istemciye gömülen gizli anahtar tersine
 ///     mühendislikle çıkarılıp sahte kart imzalamak için kullanılabilirdi.
-///   - "alg" alanı da doğrulanır (yalnızca "RS256" kabul edilir) ki bir
+///     ECDSA P-256, aynı güvenlik seviyesindeki RSA'ya göre çok daha kısa
+///     anahtar/imza ürettiği için QR kodunu da küçültüp okumayı
+///     kolaylaştırır.
+///   - "alg" alanı da doğrulanır (yalnızca "ES256" kabul edilir) ki bir
 ///     saldırgan "alg: none" gibi bir başlıkla imza kontrolünü atlatmaya
 ///     çalışamasın (klasik "algorithm confusion" saldırısı).
 ///   - "exp" (son kullanma) alanı doluysa süresi geçmiş kartlar reddedilir.
@@ -63,25 +68,22 @@ internal class JwtHeader
 public static class JwtCardVerifier
 {
     // === AÇIK ANAHTAR (PUBLIC KEY) ===
-    // Bu, RSA açık anahtarının RsaKeyPortability formatında (bkz.
-    // Assets/Script/System/RsaKeyPortability.cs) Base64 ile kodlanmış hâlidir
-    // - standart bir PEM/DER değildir, CardSigningTool ile aynı basit JSON
-    // zarfını kullanır (Unity'nin bazı platformlarda desteklemediği
-    // ExportSubjectPublicKeyInfo/ImportSubjectPublicKeyInfo API'lerinden
-    // kaçınmak için). Karşılığı olan ÖZEL anahtar SADECE kart üretim
-    // aracında (sunucu/ofline araç) tutulmalı, bu repoya veya istemciye
-    // ASLA eklenmemelidir.
+    // Bu, EC (P-256) açık anahtarının EcKeyPortability formatında (bkz.
+    // Assets/Script/System/EcKeyPortability.cs) Base64 ile kodlanmış hâlidir
+    // - standart bir PEM değildir, kendi basit JSON zarfımızdır (Unity'nin
+    // bazı platformlarda desteklemediği ImportSubjectPublicKeyInfo gibi
+    // .NET 5+ API'lerinden kaçınmak için). ec_private.pem'den bu formatı
+    // üretmek için export_ec_public_key.py script'ini kullanın. Karşılığı
+    // olan ÖZEL anahtar (ec_private.pem) SADECE kart üretim script'inde
+    // tutulmalı, bu repoya veya istemciye ASLA eklenmemelidir.
     //
     // AŞAĞIDAKİ ANAHTAR YALNIZCA YER TUTUCUDUR / TEST AMAÇLIDIR.
-    // Üretime almadan önce CardSigningTool > "Generate New RSA KeyPair" ile
-    // gerçek bir anahtar çifti üretip bu sabiti güncelleyin ve özel anahtarı
-    // güvenli şekilde saklayın (repoya koymayın).
     private const string CardSigningPublicKeyBase64 =
-        "REPLACE_WITH_REAL_PUBLIC_KEY_FROM_CARD_SIGNING_TOOL";
+        "REPLACE_WITH_REAL_PUBLIC_KEY_FROM_export_ec_public_key_py";
 
-    private static RSA _cachedPublicKey;
+    private static ECDsa _cachedPublicKey;
 
-    private static RSA GetPublicKey()
+    private static ECDsa GetPublicKey()
     {
         if (_cachedPublicKey != null)
             return _cachedPublicKey;
@@ -90,17 +92,18 @@ public static class JwtCardVerifier
             CardSigningPublicKeyBase64.StartsWith("REPLACE_WITH_"))
         {
             Debug.LogError("[JwtCardVerifier] Açık anahtar ayarlanmamış! " +
-                            "CardSigningTool ile bir anahtar çifti üretip " +
-                            "CardSigningPublicKeyBase64 alanını güncelleyin. " +
-                            "Anahtar ayarlanana kadar TÜM imzalı kartlar reddedilecek.");
+                            "export_ec_public_key.py ec_private.pem ile açık " +
+                            "anahtarı üretip CardSigningPublicKeyBase64 alanını " +
+                            "güncelleyin. Anahtar ayarlanana kadar TÜM imzalı " +
+                            "kartlar reddedilecek.");
             return null;
         }
 
         try
         {
-            var rsa = RSA.Create();
-            RsaKeyPortability.ImportPublicKey(rsa, CardSigningPublicKeyBase64);
-            _cachedPublicKey = rsa;
+            var ecdsa = ECDsa.Create();
+            EcKeyPortability.ImportPublicKey(ecdsa, CardSigningPublicKeyBase64);
+            _cachedPublicKey = ecdsa;
             return _cachedPublicKey;
         }
         catch (Exception ex)
@@ -227,14 +230,14 @@ public static class JwtCardVerifier
             return false;
         }
 
-        if (header == null || !string.Equals(header.alg, "RS256", StringComparison.Ordinal))
+        if (header == null || !string.Equals(header.alg, "ES256", StringComparison.Ordinal))
         {
             // "none" veya beklenmeyen başka bir algoritma her zaman reddedilir.
             error = "Desteklenmeyen veya eksik imza algoritması: " + (header?.alg ?? "(yok)");
             return false;
         }
 
-        // 2) İmzayı doğrula: RSASSA-PKCS1-v1_5 + SHA-256, "header.payload" üzerinde.
+        // 2) İmzayı doğrula: ECDSA P-256 + SHA-256, "header.payload" üzerinde.
         var publicKey = GetPublicKey();
         if (publicKey == null)
         {
@@ -254,10 +257,40 @@ public static class JwtCardVerifier
             return false;
         }
 
+        if (signature.Length != 64)
+        {
+            // ES256/JWS imzası P-256 için tam olarak 64 bayt (32 bayt R + 32
+            // bayt S, IEEE P1363 ham birleştirme) olmalıdır. PyJWT dahil
+            // standart JWT kütüphaneleri bu formatı üretir.
+            error = $"İmza uzunluğu geçersiz (beklenen 64 bayt, gelen {signature.Length}).";
+            return false;
+        }
+
         bool signatureValid;
         try
         {
-            signatureValid = publicKey.VerifyData(signedData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            // Tercih edilen yol: .NET 5+'ta eklenen, JWT'nin ham (P1363)
+            // imza formatını DOĞRUDAN doğrulayabilen overload.
+            signatureValid = publicKey.VerifyData(
+                signedData, signature, HashAlgorithmName.SHA256,
+                DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
+        }
+        catch (PlatformNotSupportedException)
+        {
+            // Bazı Unity/Mono çalışma zamanlarında yukarıdaki .NET5+ overload'u
+            // yok (RSA.ExportPkcs8PrivateKey'de yaşadığımızla aynı sorun
+            // sınıfı). Bu durumda ham imzayı manuel olarak DER'e çevirip her
+            // yerde desteklenen eski overload ile doğrula.
+            try
+            {
+                byte[] derSignature = ConvertP1363SignatureToDer(signature);
+                signatureValid = publicKey.VerifyData(signedData, derSignature, HashAlgorithmName.SHA256);
+            }
+            catch (Exception ex)
+            {
+                error = "İmza doğrulama hatası (DER fallback): " + ex.Message;
+                return false;
+            }
         }
         catch (Exception ex)
         {
@@ -302,6 +335,80 @@ public static class JwtCardVerifier
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// JWT/JWS'nin ES256 için kullandığı "ham" (IEEE P1363, R || S, her biri
+    /// P-256 için 32 bayt = toplam 64 bayt) imza formatını, ECDsa.VerifyData'nın
+    /// eski (her platformda desteklenen) overload'unun beklediği DER
+    /// (ECDSA-Sig-Value ::= SEQUENCE { r INTEGER, s INTEGER }) formatına çevirir.
+    /// </summary>
+    private static byte[] ConvertP1363SignatureToDer(byte[] p1363Signature)
+    {
+        int len = p1363Signature.Length / 2;
+        byte[] r = new byte[len];
+        byte[] s = new byte[len];
+        Array.Copy(p1363Signature, 0, r, 0, len);
+        Array.Copy(p1363Signature, len, s, 0, len);
+
+        byte[] rEnc = EncodeDerInteger(r);
+        byte[] sEnc = EncodeDerInteger(s);
+
+        byte[] seqContent = new byte[rEnc.Length + sEnc.Length];
+        Buffer.BlockCopy(rEnc, 0, seqContent, 0, rEnc.Length);
+        Buffer.BlockCopy(sEnc, 0, seqContent, rEnc.Length, sEnc.Length);
+
+        byte[] seqLenEnc = EncodeDerLength(seqContent.Length);
+        byte[] result = new byte[1 + seqLenEnc.Length + seqContent.Length];
+        result[0] = 0x30; // DER SEQUENCE tag
+        Buffer.BlockCopy(seqLenEnc, 0, result, 1, seqLenEnc.Length);
+        Buffer.BlockCopy(seqContent, 0, result, 1 + seqLenEnc.Length, seqContent.Length);
+        return result;
+    }
+
+    private static byte[] EncodeDerInteger(byte[] unsignedBigEndian)
+    {
+        int start = 0;
+        while (start < unsignedBigEndian.Length - 1 && unsignedBigEndian[start] == 0x00)
+            start++;
+
+        int contentLen = unsignedBigEndian.Length - start;
+        bool needsLeadingZero = (unsignedBigEndian[start] & 0x80) != 0;
+
+        int totalLen = contentLen + (needsLeadingZero ? 1 : 0);
+        byte[] lenEnc = EncodeDerLength(totalLen);
+
+        byte[] result = new byte[1 + lenEnc.Length + totalLen];
+        result[0] = 0x02; // DER INTEGER tag
+        Buffer.BlockCopy(lenEnc, 0, result, 1, lenEnc.Length);
+
+        int offset = 1 + lenEnc.Length;
+        if (needsLeadingZero)
+        {
+            result[offset] = 0x00;
+            offset++;
+        }
+        Buffer.BlockCopy(unsignedBigEndian, start, result, offset, contentLen);
+        return result;
+    }
+
+    private static byte[] EncodeDerLength(int length)
+    {
+        if (length < 0x80)
+            return new byte[] { (byte)length };
+
+        // Uzun form (P-256 imzalarının R/S bileşenleri için pratikte hiç
+        // tetiklenmez - en fazla 33 bayt olurlar - ama tam olsun diye var).
+        int byteCount = 0;
+        int tmp = length;
+        while (tmp > 0) { byteCount++; tmp >>= 8; }
+
+        byte[] result = new byte[1 + byteCount];
+        result[0] = (byte)(0x80 | byteCount);
+        for (int i = 0; i < byteCount; i++)
+            result[1 + i] = (byte)(length >> (8 * (byteCount - 1 - i)));
+
+        return result;
     }
 
     private static byte[] Base64UrlDecode(string input)
