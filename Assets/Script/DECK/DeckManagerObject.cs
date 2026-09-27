@@ -100,8 +100,6 @@ public class DeckManagerObject : MonoBehaviour
         LoadDecks();
     }
 
-    private string SavePath => Path.Combine(Application.persistentDataPath, "player_decks.json");
-
     private string GetCardSaveId(CardData card)
     {
         if (card == null)
@@ -119,8 +117,16 @@ public class DeckManagerObject : MonoBehaviour
         return card.cardName;
     }
 
+    // NOT (2026 güvenlik incelemesi): Bu metotlar daha önce ortak/profilsiz bir
+    // "player_decks.json" dosyasına imzasız düz JSON olarak yazıyordu; hem
+    // SaveSystem'deki profil bazlı deste kaydını hiç kullanmıyordu (ölü kod)
+    // hem de tüm profiller aynı dosyayı paylaştığı için profil izolasyonu
+    // bozuktu. Artık PlayerInventory ile aynı profil kimliğini kullanan,
+    // bütünlük imzalı SaveSystem üzerinden kaydediyor/yüklüyoruz.
     public void SaveDecks()
     {
+        string profileId = PlayerInventory.CurrentProfileIdStatic;
+
         DeckSaveData data = new DeckSaveData();
 
         data.deck1_CardIds = deck1.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
@@ -129,26 +135,20 @@ public class DeckManagerObject : MonoBehaviour
         data.deck4_CardIds = deck4.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
         data.deck5_CardIds = deck5.Select(GetCardSaveId).Where(id => !string.IsNullOrEmpty(id)).ToList();
 
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SavePath, json);
+        SaveSystem.SaveDecks(profileId, data);
 
-        Debug.Log("💾 Desteler kaydedildi: " + SavePath);
+        Debug.Log("💾 Desteler kaydedildi (profil: " + profileId + ")");
     }
 
     public void LoadDecks()
     {
-        if (!File.Exists(SavePath))
-        {
-            Debug.Log("ℹ Kayıtlı deste dosyası yok.");
-            return;
-        }
+        string profileId = PlayerInventory.CurrentProfileIdStatic;
 
-        string json = File.ReadAllText(SavePath);
-        DeckSaveData data = JsonUtility.FromJson<DeckSaveData>(json);
+        DeckSaveData data = SaveSystem.LoadDecks(profileId);
 
         if (data == null)
         {
-            Debug.LogWarning("⚠ Deste kayıt dosyası okunamadı.");
+            Debug.LogWarning("⚠ Deste kaydı okunamadı.");
             return;
         }
 

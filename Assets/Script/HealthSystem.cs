@@ -54,7 +54,18 @@ public class HealthSystem : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void HealServerRpc(int amount)
     {
-        if (amount <= 0) return;
+        HealServerSide(amount);
+    }
+
+    /// <summary>
+    /// Sunucu tarafında doğrudan çağrılacak iyileştirme (RPC değil - zaten
+    /// sunucuda çalışan kodlardan, ör. pasif yetenekler / round-start
+    /// hook'larından çağrılmak için). Bir istemciden gelen isteği hiçbir
+    /// zaman doğrudan işlemez.
+    /// </summary>
+    public void HealServerSide(int amount)
+    {
+        if (!IsServer || amount <= 0) return;
         int old = currentHP.Value;
         currentHP.Value = Mathf.Min(maxHP, currentHP.Value + amount);
         int gained = currentHP.Value - old;
@@ -99,14 +110,20 @@ public class HealthSystem : NetworkBehaviour
         if (deathEffect != null)
             Instantiate(deathEffect, transform.position, Quaternion.identity);
 
+        // NOT (round/ability sistemi güncellemesi): Önceden burada NetworkObject
+        // despawn ediliyordu (ölüm = kalıcı yok oluş). Tasarım dokümanındaki
+        // "karakter ölürse [yetenek] bekleme süresi sıfırlanmaz, yeniden
+        // dirilirse kalan süreyle devam eder" kuralı, ölen karakterin
+        // durumunun (özellikle Character.AbilityCooldownRemaining) sahnede
+        // KORUNMASINI gerektiriyor. Bu yüzden artık despawn ETMİYORUZ; sadece
+        // "düşmüş" (downed) olarak işaretliyoruz. IsAlive (currentHP > 0)
+        // zaten hedefleme/tur sıralaması gibi tüm sistemlerde tek doğruluk
+        // kaynağı olarak kullanılıyor (bkz. BattleGrid, Character.IsAlive).
+        var character = GetComponent<Character>();
+        if (character != null)
+            character.SetDownedVisual(true);
+
         // ✅ Victory kontrolü
         BattleManager.Instance?.CheckVictory();
-
-        var netObj = GetComponent<NetworkObject>();
-        if (IsServer)
-        {
-            if (netObj) netObj.Despawn(true);
-            else Destroy(gameObject);
-        }
     }
 }

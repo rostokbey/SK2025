@@ -142,10 +142,15 @@ public class LobbyUIManager : MonoBehaviour
             string joinCode =
                 await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
-            RelayServerData relayServerData =
-                new RelayServerData(allocation, "dtls");
-
-            transport.SetRelayServerData(relayServerData);
+            // Unity Transport 6.5.0 / Relay güncel API
+            transport.SetHostRelayData(
+                allocation.RelayServer.IpV4,
+                (ushort)allocation.RelayServer.Port,
+                allocation.AllocationIdBytes,
+                allocation.Key,
+                allocation.ConnectionData,
+                true
+            );
 
             NetworkManager.Singleton.StartHost();
 
@@ -205,10 +210,15 @@ public class LobbyUIManager : MonoBehaviour
             JoinAllocation joinAllocation =
                 await RelayService.Instance.JoinAllocationAsync(joinCode);
 
-            RelayServerData relayServerData =
-                new RelayServerData(joinAllocation, "dtls");
-
-            transport.SetRelayServerData(relayServerData);
+            transport.SetClientRelayData(
+                joinAllocation.RelayServer.IpV4,
+                (ushort)joinAllocation.RelayServer.Port,
+                joinAllocation.AllocationIdBytes,
+                joinAllocation.Key,
+                joinAllocation.ConnectionData,
+                joinAllocation.HostConnectionData,
+                true
+            );
 
             NetworkManager.Singleton.StartClient();
 
@@ -302,7 +312,8 @@ public class LobbyUIManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
+        if (NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.SceneManager != null)
         {
             NetworkManager.Singleton.SceneManager.LoadScene(
                 battleSceneName,
@@ -320,7 +331,9 @@ public class LobbyUIManager : MonoBehaviour
         if (startBattleButton == null)
             return;
 
-        bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+        bool isHost =
+            NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsHost;
 
         bool canStart =
             !isStartingBattle &&
@@ -349,7 +362,9 @@ public class LobbyUIManager : MonoBehaviour
 
         if (count < 5)
         {
-            ShowWarning($"Maça girmek için en az 5 kart gerekli. Şu an: {count}/5");
+            ShowWarning(
+                $"Maça girmek için en az 5 kart gerekli. Şu an: {count}/5"
+            );
             return false;
         }
 
@@ -369,8 +384,11 @@ public class LobbyUIManager : MonoBehaviour
 
         if (NetworkManager.Singleton != null)
         {
-            if (NetworkManager.Singleton.IsHost || NetworkManager.Singleton.IsClient)
+            if (NetworkManager.Singleton.IsHost ||
+                NetworkManager.Singleton.IsClient)
+            {
                 NetworkManager.Singleton.Shutdown();
+            }
         }
 
         if (joinCodeUI != null)

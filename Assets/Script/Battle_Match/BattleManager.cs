@@ -55,10 +55,343 @@ public class BattleManager : NetworkBehaviour
     private int nextPlayerSpawnIndex = 0;
     private int nextEnemySpawnIndex = 0;
 
+    [Header("Sınırlar (Anti-Cheat)")]
+    [Tooltip("Bir tarafın aynı anda sahada bulundurabileceği maksimum karakter sayısı.")]
+    public int maxActiveCharactersPerSide = 12;
+
+    // ---------------------------------------------------------------------
+    #region Grid / Raund / AFK / Teslim Olma Durumu
+
+    [Header("Saha Grid Ayarları")]
+    [Tooltip("Taraf başına sütun sayısı. 1v1 için 6 (tasarım dokümanı). 2v2/3v3 için matchmaking henüz yok.")]
+    public int gridColumns = 6;
+
+    [Tooltip("SpawnCharacterAtPositionServerRpc ile serbest tıklamayla yerleştirmede, " +
+             "sahnenizdeki 'ön hat' Z ekseninde min mi max mı tarafta? Test edip yanlışsa çevirin.")]
+    public bool playerFrontRowIsMaxZ = true;
+    public bool enemyFrontRowIsMaxZ = false;
+
+    private BattleGrid playerGrid;
+    private BattleGrid enemyGrid;
+
+    public BattleGrid GetGridFor(bool isPlayerSide) => isPlayerSide ? playerGrid : enemyGrid;
+
+    /// <summary>Şu anki raund numarası (1'den başlar). turnOrder tam bir tur tamamlayınca artar.</summary>
+    public int CurrentRound { get; private set; } = 1;
+
+    // Raund başına, taraf başına en fazla 1 aktif yetenek kullanımı.
+    private int playerSideLastAbilityRound = -1;
+    private int enemySideLastAbilityRound = -1;
+
+    [Header("AFK / Süre Aşımı")]
+    [Tooltip("Bir karakterin turunu tamamlamak için verilen süre (saniye). 0 = sınırsız (devre dışı).")]
+    public float turnTimeLimitSeconds = 30f;
+
+    [Tooltip("Art arda kaç kez süresi geçerse o taraf otomatik mağlup sayılır.")]
+    public int maxConsecutiveAfkSkipsBeforeForfeit = 3;
+
+    public readonly NetworkVariable<float> TurnTimeRemaining = new NetworkVariable<float>(
+        0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    private int playerConsecutiveAfkSkips = 0;
+    private int enemyConsecutiveAfkSkips = 0;
+    private bool battleEnded = false;
+
+    // Teslim olma: 1v1'de tek oyluk "oylama" (kendi kendine teslim), takım
+    // modları eklendiğinde requiredVotes takım boyutuna çıkarılabilir.
+    private readonly HashSet<ulong> playerSurrenderVotes = new();
+    private readonly HashSet<ulong> enemySurrenderVotes = new();
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------
+    #region Yetki / Anti-Cheat Yardımcıları
+    //
+    // 2026 güvenlik incelemesi bulguları: SendAttackServerRpc,
+    // SendSkillAttackServerRpc, PlayCardServerRpc ve
+    // SpawnCharacterAtPositionServerRpc [ServerRpc] olarak sunucuda
+    // çalışıyordu ama HİÇBİRİ gönderen client'ın (a) o an sırası olup
+    // olmadığını, (b) oynatılan kartın gerçekten kendisine ait olup
+    // olmadığını doğrulamıyordu. Bu, bir client'ın sırası rakipteyken bile
+    // sınırsız saldırı/kart yerleştirme yapabilmesine yol açıyordu. Bu
+    // bölümdeki yardımcılar tüm RPC'lerde ortak, tutarlı bir yetki
+    // kontrolü sağlar.
+
+    /// <summary>
+    /// Gönderen client'ın hangi tarafta olduğunu (player/host tarafı mı,
+    /// enemy/rakip tarafı mı) çözer. Önceden bu proje iki farklı ve
+    /// birbiriyle tutarsız sezgisel yöntem kullanıyordu
+    /// (ConnectedClientsList[0] ile NetworkManager.ServerClientId
+    /// karşılaştırması ayrı ayrı yerlerde). Artık tek ve güvenilir kaynak:
+    /// host her zaman NetworkManager.ServerClientId'dir; sunucuya bağlı
+    /// host-dışı herhangi bir client rakip taraftır.
+    /// </summary>
+    private bool TryResolveSenderSide(ulong senderId, out bool isPlayerSide)
+    {
+        if (senderId == NetworkManager.ServerClientId)
+        {
+            isPlayerSide = true;
+            return true;
+        }
+
+        if (NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.ConnectedClients.ContainsKey(senderId))
+        {
+            isPlayerSide = false;
+            return true;
+        }
+
+        isPlayerSide = false;
+        return false; // Bağlı olmayan/tanınmayan bir client - reddet.
+    }
+
+    /// <summary>Şu an aktif sıranın, verilen tarafa ait olup olmadığını kontrol eder.</summary>
+    private bool IsSendersTurn(bool senderIsPlayerSide, out string reason)
+    {
+        reason = null;
+
+        if (turnOrder == null || turnOrder.Count == 0 ||
+            currentIndex < 0 || currentIndex >= turnOrder.Count ||
+            turnOrder[currentIndex] == null)
+        {
+            reason = "Sıra sistemi henüz hazır değil.";
+            return false;
+        }
+
+        bool activeSideIsPlayer = turnOrder[currentIndex].isPlayer;
+        if (activeSideIsPlayer != senderIsPlayerSide)
+        {
+            reason = $"Sıra bu tarafta değil (aktif taraf: {(activeSideIsPlayer ? "player" : "enemy")}).";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>Kartın, gönderen client'ın bu maç için gönderdiği desteye gerçekten ait olup olmadığını kontrol eder.</summary>
+    private bool SenderOwnsCard(ulong senderId, CardData card)
+    {
+        if (card == null) return false;
+
+        if (!playerSubmittedCardIds.TryGetValue(senderId, out var ids) || ids == null)
+            return false;
+
+        return (!string.IsNullOrEmpty(card.id) && ids.Contains(card.id)) ||
+               (!string.IsNullOrEmpty(card.cardId) && ids.Contains(card.cardId)) ||
+               (!string.IsNullOrEmpty(card.cardName) && ids.Contains(card.cardName));
+    }
+
+    /// <summary>Verilen tarafın sahada boş spawn slotu (kapasite) olup olmadığını kontrol eder.</summary>
+    private bool HasFreeSpawnSlot(bool isPlayerSide)
+    {
+        int activeCount = allCharacters.Count(c => c != null && c.isPlayer == isPlayerSide);
+        return activeCount < maxActiveCharactersPerSide;
+    }
+
+    /// <summary>
+    /// Bir Character üzerinde (ör. Character.AttackServerRpc içinden)
+    /// gönderen client'ın o karaktere komut verme yetkisi olup olmadığını
+    /// kontrol etmek için kullanılır (kendi tarafının karakteri mi?).
+    /// </summary>
+    public bool IsSenderAuthorizedForCharacter(ulong senderId, Character character)
+    {
+        if (character == null) return false;
+        if (!TryResolveSenderSide(senderId, out bool senderIsPlayerSide)) return false;
+        return character.isPlayer == senderIsPlayerSide;
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+    #region Grid Kayıt / Sütun Bazlı Hedefleme / Aktif Yetenek Kullanımı
+
+    private (BattleRow row, int column) RowColFromFlatIndex(int flatIndex)
+    {
+        int columns = Mathf.Max(1, gridColumns);
+        int row = Mathf.Clamp(flatIndex / columns, 0, 2);
+        int col = flatIndex % columns;
+        return ((BattleRow)row, col);
+    }
+
+    /// <summary>
+    /// Sabit-index tabanlı spawn akışları (SpawnCharacters, SpawnCharacter,
+    /// SpawnRandomEnemyFromDeck) için: playerGridPositions/enemyGridPositions
+    /// dizisindeki index'i satır/sütuna çevirip grid'e kaydeder.
+    /// ÖNEMLİ: Bu diziler Inspector'da "row-major" sırayla (önce tüm Front
+    /// sütunları, sonra Mid, sonra Back) düzenlenmiş OLMALI; 6x3 için 18
+    /// eleman gerekir. Düzenlenmemişse grid mantıksal olarak yine çalışır
+    /// (hücre çakışırsa TryOccupyNextFreeSlot'a düşer) ama görsel satır/sütun
+    /// hizası bozuk olur.
+    /// </summary>
+    private void RegisterSpawnedCharacterByFlatIndex(Character ch, bool isPlayerSide, int flatIndex)
+    {
+        if (ch == null) return;
+
+        var (row, col) = RowColFromFlatIndex(flatIndex);
+        var grid = GetGridFor(isPlayerSide);
+
+        if (grid != null && !grid.TryOccupy(ch, row, col))
+            grid.TryOccupyNextFreeSlot(ch, out _, out _);
+
+        allCharacters.Add(ch);
+        turnOrder.Add(ch);
+    }
+
+    /// <summary>SpawnCharacterAtPositionServerRpc (serbest tıklama) için: dünya konumundan hücre çözer ve kaydeder.</summary>
+    private (BattleRow row, int column) RegisterSpawnedCharacterByWorldPosition(Character ch, bool isPlayerSide, Bounds zoneBounds, Vector3 worldPos)
+    {
+        bool frontIsMaxZ = isPlayerSide ? playerFrontRowIsMaxZ : enemyFrontRowIsMaxZ;
+        var (row, col) = BattleGrid.ResolveCellFromWorldPosition(zoneBounds, worldPos, gridColumns, frontIsMaxZ);
+
+        var grid = GetGridFor(isPlayerSide);
+        if (grid != null && !grid.TryOccupy(ch, row, col))
+            grid.TryOccupyNextFreeSlot(ch, out row, out col);
+
+        allCharacters.Add(ch);
+        turnOrder.Add(ch);
+
+        return (row, col);
+    }
+
+    /// <summary>
+    /// Bir saldırganın belirttiği sütuna göre hedefi grid kurallarıyla (önden-
+    /// arkaya, önü boşsa arkaya geçiş) çözüp hasarı uygular. AoE modunda
+    /// sütundaki TÜM canlılara, diğer modlarda tek hedefe uygulanır.
+    /// </summary>
+    public void ResolveColumnAttack(Character attacker, int targetColumn, AbilityTargetingMode mode)
+    {
+        if (attacker == null) return;
+
+        var enemyGridForAttacker = GetGridFor(!attacker.isPlayer);
+        if (enemyGridForAttacker == null) return;
+
+        if (mode == AbilityTargetingMode.AreaOfEffect)
+        {
+            foreach (var target in enemyGridForAttacker.GetAllAliveInColumn(targetColumn))
+                ApplyBasicAttackDamage(attacker, target);
+            return;
+        }
+
+        var singleTarget = enemyGridForAttacker.ResolveTarget(targetColumn, mode);
+        if (singleTarget == null)
+        {
+            Debug.LogWarning($"[BM] ResolveColumnAttack: sütun {targetColumn} içinde geçerli hedef yok.");
+            return;
+        }
+
+        ApplyBasicAttackDamage(attacker, singleTarget);
+    }
+
+    private void ApplyBasicAttackDamage(Character attacker, Character defender)
+    {
+        var targetHealth = defender.GetComponent<HealthSystem>();
+        if (targetHealth == null) return;
+
+        int damage = Mathf.Max(1, attacker.cardData.baseStr);
+        targetHealth.TakeDamageServerRpc(damage);
+
+        Debug.Log($"⚔️ {attacker.cardData.cardName} ({attacker.gridRow}/{attacker.gridColumn}) → " +
+                  $"{defender.cardData.cardName} ({defender.gridRow}/{defender.gridColumn}) : -{damage} HP");
+    }
+
+    /// <summary>
+    /// AKTİF yetenek kullanım isteğini uçtan uca doğrular ve uygular:
+    /// yetki, sıra, cooldown hazır mı, raund başına taraf limiti, hedef
+    /// çözümü, efekt uygulaması, cooldown'un 4 raunda sıfırlanması ve turun
+    /// bitirilmesi.
+    /// </summary>
+    public bool TryUseActiveAbilityForCharacter(Character character, int targetColumn, ulong senderId, out string reason)
+    {
+        reason = null;
+
+        if (character == null) { reason = "Karakter yok."; return false; }
+
+        if (!IsSenderAuthorizedForCharacter(senderId, character))
+        {
+            reason = "Bu karakter üzerinde yetkiniz yok.";
+            return false;
+        }
+
+        if (!character.isMyTurn)
+        {
+            reason = "Bu karakterin sırası değil.";
+            return false;
+        }
+
+        if (!character.IsAlive)
+        {
+            reason = "Karakter düşmüş durumda.";
+            return false;
+        }
+
+        if (!character.IsActiveAbilityReady)
+        {
+            reason = $"Yetenek hazır değil ({character.AbilityCooldownRemaining.Value} raund kaldı).";
+            return false;
+        }
+
+        int lastUsedRound = character.isPlayer ? playerSideLastAbilityRound : enemySideLastAbilityRound;
+        if (lastUsedRound == CurrentRound)
+        {
+            reason = "Bu raundda bu taraf zaten bir aktif yetenek kullandı.";
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(character.cardData?.ability))
+        {
+            reason = "Bu kartın aktif yeteneği tanımlı değil.";
+            return false;
+        }
+
+        var ability = AbilityCatalog.GetActive(character.cardData.ability);
+        if (ability == null)
+        {
+            reason = $"'{character.cardData.ability}' kimlikli bir yetenek kayıtlı değil.";
+            return false;
+        }
+
+        var enemyGridForCharacter = GetGridFor(!character.isPlayer);
+        Character primaryTarget = enemyGridForCharacter?.ResolveTarget(targetColumn, ability.TargetingMode);
+
+        var allTargets = ability.TargetingMode == AbilityTargetingMode.AreaOfEffect
+            ? enemyGridForCharacter?.GetAllAliveInColumn(targetColumn) ?? new List<Character>()
+            : (primaryTarget != null ? new List<Character> { primaryTarget } : new List<Character>());
+
+        var context = new AbilityContext
+        {
+            Source = character,
+            PrimaryTarget = primaryTarget,
+            AllTargets = allTargets,
+            OwnGrid = GetGridFor(character.isPlayer),
+            EnemyGrid = enemyGridForCharacter,
+            CurrentRound = CurrentRound
+        };
+
+        ability.Apply(context);
+
+        character.AbilityCooldownRemaining.Value = 4; // ActiveAbilityCooldownRounds
+
+        if (character.isPlayer) playerSideLastAbilityRound = CurrentRound;
+        else enemySideLastAbilityRound = CurrentRound;
+
+        Debug.Log($"[BM] {character.cardData.cardName} aktif yeteneğini kullandı: {character.cardData.ability} (raund {CurrentRound})");
+
+        EndTurn();
+        return true;
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+
     void Awake()
     {
         if (Instance == null)
             Instance = this;
+
+        playerGrid = new BattleGrid(gridColumns);
+        enemyGrid = new BattleGrid(gridColumns);
     }
 
     void Start()
@@ -274,7 +607,7 @@ public class BattleManager : NetworkBehaviour
             if (ch != null)
             {
                 ch.Setup(card);
-                allCharacters.Add(ch);
+                RegisterSpawnedCharacterByFlatIndex(ch, true, i);
             }
         }
 
@@ -308,7 +641,7 @@ public class BattleManager : NetworkBehaviour
             if (ch != null)
             {
                 ch.Setup(card);
-                allCharacters.Add(ch);
+                RegisterSpawnedCharacterByFlatIndex(ch, false, i);
             }
         }
 
@@ -372,7 +705,7 @@ public class BattleManager : NetworkBehaviour
         if (ch != null)
         {
             ch.Setup(card);
-            allCharacters.Add(ch);
+            RegisterSpawnedCharacterByFlatIndex(ch, isPlayer, inDef);
         }
 
         Debug.Log($"[BM] Tek kart spawn: {(isPlayer ? "Player" : "Enemy")} -> {card.cardName}");
@@ -392,31 +725,192 @@ public class BattleManager : NetworkBehaviour
 
     public void StartBattle()
     {
-        turnOrder = new List<Character>(
-    Object.FindObjectsByType<Character>(FindObjectsSortMode.None)
-);
+        // NOT: Önceden turnOrder burada FindObjectsByType ile her seferinde
+        // SIFIRDAN kuruluyordu - bu, o ana kadar RegisterSpawnedCharacterBy*
+        // ile grid'e kaydedilmiş karakterleri (satır/sütun bilgisiyle birlikte)
+        // yok sayıp rastgele sahne sırasıyla değiştiriyordu. Artık turnOrder,
+        // karakterler kartla sahaya sürüldükçe zaten dolduruluyor (bkz.
+        // RegisterSpawnedCharacterByFlatIndex/ByWorldPosition); burada sadece
+        // hâlâ boşsa (ör. eski/alternatif bir çağrı yolu) bir fallback kuruyoruz.
+        if (turnOrder == null || turnOrder.Count == 0)
+        {
+            turnOrder = new List<Character>(
+                Object.FindObjectsByType<Character>(FindObjectsSortMode.None));
+        }
+
         currentIndex = 0;
+        CurrentRound = 1;
+        battleEnded = false;
         AssignTurn();
+        ResetTurnTimer();
     }
 
     public void EndTurn()
     {
-        if (turnOrder == null || turnOrder.Count == 0) return;
+        if (battleEnded || turnOrder == null || turnOrder.Count == 0) return;
 
-        turnOrder[currentIndex].SetTurn(false);
-        currentIndex = (currentIndex + 1) % turnOrder.Count;
+        if (currentIndex >= 0 && currentIndex < turnOrder.Count && turnOrder[currentIndex] != null)
+            turnOrder[currentIndex].SetTurn(false);
+
+        int guard = 0;
+        do
+        {
+            int previousIndex = currentIndex;
+            currentIndex = (currentIndex + 1) % turnOrder.Count;
+
+            if (currentIndex <= previousIndex)
+                AdvanceRound();
+
+            guard++;
+        }
+        while (guard < turnOrder.Count &&
+               (turnOrder[currentIndex] == null || !turnOrder[currentIndex].IsAlive));
+
         AssignTurn();
+        ResetTurnTimer();
     }
 
     void AssignTurn()
     {
         if (turnOrder == null || turnOrder.Count == 0) return;
+        if (currentIndex < 0 || currentIndex >= turnOrder.Count) return;
+        if (turnOrder[currentIndex] == null) return;
+
         turnOrder[currentIndex].SetTurn(true);
     }
 
-    // ---------------------------------------------------------
-    // Oyuncu / Düşman saldırı
-    // ---------------------------------------------------------
+    /// <summary>
+    /// turnOrder tam bir tur tamamlayıp başa döndüğünde çağrılır: raund sayacını
+    /// artırır, her karakterin pasif yeteneğini (round-start) ve aktif yetenek
+    /// cooldown sayacını (sadece canlıyken) günceller.
+    /// </summary>
+    private void AdvanceRound()
+    {
+        CurrentRound++;
+        Debug.Log($"[BM] === Raund {CurrentRound} başladı ===");
+
+        foreach (var ch in turnOrder)
+        {
+            if (ch != null)
+                ch.OnRoundStartServer(CurrentRound);
+        }
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+    #region AFK / Süre Aşımı
+
+    private void ResetTurnTimer()
+    {
+        TurnTimeRemaining.Value = turnTimeLimitSeconds;
+    }
+
+    void Update()
+    {
+        if (!IsServer || battleEnded) return;
+        if (turnTimeLimitSeconds <= 0f) return; // 0 = zaman sınırı kapalı
+        if (turnOrder == null || turnOrder.Count == 0) return;
+        if (currentIndex < 0 || currentIndex >= turnOrder.Count || turnOrder[currentIndex] == null) return;
+
+        if (TurnTimeRemaining.Value > 0f)
+        {
+            TurnTimeRemaining.Value -= Time.deltaTime;
+            return;
+        }
+
+        HandleAfkTimeout();
+    }
+
+    private void HandleAfkTimeout()
+    {
+        bool timedOutSideIsPlayer = turnOrder[currentIndex].isPlayer;
+
+        if (timedOutSideIsPlayer)
+        {
+            playerConsecutiveAfkSkips++;
+            enemyConsecutiveAfkSkips = 0;
+        }
+        else
+        {
+            enemyConsecutiveAfkSkips++;
+            playerConsecutiveAfkSkips = 0;
+        }
+
+        Debug.LogWarning($"[BM] AFK/süre aşımı: {(timedOutSideIsPlayer ? "player" : "enemy")} tarafı turunu kaçırdı " +
+                          $"({(timedOutSideIsPlayer ? playerConsecutiveAfkSkips : enemyConsecutiveAfkSkips)}. kez üst üste).");
+
+        int strikes = timedOutSideIsPlayer ? playerConsecutiveAfkSkips : enemyConsecutiveAfkSkips;
+        if (strikes >= maxConsecutiveAfkSkipsBeforeForfeit)
+        {
+            EndBattle(winnerIsPlayerSide: !timedOutSideIsPlayer, reason: "afk_timeout");
+            return;
+        }
+
+        // Turu otomatik atla (aktif yetenek/saldırı kullanmadan sırayı devret).
+        EndTurn();
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+    #region Teslim Olma
+
+    /// <summary>
+    /// Teslim olma isteği. 1v1'de tek oy yeterlidir (kendi kendine teslim -
+    /// gerçek bir "oylama" iki oyunculu bir takımda anlam kazanır). Takım
+    /// modları eklendiğinde requiredVotes = takım boyutu yapılarak buradaki
+    /// HashSet tabanlı oy toplama aynen kullanılabilir.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void RequestSurrenderServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (battleEnded) return;
+
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        if (!TryResolveSenderSide(senderId, out bool senderIsPlayerSide))
+        {
+            Debug.LogWarning($"[BM] RequestSurrenderServerRpc: tanınmayan client ({senderId}).");
+            return;
+        }
+
+        var votes = senderIsPlayerSide ? playerSurrenderVotes : enemySurrenderVotes;
+        votes.Add(senderId);
+
+        // 1v1: taraf başına gereken oy sayısı = 1 (bkz. yukarıdaki not).
+        int requiredVotes = 1;
+
+        if (votes.Count >= requiredVotes)
+        {
+            Debug.Log($"[BM] {(senderIsPlayerSide ? "Player" : "Enemy")} tarafı teslim oldu.");
+            EndBattle(winnerIsPlayerSide: !senderIsPlayerSide, reason: "surrender");
+        }
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+    #region Maç Sonu
+
+    /// <summary>
+    /// Maçı tek, tutarlı bir yerden sonlandırır (AFK forfeit, teslim olma ya
+    /// da normal zafer koşulu - CheckVictory de buraya yönlendirilebilir).
+    /// Turn timer'ı durdurur, tekrar tetiklenmeyi engeller.
+    /// </summary>
+    private void EndBattle(bool winnerIsPlayerSide, string reason)
+    {
+        if (battleEnded) return;
+        battleEnded = true;
+
+        Debug.Log($"[BM] Maç sona erdi. Kazanan taraf: {(winnerIsPlayerSide ? "player" : "enemy")} | sebep: {reason}");
+
+        NotifyMatchEndClientRpc(winnerIsPlayerSide, reason);
+    }
+
+    #endregion
+    // ---------------------------------------------------------------------
+
+
 
 
 
@@ -470,7 +964,6 @@ public class BattleManager : NetworkBehaviour
         Attack(randomCard, false);
     }
 
-    #endregion
     // ---------------------------------------------------------------------
 
     #region RPC ve Kart Gönderme
@@ -555,13 +1048,70 @@ public class BattleManager : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SendAttackServerRpc() => EndTurn();
+    public void SendAttackServerRpc(ServerRpcParams rpcParams = default)
+    {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+
+        if (!TryResolveSenderSide(senderId, out bool senderIsPlayerSide))
+        {
+            Debug.LogWarning($"[BM] Yetkisiz SendAttackServerRpc reddedildi (client {senderId}): taraf çözümlenemedi.");
+            return;
+        }
+
+        if (!IsSendersTurn(senderIsPlayerSide, out string reason))
+        {
+            Debug.LogWarning($"[BM] Yetkisiz SendAttackServerRpc reddedildi (client {senderId}): {reason}");
+            return;
+        }
+
+        // UYUMLULUK KATMANI: eski "Saldır" butonu henüz hangi sütuna
+        // saldırılacağını seçtiren bir arayüze sahip değil (bkz. yeni
+        // Character.AttackServerRpc(int targetColumn) / 6x3 grid sistemi).
+        // Makul varsayılan: sıradaki karakter, KENDİ sütununu karşı sahada
+        // hedefler ("karşındaki sütuna vur"). Gerçek bir sütun seçim arayüzü
+        // eklendiğinde bunun yerine doğrudan Character.AttackServerRpc
+        // çağrılmalı ve bu metot kaldırılabilir.
+        var attacker = turnOrder[currentIndex];
+        ResolveColumnAttack(attacker, attacker.gridColumn, AbilityTargetingMode.Normal);
+
+        EndTurn();
+    }
 
     [ServerRpc(RequireOwnership = false)]
-    public void SendSkillAttackServerRpc(string ability)
+    public void SendSkillAttackServerRpc(string ability, ServerRpcParams rpcParams = default)
     {
-        Debug.Log("Yetenek kullanıldı: " + ability);
-        EndTurn();
+        ulong senderId = rpcParams.Receive.SenderClientId;
+
+        if (!TryResolveSenderSide(senderId, out bool senderIsPlayerSide))
+        {
+            Debug.LogWarning($"[BM] Yetkisiz SendSkillAttackServerRpc reddedildi (client {senderId}): taraf çözümlenemedi.");
+            return;
+        }
+
+        if (!IsSendersTurn(senderIsPlayerSide, out string turnErrorReason))
+        {
+            Debug.LogWarning($"[BM] Yetkisiz SendSkillAttackServerRpc reddedildi (client {senderId}): {turnErrorReason}");
+            return;
+        }
+
+        // UYUMLULUK KATMANI: bkz. SendAttackServerRpc notu - aynı "kendi
+        // sütununu hedefle" varsayımı burada da geçerli. ÖNEMLİ FARK: bu
+        // metot artık (eskisi gibi) sadece log basıp turu bitiren boş bir
+        // stub DEĞİL - cooldown/3-raund-hazırlık/4-raund-bekleme/raund başına
+        // taraf limiti kuralları TryUseActiveAbilityForCharacter içinde TAM
+        // olarak uygulanıyor. "ability" parametresi artık kullanılmıyor
+        // (yetenek kimliği karakterin kendi CardData.ability alanından
+        // okunuyor) - geriye dönük uyumluluk için imza korundu.
+        var character = turnOrder[currentIndex];
+
+        if (!TryUseActiveAbilityForCharacter(character, character.gridColumn, senderId, out string abilityReason))
+        {
+            Debug.LogWarning($"[BM] SendSkillAttackServerRpc reddedildi ({character.cardData?.cardName}): {abilityReason}");
+        }
+        // NOT: EndTurn() burada AYRICA çağrılmıyor - TryUseActiveAbilityForCharacter
+        // başarılı olduğunda kendi içinde zaten EndTurn() çağırıyor; başarısız
+        // olduğunda ise tur BİLEREK bitirilmiyor (istek reddedildi, oyuncu
+        // tekrar deneyebilir/başka bir aksiyon seçebilir).
     }
 
 
@@ -569,6 +1119,12 @@ public class BattleManager : NetworkBehaviour
     public void PlayCardServerRpc(string cardId, ServerRpcParams rpcParams = default)
     {
         ulong senderClientId = rpcParams.Receive.SenderClientId;
+
+        if (!TryResolveSenderSide(senderClientId, out bool isPlayer))
+        {
+            Debug.LogWarning($"[BM] PlayCardServerRpc: tanınmayan client reddedildi ({senderClientId}).");
+            return;
+        }
 
         var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
         var card = deckManager != null ? deckManager.GetCardById(cardId) : null;
@@ -578,8 +1134,19 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // kim oynadıysa ona göre player/enemy olarak spawn et
-        bool isPlayer = senderClientId == NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
+        // Anti-cheat: kart gerçekten bu client'ın maça gönderdiği destede mi?
+        if (!SenderOwnsCard(senderClientId, card))
+        {
+            Debug.LogWarning($"[BM] PlayCardServerRpc reddedildi: client {senderClientId} '{cardId}' kartına sahip değil.");
+            return;
+        }
+
+        if (!HasFreeSpawnSlot(isPlayer))
+        {
+            Debug.LogWarning($"[BM] PlayCardServerRpc reddedildi: {(isPlayer ? "player" : "enemy")} tarafında boş slot yok.");
+            return;
+        }
+
         SpawnCharacter(card, isPlayer);
     }
 
@@ -590,30 +1157,60 @@ public class BattleManager : NetworkBehaviour
 
     public void CheckVictory()
     {
+        if (battleEnded) return;
+
         int alive = 0;
-        ulong winnerId = 0;
+        bool winnerIsPlayerSide = false;
 
         foreach (var ch in allCharacters)
         {
             if (ch == null) continue;
 
-            var hs = ch.GetComponent<HealthSystem>();
-            if (hs != null && hs.currentHP.Value > 0)
+            // NOT: ch.OwnerClientId burada KASITLI olarak kullanılmıyor. Tüm
+            // karakterler net.Spawn() ile (ownership belirtmeden) spawn
+            // edildiği için OwnerClientId pratikte her zaman sunucuya eşit
+            // olur - host-olmayan taraf için güvenilmez bir kaynaktı.
+            // ch.isPlayer, spawn anında TryResolveSenderSide ile doğrulanmış
+            // gerçek taraf bilgisini taşır.
+            if (ch.IsAlive)
             {
                 alive++;
-                winnerId = ch.OwnerClientId;
+                winnerIsPlayerSide = ch.isPlayer;
             }
         }
 
         if (alive == 1)
-            GrantRewardTo(winnerId);
+            EndBattle(winnerIsPlayerSide, "victory");
     }
 
 
-    public void GrantRewardTo(ulong winnerId)
+    /// <summary>
+    /// Maç sonucunu HER İKİ client'a da bildirir (ClientRpc, host'un kendi
+    /// client instance'ında da çalışır - Netcode'da host = server + client
+    /// birleşik). ÖNCEDEN GrantRewardTo SADECE sunucuda (host'un
+    /// makinesinde) doğrudan çağrılıyordu; bu yüzden host-olmayan oyuncu
+    /// (joiner) ne XP alıyordu ne de maç sonu ekranını görüyordu -
+    /// GrantMatchRewards, o an çalıştığı CİHAZDAKİ yerel DeckManagerObject/
+    /// CardLevelSystem/SaveSystem verisini günceller, bu yüzden mutlaka her
+    /// iki cihazda da AYRI AYRI çalıştırılması gerekiyordu.
+    /// </summary>
+    [ClientRpc]
+    private void NotifyMatchEndClientRpc(bool winnerIsPlayerSide, string reason)
     {
-        bool isLocalPlayerWinner = (NetworkManager.Singleton.LocalClientId == winnerId);
+        // Host = "player" tarafı (bkz. TryResolveSenderSide). Bu cihazın
+        // host mu yoksa katılımcı (joiner) mı olduğuna göre "ben kazandım
+        // mı" sorusunu yerel olarak çöz.
+        bool isThisDeviceHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+        bool isLocalPlayerWinner = isThisDeviceHost ? winnerIsPlayerSide : !winnerIsPlayerSide;
 
+        Debug.Log($"[BM] Maç sonu bildirimi alındı (bu cihaz: {(isThisDeviceHost ? "host" : "joiner")}) -> " +
+                  $"{(isLocalPlayerWinner ? "KAZANDIN" : "KAYBETTİN")} (sebep: {reason})");
+
+        GrantRewardTo(isLocalPlayerWinner);
+    }
+
+    public void GrantRewardTo(bool isLocalPlayerWinner)
+    {
         var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
         var usedCards = deckManager != null ? deckManager.currentMatchDeck : null;
 
@@ -701,7 +1298,57 @@ public class BattleManager : NetworkBehaviour
 
         Debug.Log("TEST CARD => " + card.cardName + " | prefab=" + card.prefab);
 
-        bool isPlayer = senderId == NetworkManager.ServerClientId;
+        if (!TryResolveSenderSide(senderId, out bool isPlayer))
+        {
+            Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc: tanınmayan client reddedildi ({senderId}).");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            });
+
+            return;
+        }
+
+        // Anti-cheat: kart gerçekten bu client'ın maça gönderdiği destede mi?
+        if (!SenderOwnsCard(senderId, card))
+        {
+            Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi: client {senderId} '{card.cardName}' kartına sahip değil.");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            });
+
+            return;
+        }
+
+        // Anti-cheat: sıra bu client'ın tarafında değilse yerleştirmeye izin verme.
+        // (Bu kontrol, "sıram geçmesine rağmen sınırsız saldırı" hatasının kaynağıydı.)
+        if (!IsSendersTurn(isPlayer, out string turnReason))
+        {
+            Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi (client {senderId}): {turnReason}");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            });
+
+            return;
+        }
+
+        // Anti-cheat: sahada bu taraf için boş slot yoksa (sınırsız spawn engeli).
+        if (!HasFreeSpawnSlot(isPlayer))
+        {
+            Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi: {(isPlayer ? "player" : "enemy")} tarafında boş slot yok.");
+
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            });
+
+            return;
+        }
 
         Collider zone = isPlayer ? playerZone : enemyZone;
 
@@ -784,7 +1431,8 @@ public class BattleManager : NetworkBehaviour
         {
             ch.Setup(card);
             ch.isPlayer = isPlayer;
-            allCharacters.Add(ch);
+            var (placedRow, placedCol) = RegisterSpawnedCharacterByWorldPosition(ch, isPlayer, zone.bounds, position);
+            Debug.Log($"[BM] Grid hücresi: {placedRow}/{placedCol}");
         }
 
         Debug.Log($"✅ {card.cardName} spawn edildi → {(isPlayer ? "Oyuncu" : "Düşman")} bölgesi");
@@ -880,6 +1528,7 @@ public class BattleManager : NetworkBehaviour
         CardData enemyCard = enemyCards[Random.Range(0, enemyCards.Count)];
 
         Transform slot = enemyGridPositions[nextEnemySpawnIndex];
+        int usedSlotIndex = nextEnemySpawnIndex;
         nextEnemySpawnIndex++;
 
         GameObject prefabToUse = ResolvePrefab(enemyCard);
@@ -909,7 +1558,7 @@ public class BattleManager : NetworkBehaviour
         {
             ch.Setup(enemyCard);
             ch.isPlayer = false;
-            allCharacters.Add(ch);
+            RegisterSpawnedCharacterByFlatIndex(ch, false, usedSlotIndex);
         }
 
         Debug.Log($"🟥 Düşman otomatik spawn edildi: {enemyCard.cardName}");
@@ -993,12 +1642,13 @@ public class BattleManager : NetworkBehaviour
 
         Debug.Log($"⚔️ {attacker.cardData.cardName} → {defender.cardData.cardName} | -{damage} HP");
 
-        if (defender.GetComponent<HealthSystem>().currentHP.Value <= 0)
-        {
-            Debug.Log($"💀 {defender.cardData.cardName} öldü!");
-            allCharacters.Remove(defender);
-            Destroy(defender.gameObject);
-            CheckVictory();
-        }
+        // NOT: Önceden burada defender MANUEL olarak Destroy() ediliyor ve
+        // CheckVictory() tekrar çağrılıyordu. Bu, HealthSystem.Die()'ın
+        // (TakeDamageServerRpc HP'yi 0'a indirdiğinde otomatik tetiklediği)
+        // "düşür (downed), yok etme" davranışını eziyordu - karakter gerçekten
+        // yok ediliyor (revive sistemini kırıyordu), grid'den de hiç
+        // kaldırılmıyordu (Remove çağrılmadığı için hücre sonsuza dek "dolu"
+        // görünüyordu) ve CheckVictory iki kez çalışıyordu. Ölüm/downed durumu
+        // ve zafer kontrolü artık TEK bir yerden (HealthSystem.Die) yönetiliyor.
     }
 }
