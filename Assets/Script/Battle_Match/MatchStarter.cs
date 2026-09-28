@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// Casual/Season bayraklarını saklar ve gerçek başlatmayı BattleStartAdapter’a devir eder.
@@ -41,12 +41,6 @@ public class MatchStarter : MonoBehaviour
 
         LastMatchWasSeason = seasonMode;
         LastMatchTeamSize = Mathf.Clamp(teamSize, 1, 3);
-
-        if (adapter == null)
-        {
-            Debug.LogError("[MatchStarter] adapter atanmadı.");
-            return;
-        }
 
         if (lobbyTeamManager != null)
         {

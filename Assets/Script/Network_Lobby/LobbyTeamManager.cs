@@ -303,8 +303,8 @@ public class LobbyTeamManager : NetworkBehaviour
             bool isReady = readyStates.ContainsKey(id) && readyStates[id];
 
             bool isHostPlayer = id == 0;
-            string hostIcon = isHostPlayer ? " 👑" : "";
-            string readyIcon = isReady ? "✅" : "⏳";
+            string hostIcon = isHostPlayer ? " [HOST]" : "";
+            string readyIcon = isReady ? "[HAZIR]" : "[BEKLIYOR]";
 
             text.text = $"{playerName}{hostIcon} {readyIcon}";
         }
@@ -375,7 +375,7 @@ public class LobbyTeamManager : NetworkBehaviour
         TMP_Text text = readyButton.GetComponentInChildren<TMP_Text>();
 
         if (text != null)
-            text.text = isReady ? "HAZIR ✅" : "HAZIR OL";
+            text.text = isReady ? "HAZIR" : "HAZIR OL";
     }
 
     private void UpdateSwitchTeamButtonState()

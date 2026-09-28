@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
@@ -99,6 +99,10 @@ public class QRDataManager : MonoBehaviour
 
             Debug.Log($"[QR] Karakter kartı oluşturuldu: {card.cardName} ({card.id})");
         }
+
+        // Token bu noktaya yalnız JwtCardVerifier doğrulamasından geçerek gelir.
+        // Envanterde saklanır ve çevrimiçi maçta sunucuya kanıt olarak gönderilir.
+        card.signedToken = jwtText.Trim();
 
         var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
         if (inv != null)

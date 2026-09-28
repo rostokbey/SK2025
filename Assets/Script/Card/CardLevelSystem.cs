@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CardLevelSystem : MonoBehaviour
@@ -87,9 +87,12 @@ public class CardLevelSystem : MonoBehaviour
     /// <summary>L -> (L+1) için gereken XP.</summary>
     public int XpToNextLevel(int level)
     {
-        // float tabanlı; double/float uyumsuzluğu yok
-        float v = 100f * Mathf.Pow(1.08f, Mathf.Max(0, level - 1));
-        return Mathf.RoundToInt(v);
+        // 1->2 = 5.000, 98->99 = 300.000. Ara değerler 1,25 kuvvetli
+        // yumuşak bir eğriyle büyür ve yüzlüğe yuvarlanır.
+        int clamped = Mathf.Clamp(level, 1, maxLevel - 1);
+        float t = (clamped - 1f) / (maxLevel - 2f);
+        float value = 5000f + 295000f * Mathf.Pow(t, 1.25f);
+        return Mathf.RoundToInt(value / 100f) * 100;
     }
 
     // Geriye uyumluluk: projede eski isim kullanıldıysa kırmızı vermesin
@@ -105,7 +108,7 @@ public class CardLevelSystem : MonoBehaviour
 
         // Rakip ortalaması senden yüksekse her seviye farkı için %10 bonus
         float diff = Mathf.Max(0f, oppAvg - myAvg);
-        float bonusMul = 1f + 0.10f * diff;
+        float bonusMul = 1f + Mathf.Min(0.25f, 0.10f * diff);
 
         return Mathf.RoundToInt(baseWinXp * bonusMul);
     }
@@ -118,7 +121,7 @@ public class CardLevelSystem : MonoBehaviour
 
         // Senden düşük rakibe kaybettiğinde her seviye farkı için %10 ekstra ceza
         float diff = Mathf.Max(0f, myAvg - oppAvg);
-        float penMul = 1f + 0.10f * diff;
+        float penMul = 1f + Mathf.Min(0.25f, 0.10f * diff);
 
         return -Mathf.RoundToInt(baseLossXp * penMul); // negatif
     }

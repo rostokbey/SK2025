@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
@@ -35,8 +35,28 @@ public class BattleManager : NetworkBehaviour
     [Tooltip("İstersen sahneden bağla; bağlanmazsa da OnStartBattleButton() çağrılabilir.")]
     public Button startBattleButton;
 
-    [Header("Turn Yönetimi")]
+    [Header("Tur / Faz Yönetimi")]
     public ulong currentTurnClientId;
+
+    public readonly NetworkVariable<BattlePhase> Phase = new NetworkVariable<BattlePhase>(
+        BattlePhase.WaitingForDecks,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    public readonly NetworkVariable<ulong> ActivePlayerClientId = new NetworkVariable<ulong>(
+        ulong.MaxValue,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    public readonly NetworkVariable<int> RoundNumber = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    private readonly HashSet<ulong> initialPlacementCompleted = new();
+    private readonly HashSet<ulong> placedThisTurn = new();
+    private readonly List<ulong> matchPlayers = new();
+    private int activePlayerIndex;
 
     [Header("Saha Alanları")]
     public Collider playerZone;
@@ -48,12 +68,22 @@ public class BattleManager : NetworkBehaviour
     // --- RUNTIME ---
     private readonly List<Character> allCharacters = new();
     private readonly Dictionary<ulong, List<string>> playerSubmittedCardIds = new();
+    private readonly Dictionary<ulong, List<CardData>> playerSubmittedCards = new();
+    private readonly Dictionary<ulong, HashSet<string>> playerSubmittedJtis = new();
+    private readonly Dictionary<ulong, int> expectedSubmittedCardCounts = new();
     private List<Character> turnOrder = new();
     private int currentIndex = 0;
 
     // Tek kart spawn için sıralı slot takibi
     private int nextPlayerSpawnIndex = 0;
     private int nextEnemySpawnIndex = 0;
+
+    [Header("Geliştirme / Eski Kayıt Uyumluluğu")]
+    [Tooltip("Yalnızca prototip testi için: signedToken taşımayan eski kart kayıtlarını kabul eder. Yayın sürümünde kapatılmalıdır.")]
+    public bool allowUnsignedTestDeck = true;
+
+    [Tooltip("Gerçek kart modeli bulunamazsa Inspector'daki eski varsayılan prefab yerine görünür test kapsülünü zorlar.")]
+    public bool forceDebugCharacterVisuals = true;
 
     [Header("Sınırlar (Anti-Cheat)")]
     [Tooltip("Bir tarafın aynı anda sahada bulundurabileceği maksimum karakter sayısı.")]
@@ -77,7 +107,7 @@ public class BattleManager : NetworkBehaviour
     public BattleGrid GetGridFor(bool isPlayerSide) => isPlayerSide ? playerGrid : enemyGrid;
 
     /// <summary>Şu anki raund numarası (1'den başlar). turnOrder tam bir tur tamamlayınca artar.</summary>
-    public int CurrentRound { get; private set; } = 1;
+    public int CurrentRound => Mathf.Max(1, RoundNumber.Value);
 
     // Raund başına, taraf başına en fazla 1 aktif yetenek kullanımı.
     private int playerSideLastAbilityRound = -1;
@@ -85,7 +115,7 @@ public class BattleManager : NetworkBehaviour
 
     [Header("AFK / Süre Aşımı")]
     [Tooltip("Bir karakterin turunu tamamlamak için verilen süre (saniye). 0 = sınırsız (devre dışı).")]
-    public float turnTimeLimitSeconds = 30f;
+    public float turnTimeLimitSeconds = BattleRules.SelectionSeconds;
 
     [Tooltip("Art arda kaç kez süresi geçerse o taraf otomatik mağlup sayılır.")]
     public int maxConsecutiveAfkSkipsBeforeForfeit = 3;
@@ -147,22 +177,19 @@ public class BattleManager : NetworkBehaviour
     }
 
     /// <summary>Şu an aktif sıranın, verilen tarafa ait olup olmadığını kontrol eder.</summary>
-    private bool IsSendersTurn(bool senderIsPlayerSide, out string reason)
+    private bool IsSendersTurn(ulong senderId, out string reason)
     {
         reason = null;
 
-        if (turnOrder == null || turnOrder.Count == 0 ||
-            currentIndex < 0 || currentIndex >= turnOrder.Count ||
-            turnOrder[currentIndex] == null)
+        if (Phase.Value != BattlePhase.InitialPlacement && Phase.Value != BattlePhase.PlayerTurn)
         {
-            reason = "Sıra sistemi henüz hazır değil.";
+            reason = $"Bu fazda hamle yapılamaz: {Phase.Value}.";
             return false;
         }
 
-        bool activeSideIsPlayer = turnOrder[currentIndex].isPlayer;
-        if (activeSideIsPlayer != senderIsPlayerSide)
+        if (ActivePlayerClientId.Value != senderId)
         {
-            reason = $"Sıra bu tarafta değil (aktif taraf: {(activeSideIsPlayer ? "player" : "enemy")}).";
+            reason = $"Sıra client {ActivePlayerClientId.Value} oyuncusunda.";
             return false;
         }
 
@@ -172,20 +199,74 @@ public class BattleManager : NetworkBehaviour
     /// <summary>Kartın, gönderen client'ın bu maç için gönderdiği desteye gerçekten ait olup olmadığını kontrol eder.</summary>
     private bool SenderOwnsCard(ulong senderId, CardData card)
     {
-        if (card == null) return false;
-
-        if (!playerSubmittedCardIds.TryGetValue(senderId, out var ids) || ids == null)
+        if (card == null)
             return false;
 
-        return (!string.IsNullOrEmpty(card.id) && ids.Contains(card.id)) ||
-               (!string.IsNullOrEmpty(card.cardId) && ids.Contains(card.cardId)) ||
-               (!string.IsNullOrEmpty(card.cardName) && ids.Contains(card.cardName));
+        return FindSubmittedCardForSender(senderId, card.id) != null ||
+               FindSubmittedCardForSender(senderId, card.cardId) != null ||
+               FindSubmittedCardForSender(senderId, card.cardName) != null;
+    }
+
+    private CardData FindSubmittedCardForSender(ulong senderId, string key)
+    {
+        if (string.IsNullOrEmpty(key) ||
+            !playerSubmittedCards.TryGetValue(senderId, out var cards) ||
+            cards == null)
+        {
+            return null;
+        }
+
+        CardData exact = cards.FirstOrDefault(c =>
+            c != null &&
+            (string.Equals(c.id, key, System.StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(c.cardId, key, System.StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(c.cardName, key, System.StringComparison.OrdinalIgnoreCase)));
+
+        if (exact != null)
+            return exact;
+
+        // Yerel kayıt CARD-Karakter-0000001, imzalı payload ise Karakter/CARD-Karakter
+        // biçiminde olabiliyor. Oyuncuda aynı karakterden tek savaş kartı olduğu için
+        // fiziksel seri sonunu kaldırarak güvenli biçimde kanonik eşleştirme yapıyoruz.
+        string normalized = NormalizeCardKeyForMatch(key);
+        CardData normalizedMatch = cards.FirstOrDefault(c =>
+            c != null &&
+            (NormalizeCardKeyForMatch(c.id) == normalized ||
+             NormalizeCardKeyForMatch(c.cardId) == normalized ||
+             NormalizeCardKeyForMatch(c.cardName) == normalized));
+
+        if (normalizedMatch == null)
+        {
+            string submitted = string.Join(", ", cards.Where(c => c != null).Select(c => c.id));
+            Debug.LogWarning($"[SECURE DECK] Client {senderId} kart eşleşmedi. İstenen='{key}', Gönderilen=[{submitted}]");
+        }
+
+        return normalizedMatch;
+    }
+
+    private static string NormalizeCardKeyForMatch(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+        string result = value.Trim().Replace("_", "-").Replace(" ", "-").ToLowerInvariant();
+        if (result.StartsWith("card-")) result = result.Substring(5);
+
+        string[] parts = result.Split('-');
+        if (parts.Length > 1)
+        {
+            string last = parts[parts.Length - 1];
+            bool numeric = last.All(char.IsDigit);
+            if (numeric && last.Length >= 5)
+                result = string.Join("-", parts.Take(parts.Length - 1));
+        }
+
+        return result.Replace("-", string.Empty);
     }
 
     /// <summary>Verilen tarafın sahada boş spawn slotu (kapasite) olup olmadığını kontrol eder.</summary>
     private bool HasFreeSpawnSlot(bool isPlayerSide)
     {
-        int activeCount = allCharacters.Count(c => c != null && c.isPlayer == isPlayerSide);
+        int activeCount = allCharacters.Count(c => c != null && c.IsAlive && c.isPlayer == isPlayerSide);
         return activeCount < maxActiveCharactersPerSide;
     }
 
@@ -288,8 +369,14 @@ public class BattleManager : NetworkBehaviour
         var targetHealth = defender.GetComponent<HealthSystem>();
         if (targetHealth == null) return;
 
-        int damage = Mathf.Max(1, attacker.cardData.baseStr);
-        targetHealth.TakeDamageServerRpc(damage);
+        int attack = Mathf.Max(0, attacker.cardData.str > 0 ? attacker.cardData.str : attacker.cardData.baseStr);
+        int defence = Mathf.Max(0, defender.cardData.def > 0 ? defender.cardData.def : defender.cardData.baseDef);
+        bool critical = Random.value < BattleRules.BaseCriticalChance;
+        int damage = Mathf.Max(1, attack - defence);
+        if (critical)
+            damage = Mathf.Max(1, Mathf.RoundToInt(damage * BattleRules.CriticalMultiplier));
+
+        targetHealth.ApplyDamageServerSide(damage, critical);
 
         Debug.Log($"⚔️ {attacker.cardData.cardName} ({attacker.gridRow}/{attacker.gridColumn}) → " +
                   $"{defender.cardData.cardName} ({defender.gridRow}/{defender.gridColumn}) : -{damage} HP");
@@ -392,19 +479,89 @@ public class BattleManager : NetworkBehaviour
 
         playerGrid = new BattleGrid(gridColumns);
         enemyGrid = new BattleGrid(gridColumns);
+
+        // Gerçek 3D model/prefab yoksa iki cihazda da aynı geçici ağ prefabını hazırla.
+        BattleDebugPrefabBootstrap.EnsureRegistered();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        if (IsClient)
+            SubmitLocalSignedDeck();
+    }
+
+    private void SubmitLocalSignedDeck()
+    {
+        List<CardData> deck = null;
+
+        if (StartBattleManager.Instance != null &&
+            StartBattleManager.Instance.selectedMatchCards != null &&
+            StartBattleManager.Instance.selectedMatchCards.Count > 0)
+        {
+            deck = StartBattleManager.Instance.selectedMatchCards;
+        }
+        else if (DeckManagerObject.Instance != null)
+        {
+            deck = DeckManagerObject.Instance.currentMatchDeck;
+        }
+
+        if (deck == null || deck.Count == 0)
+        {
+            Debug.LogError("[SECURE DECK] Yerel seçili deste bulunamadı.");
+            return;
+        }
+
+        if (deck.Count > 25)
+        {
+            Debug.LogError("[SECURE DECK] Deste 25 kart sınırını aşıyor.");
+            return;
+        }
+
+        var tokens = new List<FixedString4096Bytes>();
+
+        foreach (CardData card in deck)
+        {
+            if (card == null)
+            {
+                Debug.LogError("[DECK] Deste içinde null kart var.");
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(card.signedToken))
+            {
+                tokens.Add(new FixedString4096Bytes(card.signedToken.Trim()));
+                continue;
+            }
+
+            if (!allowUnsignedTestDeck)
+            {
+                Debug.LogError(
+                    $"[SECURE DECK] '{card.cardName}' kartında imzalı QR kanıtı yok. " +
+                    "Kartı yeniden okutun ve desteyi tekrar kaydedin.");
+                return;
+            }
+
+            // Eski kayıtlarla model/yerleşim testi. TEST kayıtları yayın ekonomisinde
+            // güvenilir değildir; Inspector'da allowUnsignedTestDeck kapatılmalıdır.
+            string json = JsonUtility.ToJson(CardDataMapper.ToDTO(card));
+            string encoded = System.Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+            tokens.Add(new FixedString4096Bytes("TEST:" + encoded));
+            Debug.LogWarning($"[TEST DECK] '{card.cardName}' imzasız test kartı olarak gönderildi.");
+        }
+
+        // NetworkTransport MaxPayloadSize bu projede 6144 bayt. 25 JWT'yi tek
+        // RPC dizisinde göndermek paketi sessizce düşürüyordu. Her kart ayrı,
+        // güvenilir RPC ile gönderilir; sunucu tüm parçalar gelince desteyi açar.
+        for (int i = 0; i < tokens.Count; i++)
+            SubmitDeckCardServerRpc(tokens[i], i, tokens.Count);
+
+        Debug.Log($"[DECK CHUNK] {tokens.Count} kart parça parça sunucuya gönderildi.");
     }
 
     void Start()
     {
-        // TEST: Eğer ağ henüz başlamadıysa Host olarak başlat
-        if (NetworkManager.Singleton &&
-            !NetworkManager.Singleton.IsServer &&
-            !NetworkManager.Singleton.IsClient)
-        {
-            NetworkManager.Singleton.StartHost();
-            Debug.Log("[BM] Test: Host başladı (Editor/tek cihaz testi).");
-        }
-
         // UI buton bağlama (varsa)
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
@@ -450,9 +607,17 @@ public class BattleManager : NetworkBehaviour
 
     public void OnFieldAttackButtonPressed()
     {
-        Debug.Log("[BM] Saldır butonuna basıldı. Sahadaki karakter saldırısı çalışıyor.");
+        if (!IsClient || NetworkManager.Singleton == null)
+            return;
 
-        ResolveAttack(true);
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+        if (Phase.Value != BattlePhase.PlayerTurn || ActivePlayerClientId.Value != localId)
+        {
+            ShowWarning("Şu anda saldırı sırası sende değil.");
+            return;
+        }
+
+        SendAttackServerRpc();
     }
 
     // ---------------------------------------------------------------------
@@ -705,6 +870,7 @@ public class BattleManager : NetworkBehaviour
         if (ch != null)
         {
             ch.Setup(card);
+            ch.SetPlayerSide(isPlayer);
             RegisterSpawnedCharacterByFlatIndex(ch, isPlayer, inDef);
         }
 
@@ -712,88 +878,149 @@ public class BattleManager : NetworkBehaviour
     }
 
     // ---------------------------------------------------------------------
-    #region Turn Sistemi
+    #region Oyuncu Bazlı Tur Sistemi
 
+    // Eski toplu spawn akışı için geriye dönük uyumluluk. Ownership yerine
+    // doğrulanmış taraf eşlemesini kullanır.
     public void AssignTurnToClient(ulong clientId)
     {
+        if (!IsServer) return;
+        bool side = clientId == NetworkManager.ServerClientId;
         foreach (var ch in allCharacters)
+            if (ch != null)
+                ch.SetTurn(ch.IsAlive && ch.isPlayer == side);
+    }
+
+    private void BuildMatchPlayerOrder()
+    {
+        matchPlayers.Clear();
+        matchPlayers.AddRange(playerSubmittedCards.Keys);
+        matchPlayers.Sort((a, b) =>
         {
-            bool isPlayer = ch.OwnerClientId == clientId;
-            ch.SetTurn(isPlayer);
+            if (a == NetworkManager.ServerClientId) return -1;
+            if (b == NetworkManager.ServerClientId) return 1;
+            return a.CompareTo(b);
+        });
+    }
+
+    private void BeginInitialPlacement()
+    {
+        if (!IsServer) return;
+
+        BuildMatchPlayerOrder();
+        if (matchPlayers.Count < 2)
+        {
+            ShowWarning("İki doğrulanmış oyuncu olmadan yerleşim başlayamaz.");
+            return;
         }
+
+        battleEnded = false;
+        initialPlacementCompleted.Clear();
+        placedThisTurn.Clear();
+        activePlayerIndex = 0;
+        RoundNumber.Value = 0;
+        Phase.Value = BattlePhase.InitialPlacement;
+        SetActivePlayer(matchPlayers[activePlayerIndex], drawCard: false);
+        Debug.Log("[FLOW] İlk yerleşim başladı. Her oyuncu bir kart koyacak.");
     }
 
     public void StartBattle()
     {
-        // NOT: Önceden turnOrder burada FindObjectsByType ile her seferinde
-        // SIFIRDAN kuruluyordu - bu, o ana kadar RegisterSpawnedCharacterBy*
-        // ile grid'e kaydedilmiş karakterleri (satır/sütun bilgisiyle birlikte)
-        // yok sayıp rastgele sahne sırasıyla değiştiriyordu. Artık turnOrder,
-        // karakterler kartla sahaya sürüldükçe zaten dolduruluyor (bkz.
-        // RegisterSpawnedCharacterByFlatIndex/ByWorldPosition); burada sadece
-        // hâlâ boşsa (ör. eski/alternatif bir çağrı yolu) bir fallback kuruyoruz.
-        if (turnOrder == null || turnOrder.Count == 0)
+        if (!IsServer) return;
+        BeginCombat();
+    }
+
+    private void BeginCombat()
+    {
+        if (matchPlayers.Count < 2)
+            BuildMatchPlayerOrder();
+        if (matchPlayers.Count < 2) return;
+
+        Phase.Value = BattlePhase.PlayerTurn;
+        RoundNumber.Value = 1;
+        activePlayerIndex = 0;
+        placedThisTurn.Clear();
+        SetActivePlayer(matchPlayers[activePlayerIndex], drawCard: true);
+        Debug.Log("[FLOW] Savaş başladı. Raund 1.");
+    }
+
+    private void SetActivePlayer(ulong clientId, bool drawCard)
+    {
+        ActivePlayerClientId.Value = clientId;
+        currentTurnClientId = clientId;
+
+        bool activeIsPlayerSide = clientId == NetworkManager.ServerClientId;
+        foreach (var ch in allCharacters)
+            if (ch != null)
+                ch.SetTurn(ch.IsAlive && ch.isPlayer == activeIsPlayerSide);
+
+        ResetTurnTimer();
+        BeginLocalTurnClientRpc(clientId, drawCard, Phase.Value, CurrentRound);
+    }
+
+    [ClientRpc]
+    private void BeginLocalTurnClientRpc(ulong clientId, bool drawCard, BattlePhase phase, int round)
+    {
+        if (NetworkManager.Singleton == null || NetworkManager.Singleton.LocalClientId != clientId)
+            return;
+
+        if (drawCard)
         {
-            turnOrder = new List<Character>(
-                Object.FindObjectsByType<Character>(FindObjectsSortMode.None));
+            var hand = Object.FindFirstObjectByType<HandUIManager>(FindObjectsInactive.Include);
+            hand?.DrawCard();
         }
 
-        currentIndex = 0;
-        CurrentRound = 1;
-        battleEnded = false;
-        AssignTurn();
-        ResetTurnTimer();
+        Debug.Log($"[FLOW] Sıra sende. Faz={phase}, Raund={round}");
+    }
+
+    private void OnCardPlaced(ulong senderId)
+    {
+        if (!IsServer) return;
+
+        if (Phase.Value == BattlePhase.InitialPlacement)
+        {
+            initialPlacementCompleted.Add(senderId);
+            if (initialPlacementCompleted.Count >= matchPlayers.Count)
+            {
+                BeginCombat();
+                return;
+            }
+
+            AdvanceActivePlayer(drawCard: false);
+            return;
+        }
+
+        placedThisTurn.Add(senderId);
     }
 
     public void EndTurn()
     {
-        if (battleEnded || turnOrder == null || turnOrder.Count == 0) return;
+        if (!IsServer || battleEnded || Phase.Value != BattlePhase.PlayerTurn)
+            return;
 
-        if (currentIndex >= 0 && currentIndex < turnOrder.Count && turnOrder[currentIndex] != null)
-            turnOrder[currentIndex].SetTurn(false);
-
-        int guard = 0;
-        do
-        {
-            int previousIndex = currentIndex;
-            currentIndex = (currentIndex + 1) % turnOrder.Count;
-
-            if (currentIndex <= previousIndex)
-                AdvanceRound();
-
-            guard++;
-        }
-        while (guard < turnOrder.Count &&
-               (turnOrder[currentIndex] == null || !turnOrder[currentIndex].IsAlive));
-
-        AssignTurn();
-        ResetTurnTimer();
+        AdvanceActivePlayer(drawCard: true);
     }
 
-    void AssignTurn()
+    private void AdvanceActivePlayer(bool drawCard)
     {
-        if (turnOrder == null || turnOrder.Count == 0) return;
-        if (currentIndex < 0 || currentIndex >= turnOrder.Count) return;
-        if (turnOrder[currentIndex] == null) return;
+        if (matchPlayers.Count == 0) return;
 
-        turnOrder[currentIndex].SetTurn(true);
+        activePlayerIndex = (activePlayerIndex + 1) % matchPlayers.Count;
+        if (activePlayerIndex == 0)
+            AdvanceRound();
+
+        SetActivePlayer(matchPlayers[activePlayerIndex], drawCard);
     }
 
-    /// <summary>
-    /// turnOrder tam bir tur tamamlayıp başa döndüğünde çağrılır: raund sayacını
-    /// artırır, her karakterin pasif yeteneğini (round-start) ve aktif yetenek
-    /// cooldown sayacını (sadece canlıyken) günceller.
-    /// </summary>
     private void AdvanceRound()
     {
-        CurrentRound++;
-        Debug.Log($"[BM] === Raund {CurrentRound} başladı ===");
+        RoundNumber.Value++;
+        placedThisTurn.Clear();
+        Debug.Log($"[FLOW] Raund {CurrentRound} başladı.");
 
-        foreach (var ch in turnOrder)
-        {
+        foreach (var ch in allCharacters)
             if (ch != null)
                 ch.OnRoundStartServer(CurrentRound);
-        }
     }
 
     #endregion
@@ -808,10 +1035,12 @@ public class BattleManager : NetworkBehaviour
 
     void Update()
     {
+        UpdateLocalActionButtons();
+
         if (!IsServer || battleEnded) return;
         if (turnTimeLimitSeconds <= 0f) return; // 0 = zaman sınırı kapalı
-        if (turnOrder == null || turnOrder.Count == 0) return;
-        if (currentIndex < 0 || currentIndex >= turnOrder.Count || turnOrder[currentIndex] == null) return;
+        if (Phase.Value != BattlePhase.InitialPlacement && Phase.Value != BattlePhase.PlayerTurn) return;
+        if (ActivePlayerClientId.Value == ulong.MaxValue) return;
 
         if (TurnTimeRemaining.Value > 0f)
         {
@@ -822,9 +1051,21 @@ public class BattleManager : NetworkBehaviour
         HandleAfkTimeout();
     }
 
+    private void UpdateLocalActionButtons()
+    {
+        if (NetworkManager.Singleton == null) return;
+
+        bool myTurn = IsClient &&
+                      Phase.Value == BattlePhase.PlayerTurn &&
+                      ActivePlayerClientId.Value == NetworkManager.Singleton.LocalClientId;
+
+        if (attackButton != null) attackButton.interactable = myTurn;
+        if (skillButton != null) skillButton.interactable = myTurn;
+    }
+
     private void HandleAfkTimeout()
     {
-        bool timedOutSideIsPlayer = turnOrder[currentIndex].isPlayer;
+        bool timedOutSideIsPlayer = ActivePlayerClientId.Value == NetworkManager.ServerClientId;
 
         if (timedOutSideIsPlayer)
         {
@@ -847,7 +1088,13 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Turu otomatik atla (aktif yetenek/saldırı kullanmadan sırayı devret).
+        if (Phase.Value == BattlePhase.InitialPlacement)
+        {
+            EndBattle(winnerIsPlayerSide: !timedOutSideIsPlayer, reason: "initial_placement_timeout");
+            return;
+        }
+
+        // Normal savaş turunu otomatik atla.
         EndTurn();
     }
 
@@ -901,6 +1148,8 @@ public class BattleManager : NetworkBehaviour
     {
         if (battleEnded) return;
         battleEnded = true;
+        Phase.Value = BattlePhase.Finished;
+        ActivePlayerClientId.Value = ulong.MaxValue;
 
         Debug.Log($"[BM] Maç sona erdi. Kazanan taraf: {(winnerIsPlayerSide ? "player" : "enemy")} | sebep: {reason}");
 
@@ -969,17 +1218,319 @@ public class BattleManager : NetworkBehaviour
     #region RPC ve Kart Gönderme
 
     [ServerRpc(RequireOwnership = false)]
-    public void SubmitDeckServerRpc(FixedString128Bytes[] cardIdArray, ServerRpcParams rpcParams = default)
+    private void SubmitDeckCardServerRpc(
+        FixedString4096Bytes cardProof,
+        int cardIndex,
+        int totalCards,
+        ServerRpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
-        List<string> cardIds = cardIdArray.Select(id => id.ToString()).ToList();
 
-        playerSubmittedCardIds[senderId] = cardIds;
-        Debug.Log($"📨 {senderId} oyuncusu {cardIds.Count} kart gönderdi.");
-
-        if (playerSubmittedCardIds.Count >= 2)
+        if (totalCards < 5 || totalCards > BattleRules.DeckSize ||
+            cardIndex < 0 || cardIndex >= totalCards)
         {
-            Debug.Log("🚀 Her iki oyuncudan deste geldi.");
+            Debug.LogWarning($"[DECK CHUNK] Client {senderId} geçersiz parça bilgisi gönderdi: {cardIndex}/{totalCards}");
+            return;
+        }
+
+        if (cardIndex == 0 || !playerSubmittedCards.ContainsKey(senderId))
+        {
+            playerSubmittedCards[senderId] = new List<CardData>();
+            playerSubmittedCardIds[senderId] = new List<string>();
+            playerSubmittedJtis[senderId] = new HashSet<string>();
+            expectedSubmittedCardCounts[senderId] = totalCards;
+        }
+
+        if (expectedSubmittedCardCounts[senderId] != totalCards)
+        {
+            Debug.LogWarning($"[DECK CHUNK] Client {senderId} deste boyutunu gönderim ortasında değiştirdi.");
+            return;
+        }
+
+        string proof = cardProof.ToString();
+        if (!TryDecodeSubmittedCard(senderId, proof, out CardData card, out string identity, out string error))
+        {
+            Debug.LogWarning($"[DECK CHUNK] Client {senderId}, kart {cardIndex} reddedildi: {error}");
+            return;
+        }
+
+        HashSet<string> identities = playerSubmittedJtis[senderId];
+        if (!identities.Add(identity))
+        {
+            Debug.LogWarning($"[DECK CHUNK] Client {senderId} aynı fiziksel kartı tekrar gönderdi: {identity}");
+            return;
+        }
+
+        // Aynı imzalı fiziksel kart iki oyuncunun destesinde bulunamaz.
+        // Geliştirme sırasında Host ve Client aynı yerel hesap/desteyle test
+        // edilebiliyor. Test modu açıkken iki oyuncudaki aynı imzalı jti'ye
+        // geçici izin verilir. Yayında allowUnsignedTestDeck=false olduğunda
+        // fiziksel kart çakışması yeniden kesin olarak reddedilir.
+        if (!allowUnsignedTestDeck && !identity.StartsWith("TEST:"))
+        {
+            foreach (var pair in playerSubmittedJtis)
+            {
+                if (pair.Key != senderId && pair.Value != null && pair.Value.Contains(identity))
+                {
+                    identities.Remove(identity);
+                    Debug.LogWarning("[DECK CHUNK] Aynı fiziksel kart iki oyuncu tarafından gönderildi.");
+                    return;
+                }
+            }
+        }
+
+        playerSubmittedCards[senderId].Add(card);
+        playerSubmittedCardIds[senderId].Add(card.id);
+        Debug.Log($"[DECK CHUNK] Client {senderId}: {playerSubmittedCards[senderId].Count}/{totalCards}");
+
+        if (!AllSubmittedDecksComplete())
+            return;
+
+        Debug.Log("[DECK CHUNK] İki deste eksiksiz alındı; ilk yerleşim başlıyor.");
+        SpawnCharactersFromSubmittedDecks();
+    }
+
+    private bool AllSubmittedDecksComplete()
+    {
+        if (playerSubmittedCards.Count < 2) return false;
+
+        foreach (var pair in playerSubmittedCards)
+        {
+            if (!expectedSubmittedCardCounts.TryGetValue(pair.Key, out int expected) ||
+                pair.Value == null || pair.Value.Count != expected)
+                return false;
+        }
+        return true;
+    }
+
+    private bool TryDecodeSubmittedCard(
+        ulong senderId, string proof, out CardData card, out string identity, out string error)
+    {
+        card = null;
+        identity = null;
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(proof))
+        {
+            error = "Kart kanıtı boş.";
+            return false;
+        }
+
+        if (proof.StartsWith("TEST:"))
+        {
+            if (!allowUnsignedTestDeck)
+            {
+                error = "İmzasız test modu kapalı.";
+                return false;
+            }
+
+            try
+            {
+                string json = Encoding.UTF8.GetString(System.Convert.FromBase64String(proof.Substring(5)));
+                CardDTO dto = JsonUtility.FromJson<CardDTO>(json);
+                if (dto == null || string.IsNullOrWhiteSpace(dto.id) ||
+                    string.IsNullOrWhiteSpace(dto.cardName) || dto.baseHP <= 0 ||
+                    dto.baseStr < 0 || dto.baseDef < 0)
+                {
+                    error = "Test kartı alanları geçersiz.";
+                    return false;
+                }
+
+                card = CardDataMapper.FromDTO(dto);
+                identity = $"TEST:{senderId}:{dto.id}";
+                return true;
+            }
+            catch (System.Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+        }
+
+        if (!JwtCardVerifier.TryParse(proof, out CardPayload payload, out error))
+            return false;
+
+        // Eski CardMint JWT'leri geçerli ES256 imzasına sahip olduğu hâlde
+        // payload içinde typ/ver/jti alanlarını taşımayabiliyor. İmza doğrulandıktan
+        // sonra boş typ ve ver=0 geriye dönük format olarak kabul edilir. jti yoksa
+        // token'ın SHA-256 özeti benzersiz ve kararlı fiziksel kimlik olur.
+        bool typeValid = payload != null &&
+            (string.IsNullOrWhiteSpace(payload.typ) || string.Equals(payload.typ, "CARD", System.StringComparison.OrdinalIgnoreCase));
+        bool versionValid = payload != null && (payload.ver == 0 || payload.ver == 1);
+
+        if (payload == null || !typeValid || !versionValid ||
+            string.IsNullOrWhiteSpace(payload.id) ||
+            payload.hp <= 0 || payload.str < 0 || payload.def < 0)
+        {
+            error = $"İmzalı kart alanları geçersiz: " +
+                    $"typ='{payload?.typ}', ver={payload?.ver}, id='{payload?.id}', " +
+                    $"hp={payload?.hp}, str={payload?.str}, def={payload?.def}.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(payload.name))
+            payload.name = payload.id;
+
+        Sprite sprite = DeckManagerObject.Instance != null
+            ? DeckManagerObject.Instance.GetSpriteByName(payload.name)
+            : null;
+
+        card = new CardData(
+            payload.id, payload.name, payload.hp, payload.str, payload.def,
+            payload.rarity, payload.ability, payload.passive,
+            1, 0, 3, sprite, null, payload.prefab);
+        card.signedToken = proof;
+        identity = !string.IsNullOrWhiteSpace(payload.jti)
+            ? payload.jti
+            : "TOKENHASH:" + ComputeSha256Base64(proof);
+        return true;
+    }
+
+    private static string ComputeSha256Base64(string value)
+    {
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(value ?? string.Empty);
+            return System.Convert.ToBase64String(sha.ComputeHash(bytes));
+        }
+    }
+
+    // Eski toplu RPC geriye dönük uyumluluk için tutulur; yeni istemci kullanmaz.
+    [ServerRpc(RequireOwnership = false)]
+    public void SubmitDeckServerRpc(
+        FixedString4096Bytes[] signedTokenArray,
+        ServerRpcParams rpcParams = default)
+    {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+
+        if (signedTokenArray == null ||
+            signedTokenArray.Length < 5 ||
+            signedTokenArray.Length > 25)
+        {
+            Debug.LogWarning(
+                $"[SECURE DECK] Client {senderId} geçersiz deste boyutu gönderdi.");
+            return;
+        }
+
+        var verifiedCards = new List<CardData>();
+        var verifiedIds = new List<string>();
+        var submittedJtis = new HashSet<string>();
+
+        foreach (FixedString4096Bytes tokenValue in signedTokenArray)
+        {
+            string token = tokenValue.ToString();
+
+            if (token.StartsWith("TEST:"))
+            {
+                if (!allowUnsignedTestDeck)
+                {
+                    Debug.LogWarning($"[SECURE DECK] Client {senderId} imzasız test kartı gönderdi; test modu kapalı.");
+                    return;
+                }
+
+                try
+                {
+                    string json = Encoding.UTF8.GetString(System.Convert.FromBase64String(token.Substring(5)));
+                    CardDTO dto = JsonUtility.FromJson<CardDTO>(json);
+                    if (dto == null || string.IsNullOrWhiteSpace(dto.id) ||
+                        string.IsNullOrWhiteSpace(dto.cardName) || dto.baseHP <= 0 ||
+                        dto.baseStr < 0 || dto.baseDef < 0)
+                    {
+                        Debug.LogWarning($"[TEST DECK] Client {senderId} geçersiz test kartı gönderdi.");
+                        return;
+                    }
+
+                    string testIdentity = $"TEST:{senderId}:{dto.id}";
+                    if (!submittedJtis.Add(testIdentity))
+                    {
+                        Debug.LogWarning($"[TEST DECK] Client {senderId} aynı kartı iki kez gönderdi: {dto.id}");
+                        return;
+                    }
+
+                    CardData testCard = CardDataMapper.FromDTO(dto);
+                    verifiedCards.Add(testCard);
+                    verifiedIds.Add(testCard.id);
+                    continue;
+                }
+                catch (System.Exception exception)
+                {
+                    Debug.LogWarning($"[TEST DECK] Kart çözülemedi: {exception.Message}");
+                    return;
+                }
+            }
+
+            if (!JwtCardVerifier.TryParse(token, out CardPayload payload, out string error))
+            {
+                Debug.LogWarning(
+                    $"[SECURE DECK] Client {senderId} için kart reddedildi: {error}");
+                return; // Bir kart bile geçersizse tüm deste reddedilir.
+            }
+
+            if (payload == null ||
+                payload.typ != "CARD" ||
+                payload.ver != 1 ||
+                string.IsNullOrWhiteSpace(payload.id) ||
+                string.IsNullOrWhiteSpace(payload.jti) ||
+                payload.hp <= 0 || payload.str < 0 || payload.def < 0)
+            {
+                Debug.LogWarning(
+                    $"[SECURE DECK] Client {senderId} geçersiz kart claim'leri gönderdi.");
+                return;
+            }
+
+            if (!submittedJtis.Add(payload.jti))
+            {
+                Debug.LogWarning(
+                    $"[SECURE DECK] Client {senderId} aynı fiziksel kartı destede tekrarladı.");
+                return;
+            }
+
+            foreach (var pair in playerSubmittedJtis)
+            {
+                if (pair.Key != senderId && pair.Value != null && pair.Value.Contains(payload.jti))
+                {
+                    Debug.LogWarning(
+                        $"[SECURE DECK] Aynı fiziksel kart iki oyuncu tarafından gönderildi (jti çakışması).");
+                    return;
+                }
+            }
+
+            Sprite sprite = DeckManagerObject.Instance != null
+                ? DeckManagerObject.Instance.GetSpriteByName(payload.name)
+                : null;
+
+            CardData card = new CardData(
+                payload.id,
+                payload.name,
+                payload.hp,
+                payload.str,
+                payload.def,
+                payload.rarity,
+                payload.ability,
+                payload.passive,
+                1,
+                0,
+                3,
+                sprite,
+                null,
+                payload.prefab
+            );
+
+            card.signedToken = token;
+            verifiedCards.Add(card);
+            verifiedIds.Add(card.id);
+        }
+
+        playerSubmittedCards[senderId] = verifiedCards;
+        playerSubmittedCardIds[senderId] = verifiedIds;
+        playerSubmittedJtis[senderId] = submittedJtis;
+
+        Debug.Log(
+            $"[SECURE DECK] Client {senderId}: {verifiedCards.Count} kartın imzası sunucuda doğrulandı.");
+
+        if (playerSubmittedCards.Count >= 2)
+        {
+            Debug.Log("[SECURE DECK] İki doğrulanmış deste hazır.");
             SpawnCharactersFromSubmittedDecks();
         }
     }
@@ -1008,34 +1559,24 @@ public class BattleManager : NetworkBehaviour
 
     private void SpawnCharactersFromSubmittedDecks()
     {
-        var players = new List<ulong>(playerSubmittedCardIds.Keys);
+        var players = new List<ulong>(playerSubmittedCards.Keys);
 
         if (players.Count < 2)
         {
-            ShowWarning("İki oyuncu deste göndermeden savaş başlayamaz.");
+            ShowWarning("İki oyuncu doğrulanmış deste göndermeden savaş başlayamaz.");
             return;
         }
 
-        var deck1 = playerSubmittedCardIds[players[0]];
-        var deck2 = playerSubmittedCardIds[players[1]];
-
-        var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
-
-        if (deckManager == null)
+        // Host/server tarafını ilk sıraya sabitle.
+        players.Sort((a, b) =>
         {
-            ShowWarning("DeckManagerObject bulunamadı.");
-            return;
-        }
+            if (a == NetworkManager.ServerClientId) return -1;
+            if (b == NetworkManager.ServerClientId) return 1;
+            return a.CompareTo(b);
+        });
 
-        var hostCards = deck1
-            .Select(id => deckManager.GetCardById(id))
-            .Where(c => c != null)
-            .ToList();
-
-        var joinCards = deck2
-            .Select(id => deckManager.GetCardById(id))
-            .Where(c => c != null)
-            .ToList();
+        var hostCards = playerSubmittedCards[players[0]];
+        var joinCards = playerSubmittedCards[players[1]];
 
         if (!CanStartBattleWithDecks(hostCards, joinCards))
             return;
@@ -1044,7 +1585,7 @@ public class BattleManager : NetworkBehaviour
 
         Debug.Log("İki oyuncunun da en az 5 kartı var. Savaş başlatılıyor.");
 
-        StartBattle();
+        BeginInitialPlacement();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -1058,7 +1599,13 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        if (!IsSendersTurn(senderIsPlayerSide, out string reason))
+        if (Phase.Value != BattlePhase.PlayerTurn)
+        {
+            Debug.LogWarning($"[BM] Saldırı reddedildi; mevcut faz: {Phase.Value}.");
+            return;
+        }
+
+        if (!IsSendersTurn(senderId, out string reason))
         {
             Debug.LogWarning($"[BM] Yetkisiz SendAttackServerRpc reddedildi (client {senderId}): {reason}");
             return;
@@ -1071,9 +1618,14 @@ public class BattleManager : NetworkBehaviour
         // hedefler ("karşındaki sütuna vur"). Gerçek bir sütun seçim arayüzü
         // eklendiğinde bunun yerine doğrudan Character.AttackServerRpc
         // çağrılmalı ve bu metot kaldırılabilir.
-        var attacker = turnOrder[currentIndex];
-        ResolveColumnAttack(attacker, attacker.gridColumn, AbilityTargetingMode.Normal);
+        var attacker = allCharacters.FirstOrDefault(c => c != null && c.IsAlive && c.isPlayer == senderIsPlayerSide);
+        if (attacker == null)
+        {
+            Debug.LogWarning("[BM] Saldırabilecek canlı karakter yok.");
+            return;
+        }
 
+        ResolveColumnAttack(attacker, attacker.gridColumn, AbilityTargetingMode.Normal);
         EndTurn();
     }
 
@@ -1088,7 +1640,7 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        if (!IsSendersTurn(senderIsPlayerSide, out string turnErrorReason))
+        if (!IsSendersTurn(senderId, out string turnErrorReason))
         {
             Debug.LogWarning($"[BM] Yetkisiz SendSkillAttackServerRpc reddedildi (client {senderId}): {turnErrorReason}");
             return;
@@ -1102,7 +1654,12 @@ public class BattleManager : NetworkBehaviour
         // olarak uygulanıyor. "ability" parametresi artık kullanılmıyor
         // (yetenek kimliği karakterin kendi CardData.ability alanından
         // okunuyor) - geriye dönük uyumluluk için imza korundu.
-        var character = turnOrder[currentIndex];
+        var character = allCharacters.FirstOrDefault(c => c != null && c.IsAlive && c.isPlayer == senderIsPlayerSide);
+        if (character == null)
+        {
+            Debug.LogWarning("[BM] Yetenek kullanabilecek canlı karakter yok.");
+            return;
+        }
 
         if (!TryUseActiveAbilityForCharacter(character, character.gridColumn, senderId, out string abilityReason))
         {
@@ -1126,8 +1683,7 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        var deckManager = Object.FindFirstObjectByType<DeckManagerObject>();
-        var card = deckManager != null ? deckManager.GetCardById(cardId) : null;
+        var card = FindSubmittedCardForSender(senderClientId, cardId);
         if (card == null)
         {
             Debug.LogWarning("Kart bulunamadı: " + cardId);
@@ -1141,6 +1697,18 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
+        if (!IsSendersTurn(senderClientId, out string turnReason))
+        {
+            Debug.LogWarning($"[BM] PlayCardServerRpc reddedildi: {turnReason}");
+            return;
+        }
+
+        if (Phase.Value == BattlePhase.PlayerTurn && placedThisTurn.Contains(senderClientId))
+        {
+            Debug.LogWarning("[BM] Bu turda zaten bir kart yerleştirildi.");
+            return;
+        }
+
         if (!HasFreeSpawnSlot(isPlayer))
         {
             Debug.LogWarning($"[BM] PlayCardServerRpc reddedildi: {(isPlayer ? "player" : "enemy")} tarafında boş slot yok.");
@@ -1148,6 +1716,7 @@ public class BattleManager : NetworkBehaviour
         }
 
         SpawnCharacter(card, isPlayer);
+        OnCardPlaced(senderClientId);
     }
 
     #endregion
@@ -1157,30 +1726,37 @@ public class BattleManager : NetworkBehaviour
 
     public void CheckVictory()
     {
-        if (battleEnded) return;
+        if (!IsServer || battleEnded)
+            return;
 
-        int alive = 0;
-        bool winnerIsPlayerSide = false;
+        int playerAlive = 0;
+        int enemyAlive = 0;
 
         foreach (var ch in allCharacters)
         {
-            if (ch == null) continue;
+            if (ch == null || !ch.IsAlive)
+                continue;
 
-            // NOT: ch.OwnerClientId burada KASITLI olarak kullanılmıyor. Tüm
-            // karakterler net.Spawn() ile (ownership belirtmeden) spawn
-            // edildiği için OwnerClientId pratikte her zaman sunucuya eşit
-            // olur - host-olmayan taraf için güvenilmez bir kaynaktı.
-            // ch.isPlayer, spawn anında TryResolveSenderSide ile doğrulanmış
-            // gerçek taraf bilgisini taşır.
-            if (ch.IsAlive)
-            {
-                alive++;
-                winnerIsPlayerSide = ch.isPlayer;
-            }
+            if (ch.isPlayer)
+                playerAlive++;
+            else
+                enemyAlive++;
         }
 
-        if (alive == 1)
-            EndBattle(winnerIsPlayerSide, "victory");
+        // Henüz iki taraf da sahaya yerleşmemişse maç sonucu üretme.
+        if (playerAlive == 0 && enemyAlive == 0)
+            return;
+
+        if (playerAlive == 0 && enemyAlive > 0)
+        {
+            EndBattle(false, "victory");
+            return;
+        }
+
+        if (enemyAlive == 0 && playerAlive > 0)
+        {
+            EndBattle(true, "victory");
+        }
     }
 
 
@@ -1236,13 +1812,30 @@ public class BattleManager : NetworkBehaviour
             Debug.LogWarning($"[BM] Resources prefab bulunamadı: {card.prefab}  (Kart: {card.cardName})");
         }
 
-        // 2) Kart üstüne atalı prefab (opsiyonel)
+        // 2) Kart üstüne atanmış gerçek prefab
         if (card.characterPrefab3D != null) return card.characterPrefab3D;
 
-        // 3) Inspector’dan verdiğin default
+        GameObject debugPrefab = BattleDebugPrefabBootstrap.GetPrefab();
+
+        // Modelleme tamamlanana kadar Inspector'da atanmış eski/görünmez default
+        // prefabı atlayıp ağ uyumlu kapsülü kullan.
+        if (forceDebugCharacterVisuals && debugPrefab != null)
+        {
+            Debug.Log($"[DEBUG PREFAB] {card?.cardName} görünür test kapsülüyle spawn ediliyor.");
+            return debugPrefab;
+        }
+
+        // 3) Inspector’dan verilen varsayılan karakter prefabı
         if (characterPrefab != null) return characterPrefab;
 
-        Debug.LogError("[BM] Prefab seçilemedi: characterPrefab da atanmadı!");
+        // 4) Model henüz yoksa otomatik üretilen ağ uyumlu test kapsülü
+        if (debugPrefab != null)
+        {
+            Debug.LogWarning($"[BM] {card?.cardName} için 3D model yok; geçici kapsül kullanılıyor.");
+            return debugPrefab;
+        }
+
+        Debug.LogError("[BM] Prefab seçilemedi; geçici test prefabı da bulunamadı.");
         return null;
     }
 
@@ -1279,7 +1872,7 @@ public class BattleManager : NetworkBehaviour
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
 
-        var card = FindCardForSpawn(cardName);
+        var card = FindSubmittedCardForSender(senderId, cardName);
 
         if (card == null)
         {
@@ -1325,7 +1918,7 @@ public class BattleManager : NetworkBehaviour
 
         // Anti-cheat: sıra bu client'ın tarafında değilse yerleştirmeye izin verme.
         // (Bu kontrol, "sıram geçmesine rağmen sınırsız saldırı" hatasının kaynağıydı.)
-        if (!IsSendersTurn(isPlayer, out string turnReason))
+        if (!IsSendersTurn(senderId, out string turnReason))
         {
             Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi (client {senderId}): {turnReason}");
 
@@ -1334,6 +1927,16 @@ public class BattleManager : NetworkBehaviour
                 Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
             });
 
+            return;
+        }
+
+        if (Phase.Value == BattlePhase.PlayerTurn && placedThisTurn.Contains(senderId))
+        {
+            Debug.LogWarning("[BM] Bu turda zaten bir kart yerleştirildi.");
+            PlacementResultClientRpc(false, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { senderId } }
+            });
             return;
         }
 
@@ -1352,8 +1955,6 @@ public class BattleManager : NetworkBehaviour
 
         Collider zone = isPlayer ? playerZone : enemyZone;
 
-        Debug.Log($"Spawn isteyen senderId: {senderId}, isPlayer: {isPlayer}, seçilen zone: {zone.name}, position: {position}");
-
         if (zone == null)
         {
             Debug.LogError("❌ PlayerZone/EnemyZone Collider atanmadı!");
@@ -1369,6 +1970,7 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
+        Debug.Log($"Spawn isteyen senderId: {senderId}, isPlayer: {isPlayer}, seçilen zone: {zone.name}, position: {position}");
         Bounds b = zone.bounds;
 
         bool insideXZ =
@@ -1408,9 +2010,9 @@ public class BattleManager : NetworkBehaviour
 
    
 
-    Vector3 spawnPos = isPlayer
-            ? position + new Vector3(0f, 108f, -50f)
-            : position + new Vector3(0f, 108f, -90f);
+        // Raycast zaten doğru savaş alanı noktasını verir; eski 108/-50/-90
+        // ofsetleri karakteri görünür alanın kilometrelerce dışına taşıyordu.
+        Vector3 spawnPos = position + Vector3.up * 0.4f;
 
         Quaternion spawnRot = isPlayer
             ? Quaternion.Euler(0f, 0f, 0f)
@@ -1430,12 +2032,13 @@ public class BattleManager : NetworkBehaviour
         if (ch != null)
         {
             ch.Setup(card);
-            ch.isPlayer = isPlayer;
+            ch.SetPlayerSide(isPlayer);
             var (placedRow, placedCol) = RegisterSpawnedCharacterByWorldPosition(ch, isPlayer, zone.bounds, position);
             Debug.Log($"[BM] Grid hücresi: {placedRow}/{placedCol}");
         }
 
         Debug.Log($"✅ {card.cardName} spawn edildi → {(isPlayer ? "Oyuncu" : "Düşman")} bölgesi");
+        OnCardPlaced(senderId);
 
         PlacementResultClientRpc(true, new ClientRpcParams
         {
@@ -1557,7 +2160,7 @@ public class BattleManager : NetworkBehaviour
         if (ch != null)
         {
             ch.Setup(enemyCard);
-            ch.isPlayer = false;
+            ch.SetPlayerSide(false);
             RegisterSpawnedCharacterByFlatIndex(ch, false, usedSlotIndex);
         }
 

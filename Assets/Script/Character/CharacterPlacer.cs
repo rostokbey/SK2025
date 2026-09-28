@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using Unity.Netcode;
 
@@ -9,7 +9,8 @@ public class CharacterPlacer : MonoBehaviour
     [Header("Placement")]
     public LayerMask battlefieldLayer;
     public float spawnYOffset = 0.6f;
-    public float spawnZOffset = -32.97f;
+    [Tooltip("Eski sahne uyumluluğu; normalde 0 kalmalı.")]
+    public float spawnZOffset = 0f;
 
     private Camera mainCamera;
     private CardData cardToPlace;
@@ -34,7 +35,12 @@ public class CharacterPlacer : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            PlaceCharacter();
+            // Savaş sahnesindeki tam ekran UI arka planı her noktayı "UI" saydığı
+            // için EventSystem.IsPointerOverGameObject kullanılamaz. Yalnızca
+            // gerçekten açık olan ayarlar menüsü tıklamayı engeller.
+            GameObject settingsPanel = GameObject.Find("BattleSettingsPanel");
+            if (settingsPanel == null || !settingsPanel.activeInHierarchy)
+                PlaceCharacter();
         }
 
         if (Input.GetMouseButtonDown(1))
@@ -93,28 +99,52 @@ public class CharacterPlacer : MonoBehaviour
             Debug.LogWarning("❌ DEBUG: Ray hiçbir objeye çarpmadı.");
         }
 
-        // Asıl yerleştirme raycast'i
+        Vector3 placementPosition;
+
+        // Öncelik gerçek Battlefield collider/layer raycast'idir. Sahne zemini
+        // collider taşımıyorsa BattleManager'daki taraf alanına yatay düzlem
+        // raycast'i uygulanır; böylece yalnızca görsel 3D zeminle de test edilir.
         if (Physics.Raycast(ray, out RaycastHit hit, 5000f, battlefieldLayer))
         {
-            Debug.Log(
-                $"✅ BATTLEFIELD HIT: {hit.collider.name} | " +
-                $"Layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)} | " +
-                $"Spawn Pos: {hit.point}"
-            );
-
-            Vector3 placementPosition = hit.point + Vector3.up * spawnYOffset;
-            placementPosition.z += spawnZOffset;
-
-            Debug.Log($"📍 Karakter spawn konumu: {placementPosition}");
-
-            isWaitingServerResult = true;
-
-            BattleManager.Instance.SpawnCharacterAtPositionServerRpc(cardToPlace.id, placementPosition);
+            placementPosition = hit.point + Vector3.up * spawnYOffset;
+            Debug.Log($"✅ BATTLEFIELD HIT: {hit.collider.name} | Spawn Pos: {hit.point}");
         }
-        else
+        else if (!TryResolvePlacementFromSideZone(ray, out placementPosition))
         {
-            Debug.LogWarning("❌ Geçersiz yer. Battlefield layer üzerinde bir yere tıklanmadı.");
+            Debug.LogWarning("❌ Geçersiz yer: Battlefield layer ve oyuncu alanı bulunamadı.");
+            return;
         }
+
+        Debug.Log($"📍 Karakter spawn konumu: {placementPosition}");
+        isWaitingServerResult = true;
+        BattleManager.Instance.SpawnCharacterAtPositionServerRpc(cardToPlace.id, placementPosition);
+    }
+
+    private bool TryResolvePlacementFromSideZone(Ray ray, out Vector3 position)
+    {
+        position = Vector3.zero;
+        if (BattleManager.Instance == null || NetworkManager.Singleton == null)
+            return false;
+
+        bool hostSide = NetworkManager.Singleton.LocalClientId == NetworkManager.ServerClientId;
+        Collider zone = hostSide ? BattleManager.Instance.playerZone : BattleManager.Instance.enemyZone;
+        if (zone == null)
+            return false;
+
+        Bounds bounds = zone.bounds;
+        Plane plane = new Plane(Vector3.up, new Vector3(0f, bounds.max.y, 0f));
+        if (!plane.Raycast(ray, out float distance))
+            return false;
+
+        Vector3 point = ray.GetPoint(distance);
+        const float margin = 0.05f;
+        point.x = Mathf.Clamp(point.x, bounds.min.x + margin, bounds.max.x - margin);
+        point.z = Mathf.Clamp(point.z, bounds.min.z + margin, bounds.max.z - margin);
+        point.y = bounds.max.y + spawnYOffset;
+        position = point;
+
+        Debug.Log("[PLACEMENT] Battlefield collider kaçırıldı; taraf alanı düzlemi kullanıldı.");
+        return true;
     }
 
     public void PlacementResult(bool success)

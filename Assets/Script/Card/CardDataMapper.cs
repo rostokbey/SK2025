@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public static class CardDataMapper
 {
@@ -8,6 +8,7 @@ public static class CardDataMapper
         {
             id = c.id,
             cardName = c.cardName,
+            signedToken = c.signedToken,
 
             baseHP = c.baseHP,
             baseStr = c.baseStr,
@@ -36,7 +37,7 @@ public static class CardDataMapper
         if (!string.IsNullOrEmpty(d.spritePath))
             sp = Resources.Load<Sprite>("Characters/" + d.spritePath);
 
-        return new CardData(
+        CardData card = new CardData(
             d.id, d.cardName,
             d.baseHP, d.baseStr, d.baseDef,
             d.rarity, d.ability, d.passive,
@@ -45,5 +46,8 @@ public static class CardDataMapper
             null,
             d.prefabPath
         );
+
+        card.signedToken = d.signedToken;
+        return card;
     }
 }

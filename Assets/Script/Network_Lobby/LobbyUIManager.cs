@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using TMPro;
 using Unity.Netcode;
@@ -49,6 +49,7 @@ public class LobbyUIManager : MonoBehaviour
     private UnityTransport transport;
     private static bool servicesInitialized = false;
     private bool isStartingBattle = false;
+    private bool isConnecting = false;
 
     private void Awake()
     {
@@ -62,9 +63,51 @@ public class LobbyUIManager : MonoBehaviour
             startBattleButton.onClick.AddListener(StartBattleFromLobby);
 
         if (NetworkManager.Singleton != null)
+        {
             transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            NetworkManager.Singleton.OnClientConnectedCallback += HandleClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += HandleClientDisconnected;
+        }
 
         SetLobbyStartState();
+    }
+
+    private void HandleClientConnected(ulong clientId)
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        Debug.Log(
+            $"[Lobby] Client bağlandı. ClientId={clientId}, " +
+            $"LocalClientId={NetworkManager.Singleton.LocalClientId}, " +
+            $"IsHost={NetworkManager.Singleton.IsHost}");
+
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+            ShowWarning("Sunucuya bağlantı tamamlandı.");
+    }
+
+    private void HandleClientDisconnected(ulong clientId)
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        string reason = NetworkManager.Singleton.DisconnectReason;
+        string message = string.IsNullOrEmpty(reason) ? "Sebep belirtilmedi" : reason;
+
+        Debug.LogError(
+            $"[Lobby] Client bağlantısı kesildi. ClientId={clientId}, Sebep={message}");
+
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+            ShowWarning("Sunucu bağlantısı kesildi: " + message);
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
     }
 
     private void SetLobbyStartState()
@@ -129,8 +172,19 @@ public class LobbyUIManager : MonoBehaviour
 
     public async void HostGame()
     {
+        if (isConnecting)
+        {
+            Debug.LogWarning("[Lobby] Host bağlantısı zaten başlatılıyor.");
+            return;
+        }
+
+        if (!CanStartNetwork("Host"))
+            return;
+
         if (!HasEnoughCardsForBattle())
             return;
+
+        isConnecting = true;
 
         try
         {
@@ -142,17 +196,21 @@ public class LobbyUIManager : MonoBehaviour
             string joinCode =
                 await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
-            // Unity Transport 6.5.0 / Relay güncel API
+            // Bu Unity/Transport sürümünde Allocation alan SetRelayServerData
+            // constructor'ı yok. Ham Relay verisini uyumlu API ile kuruyoruz.
+            // false = UDP. DTLS/true bu projedeki Transport sürümünde Relay'e
+            // bağlanamayıp TransportFailure ürettiği için şimdilik kapalı.
             transport.SetHostRelayData(
                 allocation.RelayServer.IpV4,
                 (ushort)allocation.RelayServer.Port,
                 allocation.AllocationIdBytes,
                 allocation.Key,
                 allocation.ConnectionData,
-                true
+                false
             );
 
-            NetworkManager.Singleton.StartHost();
+            if (!NetworkManager.Singleton.StartHost())
+                throw new Exception("NetworkManager host olarak başlatılamadı.");
 
             joinCodeUI?.SetCode(joinCode);
 
@@ -186,12 +244,27 @@ public class LobbyUIManager : MonoBehaviour
             ShowWarning("Host oluşturulamadı.");
             Debug.LogError("[Lobby] HostGame hata: " + e);
         }
+        finally
+        {
+            isConnecting = false;
+        }
     }
 
     public async void JoinGame()
     {
+        if (isConnecting)
+        {
+            Debug.LogWarning("[Lobby] Bağlantı işlemi zaten devam ediyor.");
+            return;
+        }
+
+        if (!CanStartNetwork("Client"))
+            return;
+
         if (!HasEnoughCardsForBattle())
             return;
+
+        isConnecting = true;
 
         try
         {
@@ -217,10 +290,11 @@ public class LobbyUIManager : MonoBehaviour
                 joinAllocation.Key,
                 joinAllocation.ConnectionData,
                 joinAllocation.HostConnectionData,
-                true
+                false
             );
 
-            NetworkManager.Singleton.StartClient();
+            if (!NetworkManager.Singleton.StartClient())
+                throw new Exception("NetworkManager client olarak başlatılamadı.");
 
             joinCodeUI?.SetCode(joinCode);
 
@@ -247,13 +321,47 @@ public class LobbyUIManager : MonoBehaviour
 
             ShowWarning("");
 
-            Debug.Log("[Lobby] Join başarılı. Kod: " + joinCode);
+            Debug.Log(
+                "[Lobby] Client bağlantısı başlatıldı. " +
+                "Gerçek bağlantı callback ile doğrulanacak. Kod: " + joinCode);
         }
         catch (Exception e)
         {
             ShowWarning("Oyuna katılım başarısız.");
             Debug.LogError("[Lobby] JoinGame hata: " + e);
         }
+        finally
+        {
+            isConnecting = false;
+        }
+    }
+
+    private bool CanStartNetwork(string operation)
+    {
+        if (NetworkManager.Singleton == null)
+        {
+            ShowWarning("NetworkManager bulunamadı.");
+            return false;
+        }
+
+        if (transport == null)
+        {
+            ShowWarning("UnityTransport bulunamadı.");
+            return false;
+        }
+
+        if (NetworkManager.Singleton.IsListening)
+        {
+            ShowWarning("Bu oyun örneğinde ağ zaten çalışıyor.");
+            Debug.LogWarning(
+                $"[Lobby] {operation} başlatılamadı: " +
+                $"IsHost={NetworkManager.Singleton.IsHost}, " +
+                $"IsClient={NetworkManager.Singleton.IsClient}, " +
+                $"IsListening={NetworkManager.Singleton.IsListening}");
+            return false;
+        }
+
+        return true;
     }
 
     private void StartBattleFromLobby()
@@ -374,7 +482,12 @@ public class LobbyUIManager : MonoBehaviour
 
     public void LeaveRoom()
     {
+        Debug.LogError(
+            "[Lobby] LeaveRoom çağrıldı!\n" +
+            Environment.StackTrace);
+
         isStartingBattle = false;
+        isConnecting = false;
 
         if (countdownText != null)
         {

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerInventory : MonoBehaviour
@@ -50,6 +50,11 @@ public class PlayerInventory : MonoBehaviour
 
         if (sameCharacter != null)
         {
+            // Eski kayıtlarda token yoksa aynı fiziksel kart tekrar okutulduğunda
+            // güvenli çevrimiçi kanıtı kayda ekle/güncelle.
+            if (!string.IsNullOrWhiteSpace(card.signedToken))
+                sameCharacter.signedToken = card.signedToken;
+
             int dupXp = CardLevelSystem.Instance != null
                 ? CardLevelSystem.Instance.DuplicateScanXpDefault
                 : 100;

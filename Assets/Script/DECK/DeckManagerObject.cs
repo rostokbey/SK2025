@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System.IO;
@@ -356,36 +356,72 @@ public class DeckManagerObject : MonoBehaviour
 
     public CardData GetCardById(string id)
     {
-        if (string.IsNullOrEmpty(id))
+        if (string.IsNullOrWhiteSpace(id))
         {
-            Debug.LogWarning("❌ GetCardById boş id ile çağrıldı.");
+            Debug.LogWarning("GetCardById boş id ile çağrıldı.");
             return null;
         }
 
-        var card = fullDeck.FirstOrDefault(c =>
-            c != null &&
-            (c.id == id || c.cardId == id)
-        );
+        id = id.Trim();
 
-        if (card == null)
+        // Önce DeckManager'ın zaten bellekte tuttuğu tüm yerel listeler.
+        var localLists = new List<List<CardData>>
         {
-            var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+            currentMatchDeck,
+            matchDeck,
+            fullDeck,
+            deck1,
+            deck2,
+            deck3,
+            deck4,
+            deck5
+        };
 
-            if (inv != null)
-            {
-                card = inv.myCards.FirstOrDefault(c =>
-                    c != null &&
-                    (c.id == id || c.cardId == id)
-                );
-            }
+        foreach (var list in localLists)
+        {
+            CardData found = FindCardInList(list, id);
+            if (found != null)
+                return found;
         }
 
-        if (card == null)
-            Debug.LogError("❌ Spawn edilecek kart bulunamadı: " + id);
-        else
-            Debug.Log("[DeckManager] Kart bulundu: " + card.cardName + " (" + card.id + ")");
+        // Ana menüden BattleScene'e taşınan seçili kartlar.
+        if (StartBattleManager.Instance != null)
+        {
+            CardData found = FindCardInList(
+                StartBattleManager.Instance.selectedMatchCards, id);
 
-        return card;
+            if (found != null)
+                return found;
+
+            found = FindCardInList(
+                StartBattleManager.Instance.enemyMatchCards, id);
+
+            if (found != null)
+                return found;
+        }
+
+        // QR ile edinilip diskte saklanan kişisel envanter.
+        var inv = PlayerInventory.Instance ?? FindObjectOfType<PlayerInventory>();
+        if (inv != null)
+        {
+            CardData found = FindCardInList(inv.myCards, id);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private CardData FindCardInList(List<CardData> cards, string key)
+    {
+        if (cards == null)
+            return null;
+
+        return cards.FirstOrDefault(c =>
+            c != null &&
+            (string.Equals(c.id, key, System.StringComparison.Ordinal) ||
+             string.Equals(c.cardId, key, System.StringComparison.Ordinal) ||
+             string.Equals(c.cardName, key, System.StringComparison.OrdinalIgnoreCase)));
     }
 
     public void PrepareMatchDeck(List<string> selectedCardIds)

@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 
 [Serializable]
 public class CardDTO
 {
     public string id;
     public string cardName;
+    public string signedToken;
 
     public int baseHP;
     public int baseStr;

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 
 [RequireComponent(typeof(NetworkObject))]
@@ -12,8 +12,20 @@ public class Character : NetworkBehaviour
     private HealthSystem health;
 
     [Header("State")]
-    public bool isMyTurn;
-    public bool isPlayer;   // ✅ eklendi
+    public readonly NetworkVariable<bool> IsMyTurnNet =
+    new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    public readonly NetworkVariable<bool> IsPlayerNet =
+        new NetworkVariable<bool>(
+            false,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    public bool isMyTurn => IsMyTurnNet.Value;
+    public bool isPlayer => IsPlayerNet.Value;
 
     [Header("Optional")]
     public Animator animator;
@@ -205,7 +217,7 @@ public class Character : NetworkBehaviour
         }
 
         maxHp = data.baseHP;
-        defense = 0f;
+        defense = data.baseDef;
         name = data.cardName;
 
         InitAbilityStateServer();
@@ -213,7 +225,18 @@ public class Character : NetworkBehaviour
 
     public void SetTurn(bool turn)
     {
-        isMyTurn = turn;
+        if (!IsServer)
+            return;
+
+        IsMyTurnNet.Value = turn;
+    }
+
+    public void SetPlayerSide(bool playerSide)
+    {
+        if (!IsServer)
+            return;
+
+        IsPlayerNet.Value = playerSide;
     }
 
     [ServerRpc(RequireOwnership = false)]

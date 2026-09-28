@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Unity.Netcode;
 
 public class HealthSystem : NetworkBehaviour
@@ -31,6 +31,14 @@ public class HealthSystem : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void TakeDamageServerRpc(int damage)
     {
+        // Geriye dönük uyumluluk. Savaş hesapları sunucuda ApplyDamageServerSide kullanır.
+        ApplyDamageServerSide(damage, false);
+    }
+
+    public void ApplyDamageServerSide(int damage, bool isCritical)
+    {
+        if (!IsServer || damage <= 0) return;
+
         int beforeShield = shield;
 
         int shieldAbsorb = Mathf.Min(shield, damage);
@@ -45,7 +53,7 @@ public class HealthSystem : NetworkBehaviour
         if (animator != null)
             animator.SetTrigger("Hit");
 
-        ShowDamageClientRpc(remaining, false, false, false);
+        ShowDamageClientRpc(remaining, isCritical, false, false);
 
         if (currentHP.Value <= 0)
             Die();

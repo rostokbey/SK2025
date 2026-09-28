@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [System.Serializable]
 public class CardData
@@ -18,6 +18,10 @@ public class CardData
     public string id;
     public string cardId;
     public string cardName;
+
+    // İmzalı fiziksel kart kanıtı. Private key içermez; JWT'nin kendisidir.
+    // Sunucu kartı kabul etmeden önce JwtCardVerifier ile bunu doğrular.
+    public string signedToken;
 
     // ---------------- BASE STAT (kalıcı) ----------------
     public int baseHP;
@@ -146,6 +150,7 @@ public class CardData
             className = this.className,
             race = this.race,
             combo = this.combo,
+            signedToken = this.signedToken,
 
             // combat state
             hp = this.hp,

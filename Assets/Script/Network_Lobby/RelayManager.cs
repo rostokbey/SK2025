@@ -48,7 +48,8 @@ public class RelayManager : MonoBehaviour
                 (ushort)allocation.RelayServer.Port,
                 allocation.AllocationIdBytes,
                 allocation.Key,
-                allocation.ConnectionData
+                allocation.ConnectionData,
+                false
             );
 
             NetworkManager.Singleton.StartHost();
@@ -74,7 +75,8 @@ public class RelayManager : MonoBehaviour
                 joinAllocation.AllocationIdBytes,
                 joinAllocation.Key,
                 joinAllocation.ConnectionData,
-                joinAllocation.HostConnectionData
+                joinAllocation.HostConnectionData,
+                false
             );
 
             NetworkManager.Singleton.StartClient();

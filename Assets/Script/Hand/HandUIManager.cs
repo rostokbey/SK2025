@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -90,9 +90,7 @@ public class HandUIManager : MonoBehaviour
                 handCards.Remove(clickedCardUI);
                 Destroy(clickedCardUI.gameObject);
 
-                DrawCard();
-
-                Debug.Log($"[HandUI] Kart oynandı: {selectedCard.cardName}. Elde kalan: {handCards.Count}");
+                Debug.Log($"[HandUI] Kart oynandı: {selectedCard.cardName}. Yeni kart sonraki tur başında çekilecek. Elde kalan: {handCards.Count}");
             });
         };
 

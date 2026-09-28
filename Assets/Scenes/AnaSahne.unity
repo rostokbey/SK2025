@@ -814,12 +814,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
   GlobalObjectIdHash: 3793175034
   InScenePlacedSourceGlobalObjectIdHash: 0
-  m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  m_InScenePlaced: 1
+  <InScenePlaced>k__BackingField: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -5311,7 +5310,7 @@ MonoBehaviour:
   cameraView: {fileID: 1461768740}
   restartScanButton: {fileID: 1485046360}
   placeholderImage: {fileID: 0}
-  autoStart: 1
+  autoStart: 0
   showRestartWhenIdle: 1
 --- !u!4 &387014546
 Transform:
@@ -9526,7 +9525,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panel: {fileID: 749852128}
-  adapter: {fileID: 1473036696}
+  matchStarter: {fileID: 0}
 --- !u!114 &749852131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17020,6 +17019,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 642c64dd51626fd489f9789a8eaf3b75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1190802153
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1190802155}
+  - component: {fileID: 1190802154}
+  m_Layer: 0
+  m_Name: SeasonModeDialog
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1190802154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1190802153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f15370257e49eb74a8a66eb4373e8510, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SeasonModeDialog
+  panel: {fileID: 0}
+  matchStarter: {fileID: 1473036699}
+--- !u!4 &1190802155
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1190802153}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 642, y: 1389, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1192558130
 GameObject:
   m_ObjectHideFlags: 0
@@ -21702,12 +21747,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
   GlobalObjectIdHash: 2183971273
   InScenePlacedSourceGlobalObjectIdHash: 0
-  m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  m_InScenePlaced: 1
+  <InScenePlaced>k__BackingField: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -30473,6 +30517,7 @@ SceneRoots:
   - {fileID: 1354277733}
   - {fileID: 759280208}
   - {fileID: 1672473976}
+  - {fileID: 1190802155}
   - {fileID: 136935548}
   - {fileID: 53727840}
   - {fileID: 387014546}
