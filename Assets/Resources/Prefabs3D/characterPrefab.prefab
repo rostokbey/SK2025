@@ -136,6 +136,7 @@ MonoBehaviour:
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 1
   SpawnWithObservers: 1
@@ -160,6 +161,7 @@ MonoBehaviour:
     id: 
     cardId: 
     cardName: 
+    signedToken: 
     baseHP: 0
     baseStr: 0
     baseDef: 0
@@ -192,8 +194,6 @@ MonoBehaviour:
     disableAttack: 0
   maxHp: 0
   defense: 0
-  isMyTurn: 0
-  isPlayer: 0
   animator: {fileID: 0}
 --- !u!95 &8587432174379877274
 Animator:

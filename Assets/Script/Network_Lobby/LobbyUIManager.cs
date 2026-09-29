@@ -51,6 +51,9 @@ public class LobbyUIManager : MonoBehaviour
     private bool isStartingBattle = false;
     private bool isConnecting = false;
 
+    private Coroutine warningClearRoutine;
+    private const float WarningDisplaySeconds = 3f;
+
     private void Awake()
     {
         if (hostButton != null)
@@ -196,10 +199,6 @@ public class LobbyUIManager : MonoBehaviour
             string joinCode =
                 await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
-            // Bu Unity/Transport sürümünde Allocation alan SetRelayServerData
-            // constructor'ı yok. Ham Relay verisini uyumlu API ile kuruyoruz.
-            // false = UDP. DTLS/true bu projedeki Transport sürümünde Relay'e
-            // bağlanamayıp TransportFailure ürettiği için şimdilik kapalı.
             transport.SetHostRelayData(
                 allocation.RelayServer.IpV4,
                 (ushort)allocation.RelayServer.Port,
@@ -397,28 +396,21 @@ public class LobbyUIManager : MonoBehaviour
 
     private IEnumerator StartBattleCountdown()
     {
-        if (countdownText != null)
-        {
-            countdownText.gameObject.SetActive(true);
-            countdownText.text = "3";
-        }
+        BroadcastBattleCountdown(3);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSecondsRealtime(1f);
 
-        if (countdownText != null)
-            countdownText.text = "2";
+        BroadcastBattleCountdown(2);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSecondsRealtime(1f);
 
-        if (countdownText != null)
-            countdownText.text = "1";
+        BroadcastBattleCountdown(1);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSecondsRealtime(1f);
 
-        if (countdownText != null)
-            countdownText.text = "SAVAŞ!";
+        BroadcastBattleCountdown(0);
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         if (NetworkManager.Singleton != null &&
             NetworkManager.Singleton.SceneManager != null)
@@ -432,6 +424,28 @@ public class LobbyUIManager : MonoBehaviour
         {
             SceneManager.LoadScene(battleSceneName);
         }
+    }
+
+    private void BroadcastBattleCountdown(int value)
+    {
+        if (LobbyTeamManager.Instance != null &&
+            LobbyTeamManager.Instance.IsSpawned &&
+            LobbyTeamManager.Instance.IsServer)
+        {
+            LobbyTeamManager.Instance.BroadcastBattleCountdown(value);
+            return;
+        }
+
+        ShowBattleCountdown(value);
+    }
+
+    public void ShowBattleCountdown(int value)
+    {
+        if (countdownText == null)
+            return;
+
+        countdownText.gameObject.SetActive(true);
+        countdownText.text = value > 0 ? value.ToString() : "SAVAŞ!";
     }
 
     public void RefreshStartBattleButton()
@@ -468,10 +482,11 @@ public class LobbyUIManager : MonoBehaviour
         var selectedDeck = deckManager.GetSelectedCards();
         int count = selectedDeck != null ? selectedDeck.Count : 0;
 
-        if (count < 5)
+        if (count < BattleRules.MinimumDeckSize)
         {
             ShowWarning(
-                $"Maça girmek için en az 5 kart gerekli. Şu an: {count}/5"
+                $"Maça girmek için en az {BattleRules.MinimumDeckSize} kart gerekli. " +
+                $"Şu an: {count}/{BattleRules.MinimumDeckSize}"
             );
             return false;
         }
@@ -561,8 +576,29 @@ public class LobbyUIManager : MonoBehaviour
         if (!string.IsNullOrEmpty(message))
             Debug.LogWarning(message);
 
+        if (warningText == null)
+            return;
+
+        if (warningClearRoutine != null)
+        {
+            StopCoroutine(warningClearRoutine);
+            warningClearRoutine = null;
+        }
+
+        warningText.text = message;
+
+        if (!string.IsNullOrEmpty(message))
+            warningClearRoutine = StartCoroutine(ClearWarningAfterDelay());
+    }
+
+    private IEnumerator ClearWarningAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(WarningDisplaySeconds);
+
         if (warningText != null)
-            warningText.text = message;
+            warningText.text = "";
+
+        warningClearRoutine = null;
     }
 
     private async System.Threading.Tasks.Task EnsureUnityServices()

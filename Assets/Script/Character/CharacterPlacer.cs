@@ -18,6 +18,8 @@ public class CharacterPlacer : MonoBehaviour
     private bool isPlacementMode = false;
     private bool isWaitingServerResult = false;
 
+    public bool IsPlacementMode => isPlacementMode;
+
     void Awake()
     {
         if (Instance == null) Instance = this;

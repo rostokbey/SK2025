@@ -102,7 +102,7 @@ public class HealthSystem : NetworkBehaviour
         var dp = popup.GetComponent<DamagePopup>();
         if (dp != null)
         {
-            dp.Setup(amount);
+            dp.Setup(amount, isCritical, isHeal, isShieldGain);
         }
     }
 

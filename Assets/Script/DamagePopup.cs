@@ -4,56 +4,57 @@ using TMPro;
 public class DamagePopup : MonoBehaviour
 {
     [Header("Refs")]
-    public TMP_Text text;                 // Prefab içindeki TMP_Text (atanmazsa Awake'te bulunur)
+    public TMP_Text text;                 // Prefab iÃ§indeki TMP_Text (atanmazsa Awake'te bulunur)
 
     [Header("Anim")]
-    public float life = 0.8f;             // Ekranda kalma süresi
-    public Vector3 drift = new Vector3(0f, 1.5f, 0f); // Yukarı kayma yönü
-    public float speed = 2f;              // Kayma hızı
+    public float life = 0.8f;             // Ekranda kalma sÃ¼resi
+    public Vector3 drift = new Vector3(0f, 1.5f, 0f); // YukarÄ± kayma yÃ¶nÃ¼
+    public float speed = 2f;              // Kayma hÄ±zÄ±
 
     void Awake()
     {
         if (!text) text = GetComponentInChildren<TMP_Text>();
     }
 
-    // --- Basit kullanım: sadece sayı göster ---
+    // --- Basit kullanÄ±m: sadece sayÄ± gÃ¶ster ---
     public void Setup(int amount)
     {
         if (!text) text = GetComponentInChildren<TMP_Text>();
 
         text.text = amount.ToString();
-        text.color = Color.white;         // Düz hasar rengi
-        transform.localScale = Vector3.one * 0.01f; // 3D sahnede okunaklı ölçek
+        text.color = Color.white;         // DÃ¼z hasar rengi
+        transform.localScale = Vector3.one * 0.01f; // 3D sahnede okunaklÄ± Ã¶lÃ§ek
     }
 
-    // --- İsteğe bağlı: eski çağrılar boşa düşmesin diye çok parametreli overloada izin veriyoruz ---
+    // --- Ä°steÄŸe baÄŸlÄ±: eski Ã§aÄŸrÄ±lar boÅŸa dÃ¼ÅŸmesin diye Ã§ok parametreli overloada izin veriyoruz ---
     public void Setup(int amount, bool isCritical, bool isHeal, bool isShieldGain)
     {
-        Setup(amount);                    // Temel yazıyı ayarla
-        if (isHeal) text.color = Color.green;
-        else if (isCritical) text.color = Color.yellow;
+        Setup(amount);                    // Temel yazÄ±yÄ± ayarla
+        if (isShieldGain) text.color = new Color(0.20f, 0.75f, 1f);
+        else if (isHeal) text.color = Color.green;
+        else if (isCritical) text.color = new Color(1f, 0.55f, 0.05f);
         else text.color = Color.white;
-        // isShieldGain için özel efekt eklemek istersen burada rengi/metin biçimini değiştirebilirsin.
+        // isShieldGain iÃ§in Ã¶zel efekt eklemek istersen burada rengi/metin biÃ§imini deÄŸiÅŸtirebilirsin.
     }
 
     void Update()
     {
-        // Hafif yukarı doğru süzülme
+        // Hafif yukarÄ± doÄŸru sÃ¼zÃ¼lme
         transform.position += drift * speed * Time.deltaTime;
 
-        // Ömür
+        // Ã–mÃ¼r
         life -= Time.deltaTime;
         if (life <= 0f) Destroy(gameObject);
     }
 
-    // --- Opsiyonel factory: Script'ten rahat çağırmak için ---
-    // Resources/Prefabs/FX/DamagePopup yolunda prefab varsa bunu kullanır.
+    // --- Opsiyonel factory: Script'ten rahat Ã§aÄŸÄ±rmak iÃ§in ---
+    // Resources/Prefabs/FX/DamagePopup yolunda prefab varsa bunu kullanÄ±r.
     public static DamagePopup Create(Vector3 worldPos, int amount)
     {
         var prefab = Resources.Load<GameObject>("Prefabs/FX/DamagePopup");
         if (!prefab)
         {
-            Debug.LogWarning("DamagePopup prefab bulunamadı: Resources/Prefabs/FX/DamagePopup");
+            Debug.LogWarning("DamagePopup prefab bulunamadÄ±: Resources/Prefabs/FX/DamagePopup");
             return null;
         }
 

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 using UnityEngine;
 
 /// <summary>
@@ -22,27 +22,65 @@ public static class AbilityCatalog
 
     static AbilityCatalog()
     {
-        RegisterActive(new PowerStrikeActiveAbility());
-        RegisterPassive(new RegenerationPassiveAbility());
+        RegisterActive(new PowerStrikeActiveAbility(), "power strike", "güçlü vuruş", "guclu vurus");
+        RegisterActive(new WhisperActiveAbility(), "fisilti", "whisper");
+        RegisterPassive(new RegenerationPassiveAbility(), "yenilenme", "rejenerasyon");
     }
 
-    public static void RegisterActive(IActiveAbility ability)
+    public static void RegisterActive(IActiveAbility ability, params string[] aliases)
     {
         if (ability == null || string.IsNullOrEmpty(ability.Id)) return;
-        _active[ability.Id] = ability;
+
+        _active[NormalizeId(ability.Id)] = ability;
+        if (aliases == null) return;
+
+        foreach (string alias in aliases)
+            if (!string.IsNullOrWhiteSpace(alias))
+                _active[NormalizeId(alias)] = ability;
     }
 
-    public static void RegisterPassive(IPassiveAbility ability)
+    public static void RegisterPassive(IPassiveAbility ability, params string[] aliases)
     {
         if (ability == null || string.IsNullOrEmpty(ability.Id)) return;
-        _passive[ability.Id] = ability;
+
+        _passive[NormalizeId(ability.Id)] = ability;
+        if (aliases == null) return;
+
+        foreach (string alias in aliases)
+            if (!string.IsNullOrWhiteSpace(alias))
+                _passive[NormalizeId(alias)] = ability;
     }
 
     public static IActiveAbility GetActive(string id) =>
-        !string.IsNullOrEmpty(id) && _active.TryGetValue(id, out var a) ? a : null;
+        !string.IsNullOrEmpty(id) && _active.TryGetValue(NormalizeId(id), out var a) ? a : null;
 
     public static IPassiveAbility GetPassive(string id) =>
-        !string.IsNullOrEmpty(id) && _passive.TryGetValue(id, out var p) ? p : null;
+        !string.IsNullOrEmpty(id) && _passive.TryGetValue(NormalizeId(id), out var p) ? p : null;
+
+    /// <summary>
+    /// Kart üretiminde "Fısıltı", "fisilti", "power_strike" gibi farklı
+    /// yazımların aynı kayıtla güvenli biçimde eşleşmesini sağlar.
+    /// </summary>
+    private static string NormalizeId(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        string lowered = value.Trim().ToLowerInvariant()
+            .Replace('ç', 'c')
+            .Replace('ğ', 'g')
+            .Replace('ı', 'i')
+            .Replace('ö', 'o')
+            .Replace('ş', 's')
+            .Replace('ü', 'u');
+
+        var result = new StringBuilder(lowered.Length);
+        foreach (char character in lowered)
+            if (char.IsLetterOrDigit(character))
+                result.Append(character);
+
+        return result.ToString();
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -62,10 +100,49 @@ public class PowerStrikeActiveAbility : IActiveAbility
         var targetHealth = context.PrimaryTarget.GetComponent<HealthSystem>();
         if (targetHealth == null) return;
 
-        int damage = Mathf.Max(1, context.Source.cardData.baseStr * 2);
-        targetHealth.TakeDamageServerRpc(damage);
+        int attack = context.Source.cardData.str > 0
+            ? context.Source.cardData.str
+            : context.Source.cardData.baseStr;
+        int defence = context.PrimaryTarget.cardData.def > 0
+            ? context.PrimaryTarget.cardData.def
+            : context.PrimaryTarget.cardData.baseDef;
+        int damage = Mathf.Max(1, attack * 2 - defence);
+        targetHealth.ApplyDamageServerSide(damage, false);
 
         Debug.Log($"[Ability:power_strike] {context.Source.cardData.cardName} -> " +
+                  $"{context.PrimaryTarget.cardData.cardName} : {damage} hasar");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AKTİF YETENEK: "Fısıltı"
+// Arka hattı öncelikli hedefler ve STR'nin %150'sinden hedef DEF'ini düşerek
+// sunucuda hasar hesaplar. cards.json içindeki mevcut "Fısıltı" değeriyle
+// doğrudan çalışır.
+// ---------------------------------------------------------------------------
+public class WhisperActiveAbility : IActiveAbility
+{
+    public string Id => "Fısıltı";
+    public AbilityTargetingMode TargetingMode => AbilityTargetingMode.IgnoreFrontline;
+
+    public void Apply(AbilityContext context)
+    {
+        if (context?.Source == null || context.PrimaryTarget == null) return;
+
+        HealthSystem targetHealth = context.PrimaryTarget.GetComponent<HealthSystem>();
+        if (targetHealth == null) return;
+
+        int attack = context.Source.cardData.str > 0
+            ? context.Source.cardData.str
+            : context.Source.cardData.baseStr;
+        int defence = context.PrimaryTarget.cardData.def > 0
+            ? context.PrimaryTarget.cardData.def
+            : context.PrimaryTarget.cardData.baseDef;
+        int damage = Mathf.Max(1, Mathf.RoundToInt(attack * 1.5f) - defence);
+
+        targetHealth.ApplyDamageServerSide(damage, false);
+
+        Debug.Log($"[Ability:Fısıltı] {context.Source.cardData.cardName} -> " +
                   $"{context.PrimaryTarget.cardData.cardName} : {damage} hasar");
     }
 }

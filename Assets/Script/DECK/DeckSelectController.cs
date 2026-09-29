@@ -12,11 +12,14 @@ public class DeckSelectController : MonoBehaviour
     public SeasonModeDialog seasonModeDialog;
 
     [Header("Ayarlar")]
-    public int minCardsToFight = 5;       // min kart sayısı (örneğin 5) yoksa savaş başlatılamaz
+    public int minCardsToFight = BattleRules.MinimumDeckSize;
     private int selectedDeckIndex = -1;   // 0..4
 
     void Awake()
     {
+        // Inspector'da kalmış eski 2/5 değerlerinin sunucu kuralından sapmasını önle.
+        minCardsToFight = BattleRules.MinimumDeckSize;
+
         if (deckManager == null) deckManager = FindObjectOfType<DeckManagerObject>();
 
         // Butonlara click bağla (Inspector’dan da verebilirsin)

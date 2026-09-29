@@ -32,6 +32,10 @@ public class BattleManager : NetworkBehaviour
     [Header("Uyarı UI")]
     public TMP_Text warningText;
 
+    [Header("Tur Sayacı UI")]
+    [Tooltip("Boş bırakılırsa BattleScene açıldığında ekranın üstünde otomatik oluşturulur.")]
+    [SerializeField] private TMP_Text turnTimerText;
+
     [Tooltip("İstersen sahneden bağla; bağlanmazsa da OnStartBattleButton() çağrılabilir.")]
     public Button startBattleButton;
 
@@ -383,6 +387,42 @@ public class BattleManager : NetworkBehaviour
     }
 
     /// <summary>
+    /// Eski tek Saldır/Yetenek butonunda henüz hedef sütunu UI'ı olmadığı için,
+    /// saldırganın karşı sütunu boşsa rakip sahadaki ilk canlı sütuna yönelir.
+    /// Böylece kamera yönü/yerleştirme sütunu farkı bir tarafı fiilen ölümsüz
+    /// yapmaz. Gerçek sütun seçim UI'ı geri eklendiğinde yalnız seçilen sütun
+    /// kullanılmalıdır.
+    /// </summary>
+    private int ResolveLegacyTargetColumn(Character attacker, AbilityTargetingMode mode)
+    {
+        if (attacker == null)
+            return 0;
+
+        BattleGrid targetGrid = GetGridFor(!attacker.isPlayer);
+        int preferredColumn = Mathf.Clamp(attacker.gridColumn, 0, gridColumns - 1);
+
+        if (targetGrid == null ||
+            targetGrid.ResolveTarget(preferredColumn, mode) != null)
+        {
+            return preferredColumn;
+        }
+
+        Character fallbackTarget = targetGrid.GetAllAlive()
+            .OrderBy(character => character.gridColumn)
+            .ThenBy(character => character.gridRow)
+            .FirstOrDefault();
+
+        if (fallbackTarget == null)
+            return preferredColumn;
+
+        Debug.Log(
+            $"[TARGET FALLBACK] {attacker.cardData?.cardName}: " +
+            $"{preferredColumn + 1}. sütun boş, {fallbackTarget.gridColumn + 1}. sütun hedeflendi.");
+
+        return fallbackTarget.gridColumn;
+    }
+
+    /// <summary>
     /// AKTİF yetenek kullanım isteğini uçtan uca doğrular ve uygular:
     /// yetki, sıra, cooldown hazır mı, raund başına taraf limiti, hedef
     /// çözümü, efekt uygulaması, cooldown'un 4 raunda sıfırlanması ve turun
@@ -445,6 +485,12 @@ public class BattleManager : NetworkBehaviour
             ? enemyGridForCharacter?.GetAllAliveInColumn(targetColumn) ?? new List<Character>()
             : (primaryTarget != null ? new List<Character> { primaryTarget } : new List<Character>());
 
+        if (primaryTarget == null && allTargets.Count == 0)
+        {
+            reason = $"Seçilen {targetColumn + 1}. sütunda geçerli hedef yok.";
+            return false;
+        }
+
         var context = new AbilityContext
         {
             Source = character,
@@ -462,10 +508,35 @@ public class BattleManager : NetworkBehaviour
         if (character.isPlayer) playerSideLastAbilityRound = CurrentRound;
         else enemySideLastAbilityRound = CurrentRound;
 
+        if (primaryTarget != null)
+            PlayApprovedAbilityFeedbackClientRpc(
+                character.cardData.ability,
+                new NetworkObjectReference(primaryTarget.NetworkObject));
+
         Debug.Log($"[BM] {character.cardData.cardName} aktif yeteneğini kullandı: {character.cardData.ability} (raund {CurrentRound})");
 
         EndTurn();
         return true;
+    }
+
+    [ClientRpc]
+    private void PlayApprovedAbilityFeedbackClientRpc(
+        string abilityId,
+        NetworkObjectReference targetReference)
+    {
+        if (!targetReference.TryGet(out NetworkObject targetObject) || targetObject == null)
+            return;
+
+        // Efekt yalnızca sunucu yeteneği kabul edip uyguladıktan sonra oynar.
+        if (VFXManager.Instance != null &&
+            Resources.Load<GameObject>($"VFX/{abilityId}") != null)
+        {
+            VFXManager.Instance.PlayVFX(abilityId, targetObject.transform);
+        }
+        else if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(abilityId);
+        }
     }
 
     #endregion
@@ -513,9 +584,17 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        if (deck.Count > 25)
+        if (deck.Count < BattleRules.MinimumDeckSize)
         {
-            Debug.LogError("[SECURE DECK] Deste 25 kart sınırını aşıyor.");
+            Debug.LogError(
+                $"[SECURE DECK] Deste en az {BattleRules.MinimumDeckSize} kart olmalı. " +
+                $"Mevcut: {deck.Count}");
+            return;
+        }
+
+        if (deck.Count > BattleRules.DeckSize)
+        {
+            Debug.LogError($"[SECURE DECK] Deste {BattleRules.DeckSize} kart sınırını aşıyor.");
             return;
         }
 
@@ -562,6 +641,8 @@ public class BattleManager : NetworkBehaviour
 
     void Start()
     {
+        EnsureTurnTimerText();
+
         // UI buton bağlama (varsa)
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
@@ -699,6 +780,11 @@ public class BattleManager : NetworkBehaviour
             warningText.text = message;
     }
 
+    public void ShowLocalWarning(string message)
+    {
+        ShowWarning(message);
+    }
+
 
     #region Oyuncu Kart UI
 
@@ -766,11 +852,10 @@ public class BattleManager : NetworkBehaviour
             Vector3 offset = new Vector3(0f, 0f, -282f);
             obj.transform.localPosition = offset;
             obj.transform.localRotation = Quaternion.Euler(-33f, 0f, 0f);
-            obj.transform.localScale = Vector3.one;
-
             var ch = obj.GetComponent<Character>();
             if (ch != null)
             {
+                ch.SetPlayerSide(true);
                 ch.Setup(card);
                 RegisterSpawnedCharacterByFlatIndex(ch, true, i);
             }
@@ -800,11 +885,10 @@ public class BattleManager : NetworkBehaviour
 
             obj.transform.localPosition = Vector3.zero;
             obj.transform.localRotation = Quaternion.Euler(20f, 180f, 0f); // rakip bize dönsün
-            obj.transform.localScale = Vector3.one;
-
             var ch = obj.GetComponent<Character>();
             if (ch != null)
             {
+                ch.SetPlayerSide(false);
                 ch.Setup(card);
                 RegisterSpawnedCharacterByFlatIndex(ch, false, i);
             }
@@ -864,13 +948,11 @@ public class BattleManager : NetworkBehaviour
         // Hizalama
         obj.transform.localPosition = Vector3.zero;
         obj.transform.localRotation = isPlayer ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
-        obj.transform.localScale = Vector3.one;
-
         var ch = obj.GetComponent<Character>();
         if (ch != null)
         {
-            ch.Setup(card);
             ch.SetPlayerSide(isPlayer);
+            ch.Setup(card);
             RegisterSpawnedCharacterByFlatIndex(ch, isPlayer, inDef);
         }
 
@@ -1036,6 +1118,7 @@ public class BattleManager : NetworkBehaviour
     void Update()
     {
         UpdateLocalActionButtons();
+        UpdateTurnTimerUI();
 
         if (!IsServer || battleEnded) return;
         if (turnTimeLimitSeconds <= 0f) return; // 0 = zaman sınırı kapalı
@@ -1049,6 +1132,86 @@ public class BattleManager : NetworkBehaviour
         }
 
         HandleAfkTimeout();
+    }
+
+    private void EnsureTurnTimerText()
+    {
+        if (turnTimerText != null)
+            return;
+
+        Canvas[] canvases = Object.FindObjectsByType<Canvas>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        Canvas targetCanvas = canvases.FirstOrDefault(canvas =>
+            canvas != null &&
+            canvas.gameObject.scene == gameObject.scene &&
+            canvas.renderMode != RenderMode.WorldSpace);
+
+        if (targetCanvas == null)
+        {
+            Debug.LogWarning("[TURN TIMER] Uygun ekran Canvas'ı bulunamadı; geri sayım UI oluşturulamadı.");
+            return;
+        }
+
+        GameObject timerObject = new GameObject(
+            "TurnTimerText",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(TextMeshProUGUI));
+        timerObject.transform.SetParent(targetCanvas.transform, false);
+        timerObject.transform.SetAsLastSibling();
+
+        RectTransform rect = timerObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = new Vector2(0f, -24f);
+        rect.sizeDelta = new Vector2(360f, 62f);
+
+        TextMeshProUGUI text = timerObject.GetComponent<TextMeshProUGUI>();
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontSize = 34f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = Color.white;
+        text.raycastTarget = false;
+        text.text = string.Empty;
+
+        turnTimerText = text;
+    }
+
+    private void UpdateTurnTimerUI()
+    {
+        if (turnTimerText == null)
+            return;
+
+        bool timerActive =
+            !battleEnded &&
+            turnTimeLimitSeconds > 0f &&
+            ActivePlayerClientId.Value != ulong.MaxValue &&
+            (Phase.Value == BattlePhase.InitialPlacement || Phase.Value == BattlePhase.PlayerTurn);
+
+        if (!timerActive)
+        {
+            if (turnTimerText.gameObject.activeSelf)
+                turnTimerText.gameObject.SetActive(false);
+            return;
+        }
+
+        if (!turnTimerText.gameObject.activeSelf)
+            turnTimerText.gameObject.SetActive(true);
+
+        int seconds = Mathf.Max(0, Mathf.CeilToInt(TurnTimeRemaining.Value));
+        bool isLocalTurn =
+            NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.LocalClientId == ActivePlayerClientId.Value;
+
+        turnTimerText.text = isLocalTurn
+            ? $"HAMLE SÜREN: {seconds} sn"
+            : $"RAKİP SÜRESİ: {seconds} sn";
+        turnTimerText.color = seconds <= 5
+            ? new Color(1f, 0.25f, 0.2f)
+            : Color.white;
     }
 
     private void UpdateLocalActionButtons()
@@ -1226,7 +1389,7 @@ public class BattleManager : NetworkBehaviour
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
 
-        if (totalCards < 5 || totalCards > BattleRules.DeckSize ||
+        if (totalCards < BattleRules.MinimumDeckSize || totalCards > BattleRules.DeckSize ||
             cardIndex < 0 || cardIndex >= totalCards)
         {
             Debug.LogWarning($"[DECK CHUNK] Client {senderId} geçersiz parça bilgisi gönderdi: {cardIndex}/{totalCards}");
@@ -1253,6 +1416,13 @@ public class BattleManager : NetworkBehaviour
             Debug.LogWarning($"[DECK CHUNK] Client {senderId}, kart {cardIndex} reddedildi: {error}");
             return;
         }
+
+        // İmzasız prototip kartlarında aynı karakter kimliği destede birden
+        // fazla bulunabilir. Test modunda sıra indeksini kimliğe ekleyerek
+        // 25 parçanın eksiksiz tamamlanmasını sağlarız. İmzalı/JTI kartların
+        // tek kullanımlık güvenlik kuralına dokunulmaz.
+        if (allowUnsignedTestDeck && identity.StartsWith("TEST:"))
+            identity = $"{identity}:SLOT:{cardIndex}";
 
         HashSet<string> identities = playerSubmittedJtis[senderId];
         if (!identities.Add(identity))
@@ -1404,7 +1574,7 @@ public class BattleManager : NetworkBehaviour
         ulong senderId = rpcParams.Receive.SenderClientId;
 
         if (signedTokenArray == null ||
-            signedTokenArray.Length < 5 ||
+            signedTokenArray.Length < BattleRules.MinimumDeckSize ||
             signedTokenArray.Length > 25)
         {
             Debug.LogWarning(
@@ -1537,7 +1707,7 @@ public class BattleManager : NetworkBehaviour
 
     private bool CanStartBattleWithDecks(List<CardData> hostDeck, List<CardData> clientDeck)
     {
-        int minCardCount = 5;
+        int minCardCount = BattleRules.MinimumDeckSize;
 
         int hostCount = hostDeck != null ? hostDeck.Count : 0;
         int clientCount = clientDeck != null ? clientDeck.Count : 0;
@@ -1545,7 +1715,7 @@ public class BattleManager : NetworkBehaviour
         if (hostCount < minCardCount || clientCount < minCardCount)
         {
             ShowWarning(
-                $"Oyuncuların birinde destesinden 5 karttan az kart var! " +
+                $"Oyuncuların birinde destesinden {minCardCount} karttan az kart var! " +
                 $"Host: {hostCount}, Join: {clientCount}"
             );
 
@@ -1583,7 +1753,7 @@ public class BattleManager : NetworkBehaviour
 
         ShowWarning("");
 
-        Debug.Log("İki oyuncunun da en az 5 kartı var. Savaş başlatılıyor.");
+        Debug.Log($"İki oyuncunun da en az {BattleRules.MinimumDeckSize} kartı var. Savaş başlatılıyor.");
 
         BeginInitialPlacement();
     }
@@ -1625,7 +1795,10 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        ResolveColumnAttack(attacker, attacker.gridColumn, AbilityTargetingMode.Normal);
+        attacker.PlayAnimationClientRpc("Attack");
+
+        int targetColumn = ResolveLegacyTargetColumn(attacker, AbilityTargetingMode.Normal);
+        ResolveColumnAttack(attacker, targetColumn, AbilityTargetingMode.Normal);
         EndTurn();
     }
 
@@ -1661,7 +1834,13 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        if (!TryUseActiveAbilityForCharacter(character, character.gridColumn, senderId, out string abilityReason))
+        IActiveAbility activeAbility = AbilityCatalog.GetActive(character.cardData?.ability);
+        AbilityTargetingMode targetingMode = activeAbility != null
+            ? activeAbility.TargetingMode
+            : AbilityTargetingMode.Normal;
+        int targetColumn = ResolveLegacyTargetColumn(character, targetingMode);
+
+        if (!TryUseActiveAbilityForCharacter(character, targetColumn, senderId, out string abilityReason))
         {
             Debug.LogWarning($"[BM] SendSkillAttackServerRpc reddedildi ({character.cardData?.cardName}): {abilityReason}");
         }
@@ -2025,14 +2204,12 @@ public class BattleManager : NetworkBehaviour
         if (net != null && IsServer)
             net.Spawn();
 
-        obj.transform.localScale = Vector3.one;
-
         var ch = obj.GetComponent<Character>();
 
         if (ch != null)
         {
-            ch.Setup(card);
             ch.SetPlayerSide(isPlayer);
+            ch.Setup(card);
             var (placedRow, placedCol) = RegisterSpawnedCharacterByWorldPosition(ch, isPlayer, zone.bounds, position);
             Debug.Log($"[BM] Grid hücresi: {placedRow}/{placedCol}");
         }
@@ -2153,14 +2330,12 @@ public class BattleManager : NetworkBehaviour
         if (net && IsServer)
             net.Spawn();
 
-        obj.transform.localScale = Vector3.one;
-
         Character ch = obj.GetComponent<Character>();
 
         if (ch != null)
         {
-            ch.Setup(enemyCard);
             ch.SetPlayerSide(false);
+            ch.Setup(enemyCard);
             RegisterSpawnedCharacterByFlatIndex(ch, false, usedSlotIndex);
         }
 

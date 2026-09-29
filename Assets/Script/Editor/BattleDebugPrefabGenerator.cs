@@ -58,8 +58,11 @@ public static class BattleDebugPrefabGenerator
         GameObject body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         body.name = "Body";
         body.transform.SetParent(root.transform, false);
-        body.transform.localPosition = Vector3.up;
-        body.transform.localScale = new Vector3(0.8f, 1.2f, 0.8f);
+        // BattleScene yaklaşık 1200-2000 dünya birimi genişliğinde. Root ölçeğini
+        // 1 tutup yalnız görsel/collider child'ını büyütüyoruz; böylece Netcode
+        // kök transformu ve ileride gerçek model takma düzeni bozulmuyor.
+        body.transform.localPosition = new Vector3(0f, 60f, 0f);
+        body.transform.localScale = new Vector3(40f, 60f, 40f);
 
         Renderer renderer = body.GetComponent<Renderer>();
         if (renderer != null)

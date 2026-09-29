@@ -237,6 +237,26 @@ public class LobbyTeamManager : NetworkBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Host'un başlattığı 3-2-1 geri sayımını lobby'deki tüm istemcilere
+    /// aynı RPC üzerinden gösterir. Sadece sunucu çağırabilir.
+    /// </summary>
+    public void BroadcastBattleCountdown(int value)
+    {
+        if (!IsServer)
+            return;
+
+        ShowBattleCountdownClientRpc(value);
+    }
+
+    [ClientRpc]
+    private void ShowBattleCountdownClientRpc(int value)
+    {
+        LobbyUIManager lobby = FindObjectOfType<LobbyUIManager>(true);
+        if (lobby != null)
+            lobby.ShowBattleCountdown(value);
+    }
+
     private void SyncTeams()
     {
         string readyData = BuildReadyData();

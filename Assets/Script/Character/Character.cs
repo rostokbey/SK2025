@@ -30,6 +30,36 @@ public class Character : NetworkBehaviour
     [Header("Optional")]
     public Animator animator;
 
+    [ClientRpc]
+    public void PlayAnimationClientRpc(string triggerName)
+    {
+        if (animator == null)
+            animator = GetComponent<Animator>();
+
+        if (animator == null)
+        {
+            Debug.LogError(
+                $"[ANIM] {name}: Animator bulunamadı. Trigger={triggerName}"
+            );
+            return;
+        }
+
+        Debug.Log(
+            $"[ANIM] {name}: Trigger gönderildi → {triggerName}, " +
+            $"Controller={animator.runtimeAnimatorController?.name}"
+        );
+
+        animator.ResetTrigger(triggerName);
+        animator.SetTrigger(triggerName);
+    }
+
+    private void Awake()
+    {
+        // Setup yalnız sunucuda çağrılabilir; istemciler de NetworkVariable HP
+        // üzerinden IsAlive okuyabilsin diye component referansını yerelde kur.
+        health = GetComponent<HealthSystem>();
+    }
+
     // -----------------------------------------------------------------
     #region Grid Konumu (6x3 saha sistemi)
 
