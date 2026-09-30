@@ -22,9 +22,14 @@ public class MyClientIdManager : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        // BattleScene'de tek doğruluk kaynağı BattleManager'dır. Eski iki
+        // oyunculu sayaç seçim UI butonlarını tekrar açıp kapatmasın.
+        if (BattleManager.Instance != null)
+            return;
+
         bool isMyTurn = NetworkManager.Singleton.LocalClientId == currentTurnClientId.Value;
-        attackButton.interactable = isMyTurn;
-        skillButton.interactable = isMyTurn;
+        if (attackButton != null) attackButton.interactable = isMyTurn;
+        if (skillButton != null) skillButton.interactable = isMyTurn;
     }
 
     [ServerRpc(RequireOwnership = false)]

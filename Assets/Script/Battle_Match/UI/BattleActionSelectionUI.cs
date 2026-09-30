@@ -1,32 +1,53 @@
-using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 1v1 savaş için yerel karakter ve hedef sütunu seçimi.
-/// Seçim istemcide yapılır; saldırı/yetenek isteği mevcut sunucu-otoriteli
-/// Character RPC'lerine gönderilir ve sunucuda yeniden doğrulanır.
+/// Yerel tıklama/dokunma ile saldırgan ve düşman hedefi seçer.
+/// Seçim istemcide yapılır; saldırgan sahipliği, sıra ve ön hat koruması
+/// BattleManager tarafından sunucuda yeniden doğrulanır.
 /// </summary>
 public sealed class BattleActionSelectionUI : MonoBehaviour
 {
     private BattleManager battleManager;
-    private Character selectedCharacter;
-    private int selectedTargetColumn;
+    private Character selectedAttacker;
+    private Character selectedTarget;
+    private Character inspectedCharacter;
 
     private RectTransform panelRect;
     private TMP_Text statusText;
+    private TMP_Text infoText;
     private Button attackButton;
     private Button skillButton;
-    private readonly List<Button> columnButtons = new();
 
-    public void Initialize(BattleManager manager)
+    public void Initialize(
+        BattleManager manager,
+        Button existingAttackButton = null,
+        Button existingSkillButton = null)
     {
         battleManager = manager;
-        selectedTargetColumn = 0;
+        attackButton = existingAttackButton;
+        skillButton = existingSkillButton;
+
         EnsureRuntimeUI();
+        BindButtons();
         RefreshUI();
+    }
+
+    private void BindButtons()
+    {
+        if (attackButton != null)
+        {
+            attackButton.onClick.RemoveAllListeners();
+            attackButton.onClick.AddListener(() => TryRequestAttack());
+        }
+
+        if (skillButton != null)
+        {
+            skillButton.onClick.RemoveAllListeners();
+            skillButton.onClick.AddListener(() => TryRequestActiveAbility());
+        }
     }
 
     private void Update()
@@ -35,8 +56,8 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             return;
 
         bool combatVisible = battleManager.Phase.Value == BattlePhase.PlayerTurn;
-        if (panelRect != null && panelRect.gameObject.activeSelf != combatVisible)
-            panelRect.gameObject.SetActive(combatVisible);
+        if (!combatVisible && panelRect != null && panelRect.gameObject.activeSelf)
+            panelRect.gameObject.SetActive(false);
 
         if (!combatVisible)
             return;
@@ -48,35 +69,46 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
 
     public bool TryRequestAttack()
     {
-        if (!CanUseSelectedCharacter(out string reason))
+        if (!CanUseSelection(out string reason))
         {
             SetStatus(reason);
             return false;
         }
 
-        selectedCharacter.AttackServerRpc(selectedTargetColumn);
+        if (!IsFrontmostTargetInColumn(selectedTarget))
+        {
+            SetStatus("Bu hedef ön sıradaki karakter tarafından korunuyor.");
+            return false;
+        }
+
+        battleManager.SendSelectedAttackServerRpc(
+            selectedAttacker.NetworkObjectId,
+            selectedTarget.NetworkObjectId);
+        SetStatus("Saldırı isteği sunucuya gönderildi.");
         return true;
     }
 
     public bool TryRequestActiveAbility()
     {
-        if (!CanUseSelectedCharacter(out string reason))
+        if (!CanUseSelection(out string reason))
         {
             SetStatus(reason);
             return false;
         }
 
-        if (!selectedCharacter.IsActiveAbilityReady)
+        if (!selectedAttacker.IsActiveAbilityReady)
         {
-            SetStatus($"Yetenek hazır değil: {selectedCharacter.AbilityCooldownRemaining.Value} raund kaldı.");
+            SetStatus(
+                $"Yetenek hazır değil: {selectedAttacker.AbilityCooldownRemaining.Value} raund kaldı.");
             return false;
         }
 
-        selectedCharacter.UseActiveAbilityServerRpc(selectedTargetColumn);
+        selectedAttacker.UseActiveAbilityServerRpc(selectedTarget.gridColumn);
+        SetStatus("Yetenek isteği sunucuya gönderildi.");
         return true;
     }
 
-    private bool CanUseSelectedCharacter(out string reason)
+    private bool CanUseSelection(out string reason)
     {
         reason = null;
 
@@ -93,21 +125,27 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             return false;
         }
 
-        if (selectedCharacter == null)
+        if (selectedAttacker == null || !selectedAttacker.IsAlive)
         {
-            reason = "Önce sahadaki canlı karakterlerinden birine dokun.";
+            reason = "Önce kendi canlı karakterlerinden birini seç.";
             return false;
         }
 
-        if (!selectedCharacter.IsAlive)
+        if (!battleManager.IsCharacterControlledByLocalPlayer(selectedAttacker))
         {
-            reason = "Seçili karakter düşmüş durumda.";
+            reason = "Yalnızca kendi karakterinle saldırabilirsin.";
             return false;
         }
 
-        if (!IsLocalPlayersCharacter(selectedCharacter))
+        if (selectedTarget == null || !selectedTarget.IsAlive)
         {
-            reason = "Yalnızca kendi karakterini seçebilirsin.";
+            reason = "Saldırmak istediğin canlı düşmanı seç.";
+            return false;
+        }
+
+        if (selectedAttacker.isPlayer == selectedTarget.isPlayer)
+        {
+            reason = "Takım arkadaşın hedef seçilemez.";
             return false;
         }
 
@@ -122,14 +160,21 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
         if (CharacterPlacer.Instance != null && CharacterPlacer.Instance.IsPlacementMode)
             return;
 
+        // BattleScene'de tam ekran UI arka planı bulunduğu için
+        // EventSystem.IsPointerOverGameObject her saha dokunuşunda true
+        // dönüyordu ve 3D raycast hiç çalışmıyordu. Yalnızca gerçekten
+        // etkileşimli olan seçim/ayar panelinin üzerindeki dokunuşu engelle.
         if (panelRect != null &&
+            panelRect.gameObject.activeInHierarchy &&
             RectTransformUtility.RectangleContainsScreenPoint(
                 panelRect,
                 Input.mousePosition,
                 GetCanvasCamera(panelRect)))
-        {
             return;
-        }
+
+        GameObject settingsPanel = GameObject.Find("BattleSettingsPanel");
+        if (settingsPanel != null && settingsPanel.activeInHierarchy)
+            return;
 
         Camera camera = Camera.main;
         if (camera == null)
@@ -145,100 +190,154 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             if (character == null)
                 continue;
 
-            if (!character.IsAlive || !IsLocalPlayersCharacter(character))
+            inspectedCharacter = character;
+            if (panelRect != null)
+                panelRect.gameObject.SetActive(true);
+
+            if (!character.IsAlive)
             {
-                SetStatus("Yalnızca kendi canlı karakterlerinden birini seçebilirsin.");
+                SetStatus("Bu karakter düşmüş durumda.");
                 return;
             }
 
-            selectedCharacter = character;
-            if (statusText != null)
-                statusText.text = $"Karakter seçildi. Hedef sütun: {selectedTargetColumn + 1}";
+            if (battleManager.IsCharacterOnLocalPlayersTeam(character))
+            {
+                if (battleManager.IsCharacterControlledByLocalPlayer(character))
+                {
+                    selectedAttacker = character;
+                    SetStatus($"Saldırgan seçildi: {GetDisplayName(character)}");
+                }
+                else
+                {
+                    SetStatus("Takım arkadaşının karakter bilgileri gösteriliyor.");
+                }
+            }
+            else
+            {
+                selectedTarget = character;
+                SetStatus(IsFrontmostTargetInColumn(character)
+                    ? $"Hedef seçildi: {GetDisplayName(character)}"
+                    : "Hedef bilgileri gösteriliyor; ön sıradaki koruyucu önce yenilmeli.");
+            }
+
             return;
         }
     }
 
-    private bool IsLocalPlayersCharacter(Character character)
+    private bool IsFrontmostTargetInColumn(Character target)
     {
-        if (character == null || NetworkManager.Singleton == null)
+        if (target == null || target.gridColumn < 0)
             return false;
 
-        bool localIsHostSide =
-            NetworkManager.Singleton.LocalClientId == NetworkManager.ServerClientId;
-        return character.isPlayer == localIsHostSide;
+        Character[] characters = Object.FindObjectsByType<Character>(
+            FindObjectsInactive.Exclude,
+            FindObjectsSortMode.None);
+
+        foreach (Character other in characters)
+        {
+            if (other == null || other == target || !other.IsAlive)
+                continue;
+
+            if (other.isPlayer == target.isPlayer &&
+                other.gridColumn == target.gridColumn &&
+                (int)other.gridRow < (int)target.gridRow)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void ValidateSelection()
     {
-        if (selectedCharacter != null &&
-            (!selectedCharacter.IsAlive || !IsLocalPlayersCharacter(selectedCharacter)))
+        if (selectedAttacker != null &&
+            (!selectedAttacker.IsAlive ||
+             !battleManager.IsCharacterControlledByLocalPlayer(selectedAttacker)))
         {
-            selectedCharacter = null;
+            selectedAttacker = null;
         }
-    }
 
-    private void SelectTargetColumn(int column)
-    {
-        selectedTargetColumn = Mathf.Clamp(column, 0, BattleRules.OneVsOneColumns - 1);
-        RefreshUI();
+        if (selectedTarget != null &&
+            (!selectedTarget.IsAlive ||
+             battleManager.IsCharacterOnLocalPlayersTeam(selectedTarget)))
+        {
+            selectedTarget = null;
+        }
+
+        if (inspectedCharacter != null && !inspectedCharacter.IsSpawned)
+            inspectedCharacter = null;
     }
 
     private void RefreshUI()
     {
-        if (statusText == null)
-            return;
-
         bool isMyTurn =
             NetworkManager.Singleton != null &&
             battleManager != null &&
             battleManager.Phase.Value == BattlePhase.PlayerTurn &&
             battleManager.ActivePlayerClientId.Value == NetworkManager.Singleton.LocalClientId;
 
-        bool hasUsableSelection =
-            selectedCharacter != null &&
-            selectedCharacter.IsAlive &&
-            IsLocalPlayersCharacter(selectedCharacter);
+        bool usable =
+            isMyTurn &&
+            selectedAttacker != null &&
+            selectedAttacker.IsAlive &&
+            selectedTarget != null &&
+            selectedTarget.IsAlive;
 
         if (attackButton != null)
-            attackButton.interactable = isMyTurn && hasUsableSelection;
+            attackButton.interactable = usable;
 
         if (skillButton != null)
-            skillButton.interactable =
-                isMyTurn &&
-                hasUsableSelection &&
-                selectedCharacter.IsActiveAbilityReady;
+            skillButton.interactable = usable && selectedAttacker.IsActiveAbilityReady;
 
-        for (int i = 0; i < columnButtons.Count; i++)
+        if (infoText != null)
         {
-            ColorBlock colors = columnButtons[i].colors;
-            colors.normalColor = i == selectedTargetColumn
-                ? new Color(0.20f, 0.65f, 1f, 1f)
-                : new Color(0.18f, 0.18f, 0.22f, 1f);
-            columnButtons[i].colors = colors;
+            infoText.text = inspectedCharacter == null
+                ? "Bilgi için bir karaktere dokun."
+                : BuildCharacterInfo(inspectedCharacter);
         }
 
-        if (selectedCharacter == null)
-        {
-            statusText.text = isMyTurn
-                ? "Karakterine dokun, hedef sütunu seç, sonra Saldır veya Yetenek kullan."
-                : "Rakibin hamlesi bekleniyor.";
+        if (statusText == null)
             return;
-        }
 
-        string cooldown = selectedCharacter.IsActiveAbilityReady
-            ? "Hazır"
-            : $"{selectedCharacter.AbilityCooldownRemaining.Value} raund";
-        statusText.text =
-            $"Seçili #{selectedCharacter.NetworkObjectId} • Hedef sütun {selectedTargetColumn + 1} • Yetenek: {cooldown}";
+        // Karakter seçilmeden ekranda sürekli yönerge gösterme. Panel ilk
+        // karakter dokunuşuna kadar kapalı kalır.
+    }
+
+    private string BuildCharacterInfo(Character character)
+    {
+        HealthSystem health = character.GetComponent<HealthSystem>();
+        int currentHp = health != null ? health.currentHP.Value : 0;
+        int maxHp = character.MaxHpNet.Value > 0
+            ? character.MaxHpNet.Value
+            : health != null ? health.maxHP : 0;
+        string side = battleManager.IsCharacterOnLocalPlayersTeam(character)
+            ? "Takımın"
+            : "Düşman";
+        string owner = battleManager.IsCharacterControlledByLocalPlayer(character)
+            ? " • Senin"
+            : "";
+
+        return
+            $"{GetDisplayName(character)}  [{side}{owner}]\n" +
+            $"HP {currentHp}/{maxHp}   STR {character.AttackNet.Value}   DEF {character.DefenseNet.Value}";
+    }
+
+    private static string GetDisplayName(Character character)
+    {
+        string value = character != null
+            ? character.DisplayNameNet.Value.ToString()
+            : string.Empty;
+        return string.IsNullOrWhiteSpace(value)
+            ? character != null ? character.name.Replace("_", " ") : "Karakter"
+            : value.Replace("_", " ");
     }
 
     private void SetStatus(string message)
     {
         if (statusText != null)
             statusText.text = message;
-
-        if (battleManager != null)
-            battleManager.ShowLocalWarning(message);
+        battleManager?.ShowLocalWarning(message);
     }
 
     private void EnsureRuntimeUI()
@@ -261,7 +360,7 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
         }
 
         GameObject panel = new GameObject(
-            "BattleActionSelectionPanel",
+            "BattleCharacterSelectionPanel",
             typeof(RectTransform),
             typeof(CanvasRenderer),
             typeof(Image));
@@ -272,42 +371,47 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
         panelRect.anchorMin = new Vector2(0.5f, 1f);
         panelRect.anchorMax = new Vector2(0.5f, 1f);
         panelRect.pivot = new Vector2(0.5f, 1f);
-        panelRect.anchoredPosition = new Vector2(0f, -92f);
-        panelRect.sizeDelta = new Vector2(920f, 142f);
-        panel.GetComponent<Image>().color = new Color(0.03f, 0.04f, 0.07f, 0.88f);
+        panelRect.anchoredPosition = new Vector2(0f, -82f);
+        panelRect.sizeDelta = new Vector2(820f, 128f);
+        panel.GetComponent<Image>().color = new Color(0.03f, 0.04f, 0.07f, 0.90f);
 
-        statusText = CreateText(panel.transform, "ActionStatus", new Vector2(0f, -12f), new Vector2(880f, 42f), 24f);
+        infoText = CreateText(
+            panel.transform,
+            "CharacterInfo",
+            new Vector2(-195f, -12f),
+            new Vector2(400f, 100f),
+            22f);
+        infoText.alignment = TextAlignmentOptions.Left;
+
+        statusText = CreateText(
+            panel.transform,
+            "SelectionStatus",
+            new Vector2(205f, -12f),
+            new Vector2(380f, 100f),
+            20f);
         statusText.alignment = TextAlignmentOptions.Center;
 
-        const float firstColumnX = -300f;
-        for (int i = 0; i < BattleRules.OneVsOneColumns; i++)
+        if (attackButton == null)
         {
-            int column = i;
-            Button button = CreateButton(
+            attackButton = CreateButton(
                 panel.transform,
-                $"TargetColumn{i + 1}",
-                (i + 1).ToString(),
-                new Vector2(firstColumnX + i * 66f, -82f),
-                new Vector2(56f, 50f));
-            button.onClick.AddListener(() => SelectTargetColumn(column));
-            columnButtons.Add(button);
+                "SelectedAttackButton",
+                "SALDIR",
+                new Vector2(110f, -94f),
+                new Vector2(150f, 44f));
         }
 
-        attackButton = CreateButton(
-            panel.transform,
-            "SelectedAttackButton",
-            "SALDIR",
-            new Vector2(175f, -82f),
-            new Vector2(150f, 50f));
-        attackButton.onClick.AddListener(() => TryRequestAttack());
+        if (skillButton == null)
+        {
+            skillButton = CreateButton(
+                panel.transform,
+                "SelectedSkillButton",
+                "BECERİ",
+                new Vector2(285f, -94f),
+                new Vector2(160f, 44f));
+        }
 
-        skillButton = CreateButton(
-            panel.transform,
-            "SelectedSkillButton",
-            "YETENEK",
-            new Vector2(350f, -82f),
-            new Vector2(170f, 50f));
-        skillButton.onClick.AddListener(() => TryRequestActiveAbility());
+        panel.SetActive(false);
     }
 
     private static TMP_Text CreateText(

@@ -8,6 +8,12 @@ public class LobbyTeamManager : NetworkBehaviour
 {
     public static LobbyTeamManager Instance;
 
+    // Lobby NetworkObject'i BattleScene yüklenirken yok olur. Takım eşleşmesi
+    // bütün istemcilere SyncTeamsClientRpc ile geldikten sonra bu küçük
+    // snapshot sahne değişiminde korunur ve BattleManager tarafından kullanılır.
+    private static readonly Dictionary<ulong, int> teamByClientIdSnapshot = new();
+    public static int SelectedPlayersPerTeam { get; private set; } = 1;
+
     [Header("Team Settings")]
     [SerializeField] private int maxPlayersPerTeam = 1;
 
@@ -65,19 +71,13 @@ public class LobbyTeamManager : NetworkBehaviour
 
     public void SetMaxPlayersPerTeam(int value)
     {
-        maxPlayersPerTeam = Mathf.Max(1, value);
+        maxPlayersPerTeam = Mathf.Clamp(value, 1, 3);
+        SelectedPlayersPerTeam = maxPlayersPerTeam;
 
         if (IsServer)
             SyncTeams();
-        else if (IsClient)
-            SetMaxPlayersPerTeamServerRpc(maxPlayersPerTeam);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void SetMaxPlayersPerTeamServerRpc(int value)
-    {
-        maxPlayersPerTeam = Mathf.Max(1, value);
-        SyncTeams();
+        else if (IsSpawned && IsClient)
+            Debug.LogWarning("[LobbyTeam] Takım boyutunu yalnızca host değiştirebilir.");
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -259,6 +259,7 @@ public class LobbyTeamManager : NetworkBehaviour
 
     private void SyncTeams()
     {
+        RebuildTeamSnapshot();
         string readyData = BuildReadyData();
 
         SyncTeamsClientRpc(
@@ -272,7 +273,8 @@ public class LobbyTeamManager : NetworkBehaviour
     [ClientRpc]
     private void SyncTeamsClientRpc(string ayTeamData, string kanTeamData, string readyData, int teamLimit)
     {
-        maxPlayersPerTeam = Mathf.Max(1, teamLimit);
+        maxPlayersPerTeam = Mathf.Clamp(teamLimit, 1, 3);
+        SelectedPlayersPerTeam = maxPlayersPerTeam;
 
         ayPlayers.Clear();
         kanPlayers.Clear();
@@ -285,6 +287,7 @@ public class LobbyTeamManager : NetworkBehaviour
             kanPlayers.AddRange(kanTeamData.Split('|'));
 
         ParseReadyData(readyData);
+        RebuildTeamSnapshot();
 
         RefreshUI();
         UpdateReadyButtonText();
@@ -444,5 +447,72 @@ public class LobbyTeamManager : NetworkBehaviour
         }
 
         return false;
+    }
+
+    private void RebuildTeamSnapshot()
+    {
+        teamByClientIdSnapshot.Clear();
+
+        foreach (string player in ayPlayers)
+        {
+            ulong id = ExtractClientId(player);
+            if (id != 999999)
+                teamByClientIdSnapshot[id] = 0;
+        }
+
+        foreach (string player in kanPlayers)
+        {
+            ulong id = ExtractClientId(player);
+            if (id != 999999)
+                teamByClientIdSnapshot[id] = 1;
+        }
+
+        SelectedPlayersPerTeam = Mathf.Clamp(maxPlayersPerTeam, 1, 3);
+    }
+
+    public static bool TryGetTeamIndex(ulong clientId, out int teamIndex)
+    {
+        return teamByClientIdSnapshot.TryGetValue(clientId, out teamIndex);
+    }
+
+    public static bool IsClientOnPlayerSide(ulong clientId)
+    {
+        if (TryGetTeamIndex(clientId, out int teamIndex))
+            return teamIndex == 0;
+
+        // Eski 1v1 kayıtları ve doğrudan BattleScene testleri için güvenli
+        // geriye dönük davranış: host player, diğer istemci enemy tarafıdır.
+        return clientId == NetworkManager.ServerClientId;
+    }
+
+    public static List<ulong> GetTeamMembers(int teamIndex)
+    {
+        List<ulong> result = new();
+        foreach (var pair in teamByClientIdSnapshot)
+            if (pair.Value == teamIndex)
+                result.Add(pair.Key);
+
+        result.Sort();
+        return result;
+    }
+
+    public static int GetTeamMemberCount(int teamIndex)
+    {
+        int count = 0;
+        foreach (var pair in teamByClientIdSnapshot)
+            if (pair.Value == teamIndex)
+                count++;
+        return count;
+    }
+
+    public static void ResetMatchSnapshot()
+    {
+        teamByClientIdSnapshot.Clear();
+        SelectedPlayersPerTeam = 1;
+    }
+
+    public static void RemoveClientFromSnapshot(ulong clientId)
+    {
+        teamByClientIdSnapshot.Remove(clientId);
     }
 }

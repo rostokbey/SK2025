@@ -113,9 +113,12 @@ public class BattleManager : NetworkBehaviour
     /// <summary>Şu anki raund numarası (1'den başlar). turnOrder tam bir tur tamamlayınca artar.</summary>
     public int CurrentRound => Mathf.Max(1, RoundNumber.Value);
 
-    // Raund başına, taraf başına en fazla 1 aktif yetenek kullanımı.
-    private int playerSideLastAbilityRound = -1;
-    private int enemySideLastAbilityRound = -1;
+    // Raund başına her gerçek oyuncu en fazla bir aktif yetenek kullanabilir.
+    // 1v1 davranışı değişmez; 2v2/3v3'te takım arkadaşının yetenek kullanması
+    // diğer oyuncunun hakkını tüketmez.
+    private readonly Dictionary<ulong, int> lastAbilityRoundByClient = new();
+
+    private BattleActionSelectionUI actionSelectionUI;
 
     [Header("AFK / Süre Aşımı")]
     [Tooltip("Bir karakterin turunu tamamlamak için verilen süre (saniye). 0 = sınırsız (devre dışı).")]
@@ -163,16 +166,10 @@ public class BattleManager : NetworkBehaviour
     /// </summary>
     private bool TryResolveSenderSide(ulong senderId, out bool isPlayerSide)
     {
-        if (senderId == NetworkManager.ServerClientId)
-        {
-            isPlayerSide = true;
-            return true;
-        }
-
         if (NetworkManager.Singleton != null &&
             NetworkManager.Singleton.ConnectedClients.ContainsKey(senderId))
         {
-            isPlayerSide = false;
+            isPlayerSide = LobbyTeamManager.IsClientOnPlayerSide(senderId);
             return true;
         }
 
@@ -283,7 +280,34 @@ public class BattleManager : NetworkBehaviour
     {
         if (character == null) return false;
         if (!TryResolveSenderSide(senderId, out bool senderIsPlayerSide)) return false;
+
+        // Yeni kayıtlar gerçek oyuncu sahipliği taşır. Eski sahne/prefab testleri
+        // için ControllerClientId atanmamışsa taraf doğrulamasına geri düşer.
+        if (character.ControllerClientId != ulong.MaxValue)
+            return character.ControllerClientId == senderId;
+
         return character.isPlayer == senderIsPlayerSide;
+    }
+
+    public bool IsCharacterOnLocalPlayersTeam(Character character)
+    {
+        if (character == null || NetworkManager.Singleton == null)
+            return false;
+
+        bool localSide = LobbyTeamManager.IsClientOnPlayerSide(
+            NetworkManager.Singleton.LocalClientId);
+        return character.isPlayer == localSide;
+    }
+
+    public bool IsCharacterControlledByLocalPlayer(Character character)
+    {
+        if (character == null || NetworkManager.Singleton == null)
+            return false;
+
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+        return character.ControllerClientId == ulong.MaxValue
+            ? IsCharacterOnLocalPlayersTeam(character)
+            : character.ControllerClientId == localId;
     }
 
     #endregion
@@ -458,10 +482,10 @@ public class BattleManager : NetworkBehaviour
             return false;
         }
 
-        int lastUsedRound = character.isPlayer ? playerSideLastAbilityRound : enemySideLastAbilityRound;
-        if (lastUsedRound == CurrentRound)
+        if (lastAbilityRoundByClient.TryGetValue(senderId, out int lastUsedRound) &&
+            lastUsedRound == CurrentRound)
         {
-            reason = "Bu raundda bu taraf zaten bir aktif yetenek kullandı.";
+            reason = "Bu raundda zaten bir aktif yetenek kullandınız.";
             return false;
         }
 
@@ -502,11 +526,10 @@ public class BattleManager : NetworkBehaviour
         };
 
         ability.Apply(context);
+        character.PlayAnimationClientRpc("Skill");
 
         character.AbilityCooldownRemaining.Value = 4; // ActiveAbilityCooldownRounds
-
-        if (character.isPlayer) playerSideLastAbilityRound = CurrentRound;
-        else enemySideLastAbilityRound = CurrentRound;
+        lastAbilityRoundByClient[senderId] = CurrentRound;
 
         if (primaryTarget != null)
             PlayApprovedAbilityFeedbackClientRpc(
@@ -548,6 +571,15 @@ public class BattleManager : NetworkBehaviour
         if (Instance == null)
             Instance = this;
 
+        int playersPerSide = Mathf.Clamp(LobbyTeamManager.SelectedPlayersPerTeam, 1, 3);
+        BattleTeamSize teamSize = playersPerSide == 3
+            ? BattleTeamSize.ThreeVThree
+            : playersPerSide == 2
+                ? BattleTeamSize.TwoVTwo
+                : BattleTeamSize.OneVOne;
+        gridColumns = teamSize.GetColumns();
+        maxActiveCharactersPerSide = Mathf.Max(maxActiveCharactersPerSide, gridColumns * 3);
+
         playerGrid = new BattleGrid(gridColumns);
         enemyGrid = new BattleGrid(gridColumns);
 
@@ -559,8 +591,69 @@ public class BattleManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+        if (IsServer && NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientDisconnectCallback += HandleBattleClientDisconnected;
+
         if (IsClient)
             SubmitLocalSignedDeck();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (IsServer && NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientDisconnectCallback -= HandleBattleClientDisconnected;
+
+        base.OnNetworkDespawn();
+    }
+
+    private void HandleBattleClientDisconnected(ulong clientId)
+    {
+        if (!IsServer || battleEnded)
+            return;
+
+        bool disconnectedSide = LobbyTeamManager.IsClientOnPlayerSide(clientId);
+        bool wasActive = ActivePlayerClientId.Value == clientId;
+        int removedIndex = matchPlayers.IndexOf(clientId);
+
+        matchPlayers.Remove(clientId);
+        initialPlacementCompleted.Remove(clientId);
+        placedThisTurn.Remove(clientId);
+        playerSubmittedCards.Remove(clientId);
+        playerSubmittedCardIds.Remove(clientId);
+        playerSubmittedJtis.Remove(clientId);
+        expectedSubmittedCardCounts.Remove(clientId);
+        lastAbilityRoundByClient.Remove(clientId);
+        LobbyTeamManager.RemoveClientFromSnapshot(clientId);
+
+        foreach (Character character in allCharacters)
+        {
+            if (character == null || character.ControllerClientId != clientId)
+                continue;
+
+            HealthSystem health = character.GetComponent<HealthSystem>();
+            if (health != null)
+                health.currentHP.Value = 0;
+            character.SetDownedVisual(true);
+        }
+
+        bool sideStillConnected = matchPlayers.Any(id =>
+            LobbyTeamManager.IsClientOnPlayerSide(id) == disconnectedSide);
+
+        if (!sideStillConnected)
+        {
+            EndBattle(!disconnectedSide, "team_disconnected");
+            return;
+        }
+
+        if (wasActive && matchPlayers.Count > 0)
+        {
+            activePlayerIndex = removedIndex < 0
+                ? 0
+                : Mathf.Clamp(removedIndex, 0, matchPlayers.Count - 1);
+            SetActivePlayer(matchPlayers[activePlayerIndex], drawCard: true);
+        }
+
+        CheckVictory();
     }
 
     private void SubmitLocalSignedDeck()
@@ -643,21 +736,17 @@ public class BattleManager : NetworkBehaviour
     {
         EnsureTurnTimerText();
 
+        actionSelectionUI = GetComponent<BattleActionSelectionUI>();
+        if (actionSelectionUI == null)
+            actionSelectionUI = gameObject.AddComponent<BattleActionSelectionUI>();
+        actionSelectionUI.Initialize(this, attackButton, skillButton);
+
         // UI buton bağlama (varsa)
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
 
-        // ✅ Saldır butonu artık sahadaki karakter saldırısı için BattleManager'a bağlı
-        if (attackButton != null)
-        {
-            attackButton.onClick.RemoveAllListeners();
-            attackButton.onClick.AddListener(OnFieldAttackButtonPressed);
-            Debug.Log("[BM] AttackButton BattleManager'a bağlandı.");
-        }
-        else
-        {
-            Debug.LogWarning("[BM] attackButton atanmamış!");
-        }
+        if (attackButton == null)
+            Debug.LogWarning("[BM] attackButton atanmamış; seçim paneli çalışma anında bir buton oluşturacak.");
 
         // ✅ Her client kendi elindeki kart destesini görsün
         InitLocalHandUI();
@@ -688,17 +777,18 @@ public class BattleManager : NetworkBehaviour
 
     public void OnFieldAttackButtonPressed()
     {
-        if (!IsClient || NetworkManager.Singleton == null)
-            return;
+        if (actionSelectionUI != null)
+            actionSelectionUI.TryRequestAttack();
+        else
+            ShowWarning("Karakter/hedef seçim arayüzü hazır değil.");
+    }
 
-        ulong localId = NetworkManager.Singleton.LocalClientId;
-        if (Phase.Value != BattlePhase.PlayerTurn || ActivePlayerClientId.Value != localId)
-        {
-            ShowWarning("Şu anda saldırı sırası sende değil.");
-            return;
-        }
-
-        SendAttackServerRpc();
+    public void OnFieldSkillButtonPressed()
+    {
+        if (actionSelectionUI != null)
+            actionSelectionUI.TryRequestActiveAbility();
+        else
+            ShowWarning("Karakter/hedef seçim arayüzü hazır değil.");
     }
 
     // ---------------------------------------------------------------------
@@ -856,7 +946,7 @@ public class BattleManager : NetworkBehaviour
             if (ch != null)
             {
                 ch.SetPlayerSide(true);
-                ch.Setup(card);
+                ch.Setup(card, GetDefaultControllerForSide(true));
                 RegisterSpawnedCharacterByFlatIndex(ch, true, i);
             }
         }
@@ -889,7 +979,7 @@ public class BattleManager : NetworkBehaviour
             if (ch != null)
             {
                 ch.SetPlayerSide(false);
-                ch.Setup(card);
+                ch.Setup(card, GetDefaultControllerForSide(false));
                 RegisterSpawnedCharacterByFlatIndex(ch, false, i);
             }
         }
@@ -900,7 +990,10 @@ public class BattleManager : NetworkBehaviour
     // ---------------------------------------------------------
     // 3D KARAKTER TEK KART SPAWN (elde seçilen kart için)
     // ---------------------------------------------------------
-    public void SpawnCharacter(CardData card, bool isPlayer)
+    public void SpawnCharacter(
+        CardData card,
+        bool isPlayer,
+        ulong controllerClientId = ulong.MaxValue)
     {
         if (!IsServer)
         {
@@ -952,7 +1045,9 @@ public class BattleManager : NetworkBehaviour
         if (ch != null)
         {
             ch.SetPlayerSide(isPlayer);
-            ch.Setup(card);
+            if (controllerClientId == ulong.MaxValue)
+                controllerClientId = GetDefaultControllerForSide(isPlayer);
+            ch.Setup(card, controllerClientId);
             RegisterSpawnedCharacterByFlatIndex(ch, isPlayer, inDef);
         }
 
@@ -967,22 +1062,52 @@ public class BattleManager : NetworkBehaviour
     public void AssignTurnToClient(ulong clientId)
     {
         if (!IsServer) return;
-        bool side = clientId == NetworkManager.ServerClientId;
         foreach (var ch in allCharacters)
             if (ch != null)
-                ch.SetTurn(ch.IsAlive && ch.isPlayer == side);
+                ch.SetTurn(ch.IsAlive &&
+                    (ch.ControllerClientId == ulong.MaxValue
+                        ? ch.isPlayer == LobbyTeamManager.IsClientOnPlayerSide(clientId)
+                        : ch.ControllerClientId == clientId));
     }
 
     private void BuildMatchPlayerOrder()
     {
         matchPlayers.Clear();
-        matchPlayers.AddRange(playerSubmittedCards.Keys);
-        matchPlayers.Sort((a, b) =>
+
+        List<ulong> playerSide = playerSubmittedCards.Keys
+            .Where(id => LobbyTeamManager.IsClientOnPlayerSide(id))
+            .OrderBy(id => id)
+            .ToList();
+        List<ulong> enemySide = playerSubmittedCards.Keys
+            .Where(id => !LobbyTeamManager.IsClientOnPlayerSide(id))
+            .OrderBy(id => id)
+            .ToList();
+
+        int longestTeam = Mathf.Max(playerSide.Count, enemySide.Count);
+        for (int i = 0; i < longestTeam; i++)
         {
-            if (a == NetworkManager.ServerClientId) return -1;
-            if (b == NetworkManager.ServerClientId) return 1;
-            return a.CompareTo(b);
-        });
+            if (i < playerSide.Count) matchPlayers.Add(playerSide[i]);
+            if (i < enemySide.Count) matchPlayers.Add(enemySide[i]);
+        }
+    }
+
+    private ulong GetDefaultControllerForSide(bool isPlayerSide)
+    {
+        List<ulong> members = LobbyTeamManager.GetTeamMembers(isPlayerSide ? 0 : 1);
+        if (members.Count > 0)
+            return members[0];
+
+        if (isPlayerSide)
+            return NetworkManager.ServerClientId;
+
+        if (NetworkManager.Singleton != null)
+        {
+            foreach (var client in NetworkManager.Singleton.ConnectedClientsList)
+                if (client.ClientId != NetworkManager.ServerClientId)
+                    return client.ClientId;
+        }
+
+        return ulong.MaxValue;
     }
 
     private void BeginInitialPlacement()
@@ -990,9 +1115,13 @@ public class BattleManager : NetworkBehaviour
         if (!IsServer) return;
 
         BuildMatchPlayerOrder();
-        if (matchPlayers.Count < 2)
+        int expectedPlayers = Mathf.Clamp(
+            LobbyTeamManager.SelectedPlayersPerTeam * 2,
+            2,
+            6);
+        if (matchPlayers.Count < expectedPlayers)
         {
-            ShowWarning("İki doğrulanmış oyuncu olmadan yerleşim başlayamaz.");
+            ShowWarning($"{expectedPlayers} doğrulanmış oyuncu olmadan yerleşim başlayamaz.");
             return;
         }
 
@@ -1014,9 +1143,13 @@ public class BattleManager : NetworkBehaviour
 
     private void BeginCombat()
     {
-        if (matchPlayers.Count < 2)
+        int expectedPlayers = Mathf.Clamp(
+            LobbyTeamManager.SelectedPlayersPerTeam * 2,
+            2,
+            6);
+        if (matchPlayers.Count < expectedPlayers)
             BuildMatchPlayerOrder();
-        if (matchPlayers.Count < 2) return;
+        if (matchPlayers.Count < expectedPlayers) return;
 
         Phase.Value = BattlePhase.PlayerTurn;
         RoundNumber.Value = 1;
@@ -1031,10 +1164,12 @@ public class BattleManager : NetworkBehaviour
         ActivePlayerClientId.Value = clientId;
         currentTurnClientId = clientId;
 
-        bool activeIsPlayerSide = clientId == NetworkManager.ServerClientId;
         foreach (var ch in allCharacters)
             if (ch != null)
-                ch.SetTurn(ch.IsAlive && ch.isPlayer == activeIsPlayerSide);
+                ch.SetTurn(ch.IsAlive &&
+                    (ch.ControllerClientId == ulong.MaxValue
+                        ? ch.isPlayer == LobbyTeamManager.IsClientOnPlayerSide(clientId)
+                        : ch.ControllerClientId == clientId));
 
         ResetTurnTimer();
         BeginLocalTurnClientRpc(clientId, drawCard, Phase.Value, CurrentRound);
@@ -1216,6 +1351,10 @@ public class BattleManager : NetworkBehaviour
 
     private void UpdateLocalActionButtons()
     {
+        // Seçim UI saldırgan/hedef/cooldown durumunu da hesaba katar.
+        if (actionSelectionUI != null)
+            return;
+
         if (NetworkManager.Singleton == null) return;
 
         bool myTurn = IsClient &&
@@ -1228,7 +1367,8 @@ public class BattleManager : NetworkBehaviour
 
     private void HandleAfkTimeout()
     {
-        bool timedOutSideIsPlayer = ActivePlayerClientId.Value == NetworkManager.ServerClientId;
+        bool timedOutSideIsPlayer =
+            LobbyTeamManager.IsClientOnPlayerSide(ActivePlayerClientId.Value);
 
         if (timedOutSideIsPlayer)
         {
@@ -1287,8 +1427,10 @@ public class BattleManager : NetworkBehaviour
         var votes = senderIsPlayerSide ? playerSurrenderVotes : enemySurrenderVotes;
         votes.Add(senderId);
 
-        // 1v1: taraf başına gereken oy sayısı = 1 (bkz. yukarıdaki not).
-        int requiredVotes = 1;
+        int teamIndex = senderIsPlayerSide ? 0 : 1;
+        int requiredVotes = Mathf.Max(
+            1,
+            LobbyTeamManager.GetTeamMemberCount(teamIndex));
 
         if (votes.Count >= requiredVotes)
         {
@@ -1462,7 +1604,12 @@ public class BattleManager : NetworkBehaviour
 
     private bool AllSubmittedDecksComplete()
     {
-        if (playerSubmittedCards.Count < 2) return false;
+        int expectedPlayers = Mathf.Clamp(
+            LobbyTeamManager.SelectedPlayersPerTeam * 2,
+            2,
+            6);
+        if (playerSubmittedCards.Count < expectedPlayers)
+            return false;
 
         foreach (var pair in playerSubmittedCards)
         {
@@ -1698,9 +1845,13 @@ public class BattleManager : NetworkBehaviour
         Debug.Log(
             $"[SECURE DECK] Client {senderId}: {verifiedCards.Count} kartın imzası sunucuda doğrulandı.");
 
-        if (playerSubmittedCards.Count >= 2)
+        int expectedPlayers = Mathf.Clamp(
+            LobbyTeamManager.SelectedPlayersPerTeam * 2,
+            2,
+            6);
+        if (playerSubmittedCards.Count >= expectedPlayers)
         {
-            Debug.Log("[SECURE DECK] İki doğrulanmış deste hazır.");
+            Debug.Log($"[SECURE DECK] {expectedPlayers} doğrulanmış deste hazır.");
             SpawnCharactersFromSubmittedDecks();
         }
     }
@@ -1730,32 +1881,109 @@ public class BattleManager : NetworkBehaviour
     private void SpawnCharactersFromSubmittedDecks()
     {
         var players = new List<ulong>(playerSubmittedCards.Keys);
+        int expectedPlayers = Mathf.Clamp(
+            LobbyTeamManager.SelectedPlayersPerTeam * 2,
+            2,
+            6);
 
-        if (players.Count < 2)
+        if (players.Count < expectedPlayers)
         {
-            ShowWarning("İki oyuncu doğrulanmış deste göndermeden savaş başlayamaz.");
+            ShowWarning($"{expectedPlayers} oyuncu doğrulanmış deste göndermeden savaş başlayamaz.");
             return;
         }
 
-        // Host/server tarafını ilk sıraya sabitle.
-        players.Sort((a, b) =>
+        foreach (ulong playerId in players)
         {
-            if (a == NetworkManager.ServerClientId) return -1;
-            if (b == NetworkManager.ServerClientId) return 1;
-            return a.CompareTo(b);
-        });
+            List<CardData> deck = playerSubmittedCards[playerId];
+            if (deck == null || deck.Count < BattleRules.MinimumDeckSize)
+            {
+                ShowWarning(
+                    $"Client {playerId} destesinden en az {BattleRules.MinimumDeckSize} kart göndermeli.");
+                return;
+            }
+        }
 
-        var hostCards = playerSubmittedCards[players[0]];
-        var joinCards = playerSubmittedCards[players[1]];
-
-        if (!CanStartBattleWithDecks(hostCards, joinCards))
+        int playerSideCount = players.Count(id => LobbyTeamManager.IsClientOnPlayerSide(id));
+        int enemySideCount = players.Count - playerSideCount;
+        if (playerSideCount != LobbyTeamManager.SelectedPlayersPerTeam ||
+            enemySideCount != LobbyTeamManager.SelectedPlayersPerTeam)
+        {
+            ShowWarning(
+                $"Takım dağılımı geçersiz. Ay={playerSideCount}, Kan={enemySideCount}, " +
+                $"beklenen={LobbyTeamManager.SelectedPlayersPerTeam}.");
             return;
+        }
 
         ShowWarning("");
 
-        Debug.Log($"İki oyuncunun da en az {BattleRules.MinimumDeckSize} kartı var. Savaş başlatılıyor.");
+        Debug.Log($"{expectedPlayers} oyuncunun desteleri hazır. Savaş başlatılıyor.");
 
         BeginInitialPlacement();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SendSelectedAttackServerRpc(
+        ulong attackerNetworkObjectId,
+        ulong targetNetworkObjectId,
+        ServerRpcParams rpcParams = default)
+    {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+
+        if (!IsSendersTurn(senderId, out string turnReason))
+        {
+            Debug.LogWarning($"[BM] Seçili saldırı reddedildi (client {senderId}): {turnReason}");
+            return;
+        }
+
+        if (NetworkManager.Singleton == null ||
+            NetworkManager.Singleton.SpawnManager == null ||
+            !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                attackerNetworkObjectId, out NetworkObject attackerObject) ||
+            !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                targetNetworkObjectId, out NetworkObject targetObject))
+        {
+            Debug.LogWarning("[BM] Seçili saldırı reddedildi: karakter NetworkObject bulunamadı.");
+            return;
+        }
+
+        Character attacker = attackerObject.GetComponent<Character>();
+        Character target = targetObject.GetComponent<Character>();
+
+        if (attacker == null || target == null || !attacker.IsAlive || !target.IsAlive)
+        {
+            Debug.LogWarning("[BM] Seçili saldırı reddedildi: saldırgan/hedef geçersiz veya düşmüş.");
+            return;
+        }
+
+        if (!IsSenderAuthorizedForCharacter(senderId, attacker))
+        {
+            Debug.LogWarning($"[BM] Seçili saldırı reddedildi: client {senderId} saldırganı kontrol etmiyor.");
+            return;
+        }
+
+        if (attacker.isPlayer == target.isPlayer)
+        {
+            Debug.LogWarning("[BM] Seçili saldırı reddedildi: takım arkadaşına saldırılamaz.");
+            return;
+        }
+
+        BattleGrid targetGrid = GetGridFor(target.isPlayer);
+        Character allowedTarget = targetGrid?.ResolveTarget(
+            target.gridColumn,
+            AbilityTargetingMode.Normal);
+
+        // Seçenek B: seçilen sütunda canlı bir ön sıra varsa orta/arka hedef
+        // doğrudan vurulamaz. Kontrol tamamen sunucuda yeniden yapılır.
+        if (allowedTarget != target)
+        {
+            Debug.LogWarning(
+                $"[BM] Seçili saldırı reddedildi: {target.cardData?.cardName} ön sıradaki karakter tarafından korunuyor.");
+            return;
+        }
+
+        attacker.PlayAnimationClientRpc("Attack");
+        ApplyBasicAttackDamage(attacker, target);
+        EndTurn();
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -1788,7 +2016,11 @@ public class BattleManager : NetworkBehaviour
         // hedefler ("karşındaki sütuna vur"). Gerçek bir sütun seçim arayüzü
         // eklendiğinde bunun yerine doğrudan Character.AttackServerRpc
         // çağrılmalı ve bu metot kaldırılabilir.
-        var attacker = allCharacters.FirstOrDefault(c => c != null && c.IsAlive && c.isPlayer == senderIsPlayerSide);
+        var attacker = allCharacters.FirstOrDefault(c =>
+            c != null &&
+            c.IsAlive &&
+            c.isPlayer == senderIsPlayerSide &&
+            (c.ControllerClientId == ulong.MaxValue || c.ControllerClientId == senderId));
         if (attacker == null)
         {
             Debug.LogWarning("[BM] Saldırabilecek canlı karakter yok.");
@@ -1827,7 +2059,11 @@ public class BattleManager : NetworkBehaviour
         // olarak uygulanıyor. "ability" parametresi artık kullanılmıyor
         // (yetenek kimliği karakterin kendi CardData.ability alanından
         // okunuyor) - geriye dönük uyumluluk için imza korundu.
-        var character = allCharacters.FirstOrDefault(c => c != null && c.IsAlive && c.isPlayer == senderIsPlayerSide);
+        var character = allCharacters.FirstOrDefault(c =>
+            c != null &&
+            c.IsAlive &&
+            c.isPlayer == senderIsPlayerSide &&
+            (c.ControllerClientId == ulong.MaxValue || c.ControllerClientId == senderId));
         if (character == null)
         {
             Debug.LogWarning("[BM] Yetenek kullanabilecek canlı karakter yok.");
@@ -1894,7 +2130,7 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        SpawnCharacter(card, isPlayer);
+        SpawnCharacter(card, isPlayer, senderClientId);
         OnCardPlaced(senderClientId);
     }
 
@@ -1952,13 +2188,13 @@ public class BattleManager : NetworkBehaviour
     [ClientRpc]
     private void NotifyMatchEndClientRpc(bool winnerIsPlayerSide, string reason)
     {
-        // Host = "player" tarafı (bkz. TryResolveSenderSide). Bu cihazın
-        // host mu yoksa katılımcı (joiner) mı olduğuna göre "ben kazandım
-        // mı" sorusunu yerel olarak çöz.
-        bool isThisDeviceHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
-        bool isLocalPlayerWinner = isThisDeviceHost ? winnerIsPlayerSide : !winnerIsPlayerSide;
+        ulong localId = NetworkManager.Singleton != null
+            ? NetworkManager.Singleton.LocalClientId
+            : NetworkManager.ServerClientId;
+        bool localPlayerSide = LobbyTeamManager.IsClientOnPlayerSide(localId);
+        bool isLocalPlayerWinner = localPlayerSide == winnerIsPlayerSide;
 
-        Debug.Log($"[BM] Maç sonu bildirimi alındı (bu cihaz: {(isThisDeviceHost ? "host" : "joiner")}) -> " +
+        Debug.Log($"[BM] Maç sonu bildirimi alındı (client {localId}, taraf: {(localPlayerSide ? "Ay" : "Kan")}) -> " +
                   $"{(isLocalPlayerWinner ? "KAZANDIN" : "KAYBETTİN")} (sebep: {reason})");
 
         GrantRewardTo(isLocalPlayerWinner);
@@ -2209,7 +2445,7 @@ public class BattleManager : NetworkBehaviour
         if (ch != null)
         {
             ch.SetPlayerSide(isPlayer);
-            ch.Setup(card);
+            ch.Setup(card, senderId);
             var (placedRow, placedCol) = RegisterSpawnedCharacterByWorldPosition(ch, isPlayer, zone.bounds, position);
             Debug.Log($"[BM] Grid hücresi: {placedRow}/{placedCol}");
         }

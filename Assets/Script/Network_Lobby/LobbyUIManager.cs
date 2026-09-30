@@ -101,7 +101,11 @@ public class LobbyUIManager : MonoBehaviour
             $"[Lobby] Client bağlantısı kesildi. ClientId={clientId}, Sebep={message}");
 
         if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            LobbyTeamManager.ResetMatchSnapshot();
+            SetLobbyStartState();
             ShowWarning("Sunucu bağlantısı kesildi: " + message);
+        }
     }
 
     private void OnDestroy()
@@ -116,6 +120,19 @@ public class LobbyUIManager : MonoBehaviour
     private void SetLobbyStartState()
     {
         isStartingBattle = false;
+        isConnecting = false;
+
+        if (hostButton != null)
+        {
+            hostButton.gameObject.SetActive(true);
+            hostButton.interactable = true;
+        }
+
+        if (joinButton != null)
+        {
+            joinButton.gameObject.SetActive(true);
+            joinButton.interactable = true;
+        }
 
         if (joinCodePanel != null)
             joinCodePanel.SetActive(false);
@@ -193,8 +210,14 @@ public class LobbyUIManager : MonoBehaviour
         {
             await EnsureUnityServices();
 
+            // Relay değeri host hariç katılımcı sayısıdır:
+            // 1v1 => 1, 2v2 => 3, 3v3 => 5 bağlantı.
+            int requiredConnections = Mathf.Clamp(
+                LobbyTeamManager.SelectedPlayersPerTeam * 2 - 1,
+                1,
+                maxConnections);
             Allocation allocation =
-                await RelayService.Instance.CreateAllocationAsync(maxConnections);
+                await RelayService.Instance.CreateAllocationAsync(requiredConnections);
 
             string joinCode =
                 await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
@@ -232,14 +255,20 @@ public class LobbyUIManager : MonoBehaviour
                 teamPanel.SetActive(true);
 
             if (matchButtonsPanel != null)
-                matchButtonsPanel.SetActive(true);
+                matchButtonsPanel.SetActive(false);
 
             RefreshStartBattleButton();
 
-            Debug.Log("[Lobby] Host başladı. Join Code: " + joinCode);
+            Debug.Log(
+                $"[Lobby] {LobbyTeamManager.SelectedPlayersPerTeam}v" +
+                $"{LobbyTeamManager.SelectedPlayersPerTeam} host başladı. " +
+                $"Relay katılımcı kapasitesi={requiredConnections}, Join Code={joinCode}");
         }
         catch (Exception e)
         {
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
+            SetLobbyStartState();
             ShowWarning("Host oluşturulamadı.");
             Debug.LogError("[Lobby] HostGame hata: " + e);
         }
@@ -326,6 +355,9 @@ public class LobbyUIManager : MonoBehaviour
         }
         catch (Exception e)
         {
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
+            SetLobbyStartState();
             ShowWarning("Oyuna katılım başarısız.");
             Debug.LogError("[Lobby] JoinGame hata: " + e);
         }
@@ -522,6 +554,8 @@ public class LobbyUIManager : MonoBehaviour
         if (joinCodeUI != null)
             joinCodeUI.Clear();
 
+        LobbyTeamManager.ResetMatchSnapshot();
+
         if (joinCodeInput != null)
             joinCodeInput.text = "";
 
@@ -554,21 +588,10 @@ public class LobbyUIManager : MonoBehaviour
 
     public void ClearJoinCodeUI()
     {
-        joinCodeUI?.Clear();
-
-        if (joinCodePanel != null)
-            joinCodePanel.SetActive(false);
-
-        if (battleRoomPanel != null)
-            battleRoomPanel.SetActive(false);
-
-        if (matchButtonsPanel != null)
-            matchButtonsPanel.SetActive(false);
-
-        if (startBattleButton != null)
-            startBattleButton.gameObject.SetActive(false);
-
-        ShowWarning("");
+        // Bu buton kullanıcıyı oda görünümünden ana menüye döndürüyor.
+        // Sadece panelleri kapatmak NetworkManager'ı dinlemede bırakıyordu;
+        // sonraki Oda Kur/Katıl denemesi "ağ zaten çalışıyor" hatası veriyordu.
+        LeaveRoom();
     }
 
     private void ShowWarning(string message)

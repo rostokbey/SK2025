@@ -39,13 +39,26 @@ public class MatchStarter : MonoBehaviour
             return;
         }
 
+        LobbyTeamManager.ResetMatchSnapshot();
         LastMatchWasSeason = seasonMode;
         LastMatchTeamSize = Mathf.Clamp(teamSize, 1, 3);
+
+        if (lobbyTeamManager == null)
+            lobbyTeamManager = LobbyTeamManager.Instance
+                ?? Object.FindFirstObjectByType<LobbyTeamManager>(FindObjectsInactive.Include);
 
         if (lobbyTeamManager != null)
         {
             lobbyTeamManager.SetMaxPlayersPerTeam(LastMatchTeamSize);
         }
+        else
+        {
+            Debug.LogError("[MatchStarter] LobbyTeamManager bulunamadı; mod başlatılmadı.");
+            return;
+        }
+
+        if (lobbyUIManager == null)
+            lobbyUIManager = Object.FindFirstObjectByType<LobbyUIManager>(FindObjectsInactive.Include);
 
         if (lobbyUIManager != null)
         {

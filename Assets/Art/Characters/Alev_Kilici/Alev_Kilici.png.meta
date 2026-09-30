@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: 7fa12f4cd26e6a746b2468f9032a43b2
+guid: 763312005e26d1b4ca4dde459ed320c0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1844687978536084834
-    second: "Kadim B\xFCy\xFCc\xFCs\xFC_0"
+      213: -6326663660156916396
+    second: Alev_Kilici_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 0
+    enableMipMap: 1
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -55,9 +55,9 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
-  alphaIsTransparency: 1
+  alphaIsTransparency: 0
   spriteTessellationDetail: -1
-  textureType: 8
+  textureType: 0
   textureShape: 1
   singleChannelComponent: 0
   flipbookRows: 1
@@ -72,7 +72,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -139,7 +139,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "Kadim B\xFCy\xFCc\xFCs\xFC_0"
+      name: Alev_Kilici_0
       rect:
         serializedVersion: 2
         x: 0
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e9a5ced9e0a5666e0800000000000000
-      internalID: -1844687978536084834
+      spriteID: 45d69f2dbec2338a0800000000000000
+      internalID: -6326663660156916396
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "Kadim B\xFCy\xFCc\xFCs\xFC_0": -1844687978536084834
+      Alev_Kilici_0: -6326663660156916396
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

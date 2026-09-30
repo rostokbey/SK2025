@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Collections;
 
 [RequireComponent(typeof(NetworkObject))]
 public class Character : NetworkBehaviour
@@ -26,6 +27,32 @@ public class Character : NetworkBehaviour
 
     public bool isMyTurn => IsMyTurnNet.Value;
     public bool isPlayer => IsPlayerNet.Value;
+
+    // NetworkObject ownership'i sunucuda kaldığı için oynanış sahipliğini ayrı
+    // tutuyoruz. Böylece 2v2/3v3'te aynı taraftaki oyuncular yalnızca kendi
+    // sahaya koydukları karakterlere komut verebilir.
+    public readonly NetworkVariable<ulong> ControllerClientIdNet =
+        new NetworkVariable<ulong>(
+            ulong.MaxValue,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    // CardData bir ScriptableObject/normal C# verisi olduğu için kendiliğinden
+    // ağda çoğalmaz. Seçim bilgi panelinin her istemcide doğru değer göstermesi
+    // için gerekli özet statlar ayrıca senkronlanır.
+    public readonly NetworkVariable<FixedString64Bytes> DisplayNameNet =
+        new NetworkVariable<FixedString64Bytes>(
+            default,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+    public readonly NetworkVariable<int> MaxHpNet =
+        new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public readonly NetworkVariable<int> AttackNet =
+        new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public readonly NetworkVariable<int> DefenseNet =
+        new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public ulong ControllerClientId => ControllerClientIdNet.Value;
 
     [Header("Optional")]
     public Animator animator;
@@ -60,19 +87,36 @@ public class Character : NetworkBehaviour
         health = GetComponent<HealthSystem>();
     }
 
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        // Can barı yalnızca görüntüleyen client'larda gerekir. Prefabların
+        // tamamını tek tek değiştirmeden bütün karakterlere otomatik eklenir.
+        if (IsClient && GetComponent<CharacterWorldHealthBar>() == null)
+            gameObject.AddComponent<CharacterWorldHealthBar>();
+    }
+
     // -----------------------------------------------------------------
     #region Grid Konumu (6x3 saha sistemi)
 
     /// <summary>Bu karakterin sahasındaki sırası (Front/Mid/Back).</summary>
-    public BattleRow gridRow { get; private set; }
+    private readonly NetworkVariable<int> GridRowNet =
+        new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public BattleRow gridRow => (BattleRow)Mathf.Clamp(GridRowNet.Value, 0, 2);
 
     /// <summary>Bu karakterin sütunu. -1 = henüz bir hücreye yerleştirilmedi.</summary>
-    public int gridColumn { get; private set; } = -1;
+    private readonly NetworkVariable<int> GridColumnNet =
+        new NetworkVariable<int>(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public int gridColumn => GridColumnNet.Value;
 
     public void SetGridPosition(BattleRow row, int column)
     {
-        gridRow = row;
-        gridColumn = column;
+        if (!IsServer)
+            return;
+
+        GridRowNet.Value = (int)row;
+        GridColumnNet.Value = column;
     }
 
     #endregion
@@ -231,7 +275,7 @@ public class Character : NetworkBehaviour
     // -----------------------------------------------------------------
 
     // Setup çağrısı
-    public void Setup(CardData data)
+    public void Setup(CardData data, ulong controllerClientId = ulong.MaxValue)
     {
         cardData = data;
 
@@ -250,7 +294,22 @@ public class Character : NetworkBehaviour
         defense = data.baseDef;
         name = data.cardName;
 
+        if (IsServer)
+        {
+            ControllerClientIdNet.Value = controllerClientId;
+            DisplayNameNet.Value = new FixedString64Bytes(
+                string.IsNullOrWhiteSpace(data.cardName) ? "Karakter" : data.cardName);
+            MaxHpNet.Value = data.baseHP;
+            AttackNet.Value = data.str > 0 ? data.str : data.baseStr;
+            DefenseNet.Value = data.def > 0 ? data.def : data.baseDef;
+        }
+
         InitAbilityStateServer();
+    }
+
+    public bool IsControlledBy(ulong clientId)
+    {
+        return ControllerClientIdNet.Value == clientId;
     }
 
     public void SetTurn(bool turn)

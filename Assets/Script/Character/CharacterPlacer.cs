@@ -128,8 +128,11 @@ public class CharacterPlacer : MonoBehaviour
         if (BattleManager.Instance == null || NetworkManager.Singleton == null)
             return false;
 
-        bool hostSide = NetworkManager.Singleton.LocalClientId == NetworkManager.ServerClientId;
-        Collider zone = hostSide ? BattleManager.Instance.playerZone : BattleManager.Instance.enemyZone;
+        bool playerSide = LobbyTeamManager.IsClientOnPlayerSide(
+            NetworkManager.Singleton.LocalClientId);
+        Collider zone = playerSide
+            ? BattleManager.Instance.playerZone
+            : BattleManager.Instance.enemyZone;
         if (zone == null)
             return false;
 
