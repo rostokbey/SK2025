@@ -1,3 +1,4 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +11,8 @@ public class VFXManager : MonoBehaviour
     public Vector3 defaultOffset = new Vector3(0f, 1.2f, 0f);
     public float testScale = 5f;
 
-    private readonly Dictionary<string, GameObject> vfxCache = new Dictionary<string, GameObject>();
+    private readonly Dictionary<string, GameObject> vfxCache =
+        new Dictionary<string, GameObject>();
 
     private void Awake()
     {
@@ -46,24 +48,60 @@ public class VFXManager : MonoBehaviour
 
         if (prefab == null)
         {
-            Debug.LogWarning($"VFX prefab bulunamadı: Resources/VFX/{abilityName}");
+            Debug.LogWarning(
+                $"VFX prefab bulunamadı: Resources/VFX/{abilityName}");
             return;
         }
 
-        GameObject effect = Instantiate(prefab, position, Quaternion.identity);
+        GameObject effect = Instantiate(
+            prefab, position, Quaternion.identity);
+
         effect.transform.localScale = Vector3.one * testScale;
 
-        Debug.Log($"✅ VFX SPAWN EDİLDİ: {abilityName} | Pos: {position}");
+        Debug.Log($"VFX SPAWN EDİLDİ: {abilityName} | Pos: {position}");
 
-        // =========================
-        // SFX ÇAL
-        // =========================
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySFX(abilityName);
         }
 
         Destroy(effect, defaultDestroyTime);
+    }
+
+    public void PlayMagicHit(Vector3 hitPosition)
+    {
+        GameObject prefab = GetVFXPrefab("VFX_MagicHit");
+
+        if (prefab == null)
+        {
+            Debug.LogWarning(
+                "VFX_MagicHit bulunamadı: Resources/VFX/VFX_MagicHit");
+            return;
+        }
+
+        GameObject effectObject = Instantiate(
+            prefab, hitPosition, Quaternion.identity);
+
+        MagicHitVFX effect =
+            effectObject.GetComponent<MagicHitVFX>();
+
+        if (effect != null)
+        {
+            effect.playOnAwake = false;
+            effect.destroyAfterPlay = true;
+            effect.Play();
+        }
+        else
+        {
+            Debug.LogWarning(
+                "Prefab üzerinde MagicHitVFX scripti bulunamadı.");
+            Destroy(effectObject, defaultDestroyTime);
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX("MagicHit");
+        }
     }
 
     private GameObject GetVFXPrefab(string abilityName)
@@ -73,7 +111,8 @@ public class VFXManager : MonoBehaviour
             return cachedPrefab;
         }
 
-        GameObject prefab = Resources.Load<GameObject>($"VFX/{abilityName}");
+        GameObject prefab =
+            Resources.Load<GameObject>($"VFX/{abilityName}");
 
         if (prefab != null)
         {
