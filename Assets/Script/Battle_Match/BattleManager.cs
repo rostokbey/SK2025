@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Globalization;
 using System.Text;
-
+using SK2025.VFX;
 
 public class BattleManager : NetworkBehaviour
 {
@@ -66,7 +66,7 @@ public class BattleManager : NetworkBehaviour
     public Collider playerZone;
     public Collider enemyZone;
 
-    
+
 
 
     // --- RUNTIME ---
@@ -525,16 +525,31 @@ public class BattleManager : NetworkBehaviour
             CurrentRound = CurrentRound
         };
 
+        // Efekt bilgilerini yetenek uygulanmadan önce al.
+        // Hedef yetenek sonucunda yok edilse bile konumu elimizde kalır.
+        string feedbackAbilityId = character.cardData.ability;
+        string sourceVFXKey = GetCharacterVFXKey(character);
+
+        Character visualTarget = primaryTarget != null
+            ? primaryTarget
+            : allTargets.FirstOrDefault(c => c != null);
+
+        Vector3 skillPosition = visualTarget != null
+            ? visualTarget.transform.position
+            : character.transform.position;
+
+        // Mevcut oyun mantığı.
         ability.Apply(context);
         character.PlayAnimationClientRpc("Skill");
 
-        character.AbilityCooldownRemaining.Value = 4; // ActiveAbilityCooldownRounds
+        character.AbilityCooldownRemaining.Value = 4;
         lastAbilityRoundByClient[senderId] = CurrentRound;
 
-        if (primaryTarget != null)
-            PlayApprovedAbilityFeedbackClientRpc(
-                character.cardData.ability,
-                new NetworkObjectReference(primaryTarget.NetworkObject));
+        // Efekti sunucu onayından sonra istemcilere gönder.
+        PlayApprovedAbilityFeedbackClientRpc(
+            feedbackAbilityId,
+            sourceVFXKey,
+            skillPosition);
 
         Debug.Log($"[BM] {character.cardData.cardName} aktif yeteneğini kullandı: {character.cardData.ability} (raund {CurrentRound})");
 
@@ -545,18 +560,20 @@ public class BattleManager : NetworkBehaviour
     [ClientRpc]
     private void PlayApprovedAbilityFeedbackClientRpc(
         string abilityId,
-        NetworkObjectReference targetReference)
+        string sourceVFXKey,
+        Vector3 effectPosition)
     {
-        if (!targetReference.TryGet(out NetworkObject targetObject) || targetObject == null)
-            return;
-
-        // Efekt yalnızca sunucu yeteneği kabul edip uyguladıktan sonra oynar.
-        if (VFXManager.Instance != null &&
-            Resources.Load<GameObject>($"VFX/{abilityId}") != null)
+        if (VFXManager.Instance != null)
         {
-            VFXManager.Instance.PlayVFX(abilityId, targetObject.transform);
+            VFXManager.Instance.PlayCharacterVFX(
+                sourceVFXKey,
+                "Skill",
+                effectPosition);
         }
-        else if (AudioManager.Instance != null)
+
+        // Ses ve görsel efekt birbirini engellemesin.
+        if (AudioManager.Instance != null &&
+            !string.IsNullOrEmpty(abilityId))
         {
             AudioManager.Instance.PlaySFX(abilityId);
         }
@@ -768,7 +785,7 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟩 Oyuncu kartları sayısı: {playerCards.Count}");
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
 
-        
+
         // SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
@@ -2217,6 +2234,25 @@ public class BattleManager : NetworkBehaviour
 
     #endregion
 
+    private string GetCharacterVFXKey(Character character)
+    {
+        if (character == null)
+            return string.Empty;
+
+        // Karakter oluşturulurken kullanılan prefabı bul.
+        // Böylece sahnedeki nesnenin adı değiştirilmiş olsa da
+        // mümkün olduğunca gerçek prefab adını kullanırız.
+        GameObject prefab = character.cardData != null
+            ? ResolvePrefab(character.cardData)
+            : null;
+
+        string characterName = prefab != null
+            ? prefab.name
+            : character.gameObject.name;
+
+        return characterName.Replace("(Clone)", "").Trim();
+    }
+
     private GameObject ResolvePrefab(CardData card)
     {
         // 1) JWT/CSV’den gelen Resources yolu
@@ -2254,7 +2290,7 @@ public class BattleManager : NetworkBehaviour
         return null;
     }
 
-   
+
 
     #region UI
 
@@ -2281,7 +2317,7 @@ public class BattleManager : NetworkBehaviour
     #endregion
 
 
-    
+
     [ServerRpc(RequireOwnership = false)]
     public void SpawnCharacterAtPositionServerRpc(string cardName, Vector3 position, ServerRpcParams rpcParams = default)
     {
@@ -2423,7 +2459,7 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-   
+
 
         // Raycast zaten doğru savaş alanı noktasını verir; eski 108/-50/-90
         // ofsetleri karakteri görünür alanın kilometrelerce dışına taşıyordu.
@@ -2578,8 +2614,6 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"🟥 Düşman otomatik spawn edildi: {enemyCard.cardName}");
     }
 
-
-
     [ClientRpc]
     private void PlacementResultClientRpc(bool success, ClientRpcParams clientRpcParams = default)
     {
@@ -2587,82 +2621,77 @@ public class BattleManager : NetworkBehaviour
             CharacterPlacer.Instance.PlacementResult(success);
     }
 
-    private void ResolveAttack(bool isPlayerTurn)
+    private void ResolveAttack(bool isPlayerTest)
     {
-        Debug.Log("✅ ResolveAttack ÇALIŞTI");
-        Debug.Log("🔥 ResolveAttack içine girdim - VFX test başlangıcı");
+        // Hasar mantığı ve görsel olay bildirimi sunucudan yürüsün.
+        if (!IsServer)
+            return;
 
-        if (VFXManager.Instance != null)
-        {
-            VFXManager.Instance.PlayVFX("Fireball", Vector3.zero);
-            Debug.Log("🔥 VFXManager bulundu, Fireball Vector3.zero noktasına çağrıldı");
-        }
-        else
-        {
-            Debug.LogError("❌ VFXManager.Instance NULL");
-        }
+        Character attacker = allCharacters.FirstOrDefault(c =>
+            c != null &&
+            c.IsAlive &&
+            c.isPlayer == isPlayerTest);
 
+        Character defender = allCharacters.FirstOrDefault(c =>
+            c != null &&
+            c.IsAlive &&
+            c.isPlayer != isPlayerTest);
 
-        Debug.Log($"👥 allCharacters COUNT: {allCharacters.Count}");
-
-        foreach (var c in allCharacters)
-        {
-            if (c == null)
-            {
-                Debug.Log("❌ NULL character");
-                continue;
-            }
-
-            var hp = c.GetComponent<HealthSystem>();
-
-            Debug.Log(
-                $"CHAR => {c.cardData.cardName} | isPlayer={c.isPlayer} | HP={(hp != null ? hp.currentHP.Value.ToString() : "NO HP")}"
-            );
-        }
-
-
-        var attackers = allCharacters
-            .Where(c => c != null && c.GetComponent<HealthSystem>().currentHP.Value > 0
-                   && (isPlayerTurn ? c.isPlayer : !c.isPlayer))
-            .ToList();
-
-        var defenders = allCharacters
-            .Where(c => c != null && c.GetComponent<HealthSystem>().currentHP.Value > 0
-                   && (isPlayerTurn ? !c.isPlayer : c.isPlayer))
-            .ToList();
-
-        if (attackers.Count == 0 || defenders.Count == 0)
+        if (attacker == null || defender == null)
         {
             Debug.LogWarning("[BM] Saldırı için attacker veya defender yok.");
             return;
         }
 
-        Character attacker = attackers[0];
-        Character defender = defenders[0];
+        HealthSystem defenderHealth = defender.GetComponent<HealthSystem>();
+
+        if (attacker.cardData == null || defenderHealth == null)
+        {
+            Debug.LogWarning("[BM] Saldırı için kart veya sağlık verisi eksik.");
+            return;
+        }
+
+        // Hasar uygulanmadan önce görsel bilgileri al.
+        string attackerVFXKey = GetCharacterVFXKey(attacker);
+        string defenderVFXKey = GetCharacterVFXKey(defender);
+
+        Vector3 attackPosition = attacker.transform.position;
+        Vector3 hitPosition = defender.transform.position;
 
         int damage = Mathf.Max(1, attacker.cardData.baseStr);
-        defender.GetComponent<HealthSystem>().TakeDamageServerRpc(damage);
 
-        Debug.Log("🔥 VFX TEST: Fireball çağrıldı");
+        // Mevcut hasar verme çağrısını koruyoruz.
+        defenderHealth.TakeDamageServerRpc(damage);
 
-        if (VFXManager.Instance != null)
-        {
-            VFXManager.Instance.PlayVFX("Fireball", defender.transform);
-        }
-        else
-        {
-            Debug.LogError("❌ VFXManager.Instance NULL");
-        }
-
-        Debug.Log($"⚔️ {attacker.cardData.cardName} → {defender.cardData.cardName} | -{damage} HP");
-
-        // NOT: Önceden burada defender MANUEL olarak Destroy() ediliyor ve
-        // CheckVictory() tekrar çağrılıyordu. Bu, HealthSystem.Die()'ın
-        // (TakeDamageServerRpc HP'yi 0'a indirdiğinde otomatik tetiklediği)
-        // "düşür (downed), yok etme" davranışını eziyordu - karakter gerçekten
-        // yok ediliyor (revive sistemini kırıyordu), grid'den de hiç
-        // kaldırılmıyordu (Remove çağrılmadığı için hücre sonsuza dek "dolu"
-        // görünüyordu) ve CheckVictory iki kez çalışıyordu. Ölüm/downed durumu
-        // ve zafer kontrolü artık TEK bir yerden (HealthSystem.Die) yönetiliyor.
+        // Host dahil istemcilerde görsel geri bildirim oynat.
+        PlayAttackFeedbackClientRpc(
+            attackerVFXKey,
+            defenderVFXKey,
+            attackPosition,
+            hitPosition);
     }
-}
+
+    [ClientRpc]
+    private void PlayAttackFeedbackClientRpc(
+        string attackerVFXKey,
+        string defenderVFXKey,
+        Vector3 attackPosition,
+        Vector3 hitPosition)
+    {
+        if (VFXManager.Instance == null)
+            return;
+
+        // Saldıran karakterin saldırı efekti.
+        VFXManager.Instance.PlayCharacterVFX(
+            attackerVFXKey,
+            "Attack",
+            attackPosition);
+
+        // Hedef karakterin vuruş alma efekti.
+        VFXManager.Instance.PlayCharacterVFX(
+            defenderVFXKey,
+            "Hit",
+            hitPosition);
+    }
+
+} // <--- Bu parantez tüm BattleManager sınıfını kapatır.
