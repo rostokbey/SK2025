@@ -337,7 +337,7 @@ namespace SK2025.VFX
         private void PlayFallback(string label, Vector3 position)
         {
             if (verboseLog)
-                Debug.LogWarning($"[VFX] '{label}' prefabı bulunamadı, geçici renkli efekt oynatılıyor.");
+                Debug.LogWarning($"[VFX] '{label}' prefabı bulunamadı, geçici renkli efekt oynatılıyor @ {position}");
 
             var go = new GameObject("VFX_Fallback_" + label);
             go.transform.position = position;
@@ -348,28 +348,29 @@ namespace SK2025.VFX
             Color c = Color.HSVToRGB((Mathf.Abs(label.GetHashCode()) % 100) / 100f, 0.8f, 1f);
 
             var main = ps.main;
-            main.duration = 1f;
+            main.duration = 2f;
             main.loop = false;
-            main.startLifetime = 0.7f;
-            main.startSpeed = 4f;
-            main.startSize = 0.5f;
+            main.startLifetime = 1.5f;
+            main.startSpeed = 15f;
+            main.startSize = 8f;
             main.startColor = c;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.None;
+            main.gravityModifier = -0.5f;
 
             var emission = ps.emission;
             emission.rateOverTime = 0;
-            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 30) });
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 80) });
 
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 0.1f;
+            shape.radius = 1f;
 
             var col = ps.colorOverLifetime;
             col.enabled = true;
             var g = new Gradient();
             g.SetKeys(
-                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(c, 1f) },
                 new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
             col.color = g;
 
@@ -378,7 +379,7 @@ namespace SK2025.VFX
             r.sortingOrder = 1000;
 
             ps.Play();
-            Destroy(go, 2f);
+            Destroy(go, 3f);
         }
 
 #if UNITY_EDITOR

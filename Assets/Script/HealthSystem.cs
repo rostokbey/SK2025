@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Netcode;
+using SK2025.VFX;
 
 public class HealthSystem : NetworkBehaviour
 {
@@ -14,9 +15,13 @@ public class HealthSystem : NetworkBehaviour
     public Animator animator; // ✅ Animasyon eklendi
     public GameObject deathEffect; // opsiyonel efekt
 
+    // Karaktere özel VFX araması için temiz isim (örn: "Ates_Ciragi3D")
+    private string vfxKey;
+
     void Awake()
     {
         if (maxHP <= 0) maxHP = 100;
+        vfxKey = gameObject.name.Replace("(Clone)", "").Trim();
     }
 
     public override void OnNetworkSpawn()
@@ -94,6 +99,29 @@ public class HealthSystem : NetworkBehaviour
     [ClientRpc]
     private void ShowDamageClientRpc(int amount, bool isCritical, bool isHeal, bool isShieldGain)
     {
+        // ─── VFX ───
+        // Tüm hasar/iyileşme kaynakları (saldırı, beceri, pasif) buradan geçtiği
+        // için karaktere özel Hit/Heal efektlerinin tek doğru bağlantı noktası burası.
+        if (VFXManager.Instance != null)
+        {
+            if (isHeal)
+            {
+                // Önce "Ates_Ciragi3D_Heal" arar, yoksa genel Heal efektine düşer.
+                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Heal", transform.position);
+            }
+            else if (isShieldGain)
+            {
+                // Önce "Ates_Ciragi3D_Shield" arar, yoksa genel/fallback efekt.
+                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Shield", transform.position);
+            }
+            else if (amount > 0)
+            {
+                // Önce "Ates_Ciragi3D_Hit" arar, yoksa genel Hit efektine düşer.
+                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Hit", transform.position);
+            }
+        }
+
+        // ─── Hasar yazısı (popup) ───
         if (damagePopupPrefab == null) return;
 
         var pos = transform.position + Vector3.up * 1.5f;
@@ -115,8 +143,8 @@ public class HealthSystem : NetworkBehaviour
         if (animator != null)
             animator.SetTrigger("Die");
 
-        if (deathEffect != null)
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
+        // Ölüm efekti tüm istemcilerde oynasın.
+        PlayDeathFXClientRpc();
 
         // NOT (round/ability sistemi güncellemesi): Önceden burada NetworkObject
         // despawn ediliyordu (ölüm = kalıcı yok oluş). Tasarım dokümanındaki
@@ -133,5 +161,17 @@ public class HealthSystem : NetworkBehaviour
 
         // ✅ Victory kontrolü
         BattleManager.Instance?.CheckVictory();
+    }
+
+    [ClientRpc]
+    private void PlayDeathFXClientRpc()
+    {
+        // Karaktere özel ölüm efekti: "Ates_Ciragi3D_Death" arar.
+        if (VFXManager.Instance != null)
+            VFXManager.Instance.PlayCharacterVFX(vfxKey, "Death", transform.position);
+
+        // Inspector'dan atanmış eski tip deathEffect varsa onu da oynat.
+        if (deathEffect != null)
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
     }
 }

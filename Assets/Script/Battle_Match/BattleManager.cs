@@ -66,9 +66,6 @@ public class BattleManager : NetworkBehaviour
     public Collider playerZone;
     public Collider enemyZone;
 
-
-
-
     // --- RUNTIME ---
     private readonly List<Character> allCharacters = new();
     private readonly Dictionary<ulong, List<string>> playerSubmittedCardIds = new();
@@ -144,26 +141,7 @@ public class BattleManager : NetworkBehaviour
 
     // ---------------------------------------------------------------------
     #region Yetki / Anti-Cheat Yardımcıları
-    //
-    // 2026 güvenlik incelemesi bulguları: SendAttackServerRpc,
-    // SendSkillAttackServerRpc, PlayCardServerRpc ve
-    // SpawnCharacterAtPositionServerRpc [ServerRpc] olarak sunucuda
-    // çalışıyordu ama HİÇBİRİ gönderen client'ın (a) o an sırası olup
-    // olmadığını, (b) oynatılan kartın gerçekten kendisine ait olup
-    // olmadığını doğrulamıyordu. Bu, bir client'ın sırası rakipteyken bile
-    // sınırsız saldırı/kart yerleştirme yapabilmesine yol açıyordu. Bu
-    // bölümdeki yardımcılar tüm RPC'lerde ortak, tutarlı bir yetki
-    // kontrolü sağlar.
 
-    /// <summary>
-    /// Gönderen client'ın hangi tarafta olduğunu (player/host tarafı mı,
-    /// enemy/rakip tarafı mı) çözer. Önceden bu proje iki farklı ve
-    /// birbiriyle tutarsız sezgisel yöntem kullanıyordu
-    /// (ConnectedClientsList[0] ile NetworkManager.ServerClientId
-    /// karşılaştırması ayrı ayrı yerlerde). Artık tek ve güvenilir kaynak:
-    /// host her zaman NetworkManager.ServerClientId'dir; sunucuya bağlı
-    /// host-dışı herhangi bir client rakip taraftır.
-    /// </summary>
     private bool TryResolveSenderSide(ulong senderId, out bool isPlayerSide)
     {
         if (NetworkManager.Singleton != null &&
@@ -177,7 +155,6 @@ public class BattleManager : NetworkBehaviour
         return false; // Bağlı olmayan/tanınmayan bir client - reddet.
     }
 
-    /// <summary>Şu an aktif sıranın, verilen tarafa ait olup olmadığını kontrol eder.</summary>
     private bool IsSendersTurn(ulong senderId, out string reason)
     {
         reason = null;
@@ -197,7 +174,6 @@ public class BattleManager : NetworkBehaviour
         return true;
     }
 
-    /// <summary>Kartın, gönderen client'ın bu maç için gönderdiği desteye gerçekten ait olup olmadığını kontrol eder.</summary>
     private bool SenderOwnsCard(ulong senderId, CardData card)
     {
         if (card == null)
@@ -226,9 +202,6 @@ public class BattleManager : NetworkBehaviour
         if (exact != null)
             return exact;
 
-        // Yerel kayıt CARD-Karakter-0000001, imzalı payload ise Karakter/CARD-Karakter
-        // biçiminde olabiliyor. Oyuncuda aynı karakterden tek savaş kartı olduğu için
-        // fiziksel seri sonunu kaldırarak güvenli biçimde kanonik eşleştirme yapıyoruz.
         string normalized = NormalizeCardKeyForMatch(key);
         CardData normalizedMatch = cards.FirstOrDefault(c =>
             c != null &&
@@ -264,25 +237,17 @@ public class BattleManager : NetworkBehaviour
         return result.Replace("-", string.Empty);
     }
 
-    /// <summary>Verilen tarafın sahada boş spawn slotu (kapasite) olup olmadığını kontrol eder.</summary>
     private bool HasFreeSpawnSlot(bool isPlayerSide)
     {
         int activeCount = allCharacters.Count(c => c != null && c.IsAlive && c.isPlayer == isPlayerSide);
         return activeCount < maxActiveCharactersPerSide;
     }
 
-    /// <summary>
-    /// Bir Character üzerinde (ör. Character.AttackServerRpc içinden)
-    /// gönderen client'ın o karaktere komut verme yetkisi olup olmadığını
-    /// kontrol etmek için kullanılır (kendi tarafının karakteri mi?).
-    /// </summary>
     public bool IsSenderAuthorizedForCharacter(ulong senderId, Character character)
     {
         if (character == null) return false;
         if (!TryResolveSenderSide(senderId, out bool senderIsPlayerSide)) return false;
 
-        // Yeni kayıtlar gerçek oyuncu sahipliği taşır. Eski sahne/prefab testleri
-        // için ControllerClientId atanmamışsa taraf doğrulamasına geri düşer.
         if (character.ControllerClientId != ulong.MaxValue)
             return character.ControllerClientId == senderId;
 
@@ -323,16 +288,6 @@ public class BattleManager : NetworkBehaviour
         return ((BattleRow)row, col);
     }
 
-    /// <summary>
-    /// Sabit-index tabanlı spawn akışları (SpawnCharacters, SpawnCharacter,
-    /// SpawnRandomEnemyFromDeck) için: playerGridPositions/enemyGridPositions
-    /// dizisindeki index'i satır/sütuna çevirip grid'e kaydeder.
-    /// ÖNEMLİ: Bu diziler Inspector'da "row-major" sırayla (önce tüm Front
-    /// sütunları, sonra Mid, sonra Back) düzenlenmiş OLMALI; 6x3 için 18
-    /// eleman gerekir. Düzenlenmemişse grid mantıksal olarak yine çalışır
-    /// (hücre çakışırsa TryOccupyNextFreeSlot'a düşer) ama görsel satır/sütun
-    /// hizası bozuk olur.
-    /// </summary>
     private void RegisterSpawnedCharacterByFlatIndex(Character ch, bool isPlayerSide, int flatIndex)
     {
         if (ch == null) return;
@@ -347,7 +302,6 @@ public class BattleManager : NetworkBehaviour
         turnOrder.Add(ch);
     }
 
-    /// <summary>SpawnCharacterAtPositionServerRpc (serbest tıklama) için: dünya konumundan hücre çözer ve kaydeder.</summary>
     private (BattleRow row, int column) RegisterSpawnedCharacterByWorldPosition(Character ch, bool isPlayerSide, Bounds zoneBounds, Vector3 worldPos)
     {
         bool frontIsMaxZ = isPlayerSide ? playerFrontRowIsMaxZ : enemyFrontRowIsMaxZ;
@@ -363,11 +317,6 @@ public class BattleManager : NetworkBehaviour
         return (row, col);
     }
 
-    /// <summary>
-    /// Bir saldırganın belirttiği sütuna göre hedefi grid kurallarıyla (önden-
-    /// arkaya, önü boşsa arkaya geçiş) çözüp hasarı uygular. AoE modunda
-    /// sütundaki TÜM canlılara, diğer modlarda tek hedefe uygulanır.
-    /// </summary>
     public void ResolveColumnAttack(Character attacker, int targetColumn, AbilityTargetingMode mode)
     {
         if (attacker == null) return;
@@ -410,13 +359,6 @@ public class BattleManager : NetworkBehaviour
                   $"{defender.cardData.cardName} ({defender.gridRow}/{defender.gridColumn}) : -{damage} HP");
     }
 
-    /// <summary>
-    /// Eski tek Saldır/Yetenek butonunda henüz hedef sütunu UI'ı olmadığı için,
-    /// saldırganın karşı sütunu boşsa rakip sahadaki ilk canlı sütuna yönelir.
-    /// Böylece kamera yönü/yerleştirme sütunu farkı bir tarafı fiilen ölümsüz
-    /// yapmaz. Gerçek sütun seçim UI'ı geri eklendiğinde yalnız seçilen sütun
-    /// kullanılmalıdır.
-    /// </summary>
     private int ResolveLegacyTargetColumn(Character attacker, AbilityTargetingMode mode)
     {
         if (attacker == null)
@@ -449,8 +391,8 @@ public class BattleManager : NetworkBehaviour
     /// <summary>
     /// AKTİF yetenek kullanım isteğini uçtan uca doğrular ve uygular:
     /// yetki, sıra, cooldown hazır mı, raund başına taraf limiti, hedef
-    /// çözümü, efekt uygulaması, cooldown'un 4 raunda sıfırlanması ve turun
-    /// bitirilmesi.
+    /// çözümü, efekt uygulaması (VFX + SFX), cooldown'un 4 raunda sıfırlanması
+    /// ve turun bitirilmesi.
     /// </summary>
     public bool TryUseActiveAbilityForCharacter(Character character, int targetColumn, ulong senderId, out string reason)
     {
@@ -545,13 +487,16 @@ public class BattleManager : NetworkBehaviour
         character.AbilityCooldownRemaining.Value = 4;
         lastAbilityRoundByClient[senderId] = CurrentRound;
 
-        // Efekti sunucu onayından sonra istemcilere gönder.
+        // Efekti sunucu onayından sonra istemcilere gönder (VFX + SFX birlikte).
         PlayApprovedAbilityFeedbackClientRpc(
             feedbackAbilityId,
             sourceVFXKey,
             skillPosition);
 
-        Debug.Log($"[BM] {character.cardData.cardName} aktif yeteneğini kullandı: {character.cardData.ability} (raund {CurrentRound})");
+        if (primaryTarget != null)
+            Debug.Log($"💡 {character.cardData.cardName} beceri kullandı: {character.cardData.ability} → {primaryTarget.cardData.cardName} (raund {CurrentRound})");
+        else
+            Debug.Log($"[BM] {character.cardData.cardName} aktif yeteneğini kullandı: {character.cardData.ability} (raund {CurrentRound})");
 
         EndTurn();
         return true;
@@ -569,6 +514,8 @@ public class BattleManager : NetworkBehaviour
                 sourceVFXKey,
                 "Skill",
                 effectPosition);
+
+            Debug.Log($"🔮 Skill VFX oynatılıyor: {sourceVFXKey} @ {effectPosition}");
         }
 
         // Ses ve görsel efekt birbirini engellemesin.
@@ -732,17 +679,12 @@ public class BattleManager : NetworkBehaviour
                 return;
             }
 
-            // Eski kayıtlarla model/yerleşim testi. TEST kayıtları yayın ekonomisinde
-            // güvenilir değildir; Inspector'da allowUnsignedTestDeck kapatılmalıdır.
             string json = JsonUtility.ToJson(CardDataMapper.ToDTO(card));
             string encoded = System.Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
             tokens.Add(new FixedString4096Bytes("TEST:" + encoded));
             Debug.LogWarning($"[TEST DECK] '{card.cardName}' imzasız test kartı olarak gönderildi.");
         }
 
-        // NetworkTransport MaxPayloadSize bu projede 6144 bayt. 25 JWT'yi tek
-        // RPC dizisinde göndermek paketi sessizce düşürüyordu. Her kart ayrı,
-        // güvenilir RPC ile gönderilir; sunucu tüm parçalar gelince desteyi açar.
         for (int i = 0; i < tokens.Count; i++)
             SubmitDeckCardServerRpc(tokens[i], i, tokens.Count);
 
@@ -758,17 +700,14 @@ public class BattleManager : NetworkBehaviour
             actionSelectionUI = gameObject.AddComponent<BattleActionSelectionUI>();
         actionSelectionUI.Initialize(this, attackButton, skillButton);
 
-        // UI buton bağlama (varsa)
         if (startBattleButton != null)
             startBattleButton.onClick.AddListener(OnStartBattleButton);
 
         if (attackButton == null)
             Debug.LogWarning("[BM] attackButton atanmamış; seçim paneli çalışma anında bir buton oluşturacak.");
 
-        // ✅ Her client kendi elindeki kart destesini görsün
         InitLocalHandUI();
 
-        // Sunucu değilsek server işlemlerine devam etme
         if (!IsServer) return;
 
         var playerCards = StartBattleManager.Instance?.selectedMatchCards;
@@ -784,9 +723,6 @@ public class BattleManager : NetworkBehaviour
 
         Debug.Log($"🟩 Oyuncu kartları sayısı: {playerCards.Count}");
         Debug.Log($"🟥 Düşman kartları sayısı: {enemyCards.Count}");
-
-
-        // SpawnCharacters(playerCards, enemyCards);
 
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
@@ -823,8 +759,6 @@ public class BattleManager : NetworkBehaviour
         }
 
         if (IsServer)
-            //SpawnCharacters(playerCards, enemyCards);
-
             StartBattle();
     }
 
@@ -878,7 +812,6 @@ public class BattleManager : NetworkBehaviour
         Debug.Log($"[BM] Local HandUI başlatıldı. Kart sayısı: {deck.Count}");
     }
 
-
     private void ShowWarning(string message)
     {
         Debug.LogWarning(message);
@@ -892,10 +825,8 @@ public class BattleManager : NetworkBehaviour
         ShowWarning(message);
     }
 
-
     #region Oyuncu Kart UI
 
-    // Oyuncu kartlarını UI'da gösterme (CardUI spawn)
     public void SpawnPlayerCards(List<CardData> selectedCards)
     {
         for (int i = 0; i < selectedCards.Count && i < playerGridPositions.Length; i++)
@@ -904,7 +835,6 @@ public class BattleManager : NetworkBehaviour
             GameObject go = Instantiate(cardPrefab, playerGridPositions[i].position, Quaternion.identity);
             go.transform.SetParent(playerGridPositions[i], false);
 
-            // Kartı tam olarak pozisyona yerleştir
             go.transform.localPosition = Vector3.zero;
             go.transform.localRotation = Quaternion.identity;
 
@@ -927,7 +857,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // ---- Oyuncu ----
         for (int i = 0; i < playerCards.Count && i < playerGridPositions.Length; i++)
         {
             var card = playerCards[i];
@@ -955,7 +884,6 @@ public class BattleManager : NetworkBehaviour
             else
                 obj.transform.SetParent(grid, false);
 
-            //karakter rotation ve pozisyon x y z
             Vector3 offset = new Vector3(0f, 0f, -282f);
             obj.transform.localPosition = offset;
             obj.transform.localRotation = Quaternion.Euler(-33f, 0f, 0f);
@@ -968,7 +896,6 @@ public class BattleManager : NetworkBehaviour
             }
         }
 
-        // ---- Düşman ----
         for (int i = 0; i < enemyCards.Count && i < enemyGridPositions.Length; i++)
         {
             var card = enemyCards[i];
@@ -991,7 +918,7 @@ public class BattleManager : NetworkBehaviour
                 obj.transform.SetParent(grid, false);
 
             obj.transform.localPosition = Vector3.zero;
-            obj.transform.localRotation = Quaternion.Euler(20f, 180f, 0f); // rakip bize dönsün
+            obj.transform.localRotation = Quaternion.Euler(20f, 180f, 0f);
             var ch = obj.GetComponent<Character>();
             if (ch != null)
             {
@@ -1049,13 +976,11 @@ public class BattleManager : NetworkBehaviour
         if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
             net.Spawn();
 
-        // Parent ayarı
         if (net && NetworkManager.Singleton && NetworkManager.Singleton.IsServer)
             net.TrySetParent(slot, false);
         else
             obj.transform.SetParent(slot, false);
 
-        // Hizalama
         obj.transform.localPosition = Vector3.zero;
         obj.transform.localRotation = isPlayer ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
         var ch = obj.GetComponent<Character>();
@@ -1074,8 +999,6 @@ public class BattleManager : NetworkBehaviour
     // ---------------------------------------------------------------------
     #region Oyuncu Bazlı Tur Sistemi
 
-    // Eski toplu spawn akışı için geriye dönük uyumluluk. Ownership yerine
-    // doğrulanmış taraf eşlemesini kullanır.
     public void AssignTurnToClient(ulong clientId)
     {
         if (!IsServer) return;
@@ -1273,7 +1196,7 @@ public class BattleManager : NetworkBehaviour
         UpdateTurnTimerUI();
 
         if (!IsServer || battleEnded) return;
-        if (turnTimeLimitSeconds <= 0f) return; // 0 = zaman sınırı kapalı
+        if (turnTimeLimitSeconds <= 0f) return;
         if (Phase.Value != BattlePhase.InitialPlacement && Phase.Value != BattlePhase.PlayerTurn) return;
         if (ActivePlayerClientId.Value == ulong.MaxValue) return;
 
@@ -1368,7 +1291,6 @@ public class BattleManager : NetworkBehaviour
 
     private void UpdateLocalActionButtons()
     {
-        // Seçim UI saldırgan/hedef/cooldown durumunu da hesaba katar.
         if (actionSelectionUI != null)
             return;
 
@@ -1414,7 +1336,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Normal savaş turunu otomatik atla.
         EndTurn();
     }
 
@@ -1423,12 +1344,6 @@ public class BattleManager : NetworkBehaviour
 
     #region Teslim Olma
 
-    /// <summary>
-    /// Teslim olma isteği. 1v1'de tek oy yeterlidir (kendi kendine teslim -
-    /// gerçek bir "oylama" iki oyunculu bir takımda anlam kazanır). Takım
-    /// modları eklendiğinde requiredVotes = takım boyutu yapılarak buradaki
-    /// HashSet tabanlı oy toplama aynen kullanılabilir.
-    /// </summary>
     [ServerRpc(RequireOwnership = false)]
     public void RequestSurrenderServerRpc(ServerRpcParams rpcParams = default)
     {
@@ -1461,11 +1376,6 @@ public class BattleManager : NetworkBehaviour
 
     #region Maç Sonu
 
-    /// <summary>
-    /// Maçı tek, tutarlı bir yerden sonlandırır (AFK forfeit, teslim olma ya
-    /// da normal zafer koşulu - CheckVictory de buraya yönlendirilebilir).
-    /// Turn timer'ı durdurur, tekrar tetiklenmeyi engeller.
-    /// </summary>
     private void EndBattle(bool winnerIsPlayerSide, string reason)
     {
         if (battleEnded) return;
@@ -1481,10 +1391,6 @@ public class BattleManager : NetworkBehaviour
     #endregion
     // ---------------------------------------------------------------------
 
-
-
-
-
     public void Attack(CardData playedCard, bool isPlayerTurn = true)
     {
         if (playedCard == null)
@@ -1497,7 +1403,6 @@ public class BattleManager : NetworkBehaviour
 
         SpawnCharacter(playedCard, isPlayerTurn);
 
-        // Eğer oyuncu oynadıysa düşman da spawn etsin
         if (isPlayerTurn)
         {
             var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
@@ -1508,13 +1413,11 @@ public class BattleManager : NetworkBehaviour
             }
         }
 
-        // ✅ saldırı çözümlemesi
+        // ✅ saldırı çözümlemesi (VFX dahil)
         ResolveAttack(isPlayerTurn);
 
         EndTurn();
     }
-
-
 
     // ---------------------------------------------------------
     // Düşman (AI) için otomatik kart oynatma
@@ -1528,7 +1431,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Rastgele bir kart seç
         var randomCard = enemyCards[Random.Range(0, enemyCards.Count)];
         Debug.Log($"[AI] Düşman kart oynuyor: {randomCard.cardName}");
 
@@ -1576,10 +1478,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // İmzasız prototip kartlarında aynı karakter kimliği destede birden
-        // fazla bulunabilir. Test modunda sıra indeksini kimliğe ekleyerek
-        // 25 parçanın eksiksiz tamamlanmasını sağlarız. İmzalı/JTI kartların
-        // tek kullanımlık güvenlik kuralına dokunulmaz.
         if (allowUnsignedTestDeck && identity.StartsWith("TEST:"))
             identity = $"{identity}:SLOT:{cardIndex}";
 
@@ -1590,11 +1488,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Aynı imzalı fiziksel kart iki oyuncunun destesinde bulunamaz.
-        // Geliştirme sırasında Host ve Client aynı yerel hesap/desteyle test
-        // edilebiliyor. Test modu açıkken iki oyuncudaki aynı imzalı jti'ye
-        // geçici izin verilir. Yayında allowUnsignedTestDeck=false olduğunda
-        // fiziksel kart çakışması yeniden kesin olarak reddedilir.
         if (!allowUnsignedTestDeck && !identity.StartsWith("TEST:"))
         {
             foreach (var pair in playerSubmittedJtis)
@@ -1684,10 +1577,6 @@ public class BattleManager : NetworkBehaviour
         if (!JwtCardVerifier.TryParse(proof, out CardPayload payload, out error))
             return false;
 
-        // Eski CardMint JWT'leri geçerli ES256 imzasına sahip olduğu hâlde
-        // payload içinde typ/ver/jti alanlarını taşımayabiliyor. İmza doğrulandıktan
-        // sonra boş typ ve ver=0 geriye dönük format olarak kabul edilir. jti yoksa
-        // token'ın SHA-256 özeti benzersiz ve kararlı fiziksel kimlik olur.
         bool typeValid = payload != null &&
             (string.IsNullOrWhiteSpace(payload.typ) || string.Equals(payload.typ, "CARD", System.StringComparison.OrdinalIgnoreCase));
         bool versionValid = payload != null && (payload.ver == 0 || payload.ver == 1);
@@ -1729,7 +1618,6 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
-    // Eski toplu RPC geriye dönük uyumluluk için tutulur; yeni istemci kullanmaz.
     [ServerRpc(RequireOwnership = false)]
     public void SubmitDeckServerRpc(
         FixedString4096Bytes[] signedTokenArray,
@@ -1797,7 +1685,7 @@ public class BattleManager : NetworkBehaviour
             {
                 Debug.LogWarning(
                     $"[SECURE DECK] Client {senderId} için kart reddedildi: {error}");
-                return; // Bir kart bile geçersizse tüm deste reddedilir.
+                return;
             }
 
             if (payload == null ||
@@ -1989,8 +1877,6 @@ public class BattleManager : NetworkBehaviour
             target.gridColumn,
             AbilityTargetingMode.Normal);
 
-        // Seçenek B: seçilen sütunda canlı bir ön sıra varsa orta/arka hedef
-        // doğrudan vurulamaz. Kontrol tamamen sunucuda yeniden yapılır.
         if (allowedTarget != target)
         {
             Debug.LogWarning(
@@ -2026,13 +1912,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // UYUMLULUK KATMANI: eski "Saldır" butonu henüz hangi sütuna
-        // saldırılacağını seçtiren bir arayüze sahip değil (bkz. yeni
-        // Character.AttackServerRpc(int targetColumn) / 6x3 grid sistemi).
-        // Makul varsayılan: sıradaki karakter, KENDİ sütununu karşı sahada
-        // hedefler ("karşındaki sütuna vur"). Gerçek bir sütun seçim arayüzü
-        // eklendiğinde bunun yerine doğrudan Character.AttackServerRpc
-        // çağrılmalı ve bu metot kaldırılabilir.
         var attacker = allCharacters.FirstOrDefault(c =>
             c != null &&
             c.IsAlive &&
@@ -2068,14 +1947,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // UYUMLULUK KATMANI: bkz. SendAttackServerRpc notu - aynı "kendi
-        // sütununu hedefle" varsayımı burada da geçerli. ÖNEMLİ FARK: bu
-        // metot artık (eskisi gibi) sadece log basıp turu bitiren boş bir
-        // stub DEĞİL - cooldown/3-raund-hazırlık/4-raund-bekleme/raund başına
-        // taraf limiti kuralları TryUseActiveAbilityForCharacter içinde TAM
-        // olarak uygulanıyor. "ability" parametresi artık kullanılmıyor
-        // (yetenek kimliği karakterin kendi CardData.ability alanından
-        // okunuyor) - geriye dönük uyumluluk için imza korundu.
         var character = allCharacters.FirstOrDefault(c =>
             c != null &&
             c.IsAlive &&
@@ -2097,12 +1968,7 @@ public class BattleManager : NetworkBehaviour
         {
             Debug.LogWarning($"[BM] SendSkillAttackServerRpc reddedildi ({character.cardData?.cardName}): {abilityReason}");
         }
-        // NOT: EndTurn() burada AYRICA çağrılmıyor - TryUseActiveAbilityForCharacter
-        // başarılı olduğunda kendi içinde zaten EndTurn() çağırıyor; başarısız
-        // olduğunda ise tur BİLEREK bitirilmiyor (istek reddedildi, oyuncu
-        // tekrar deneyebilir/başka bir aksiyon seçebilir).
     }
-
 
     [ServerRpc(RequireOwnership = false)]
     public void PlayCardServerRpc(string cardId, ServerRpcParams rpcParams = default)
@@ -2122,7 +1988,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Anti-cheat: kart gerçekten bu client'ın maça gönderdiği destede mi?
         if (!SenderOwnsCard(senderClientId, card))
         {
             Debug.LogWarning($"[BM] PlayCardServerRpc reddedildi: client {senderClientId} '{cardId}' kartına sahip değil.");
@@ -2175,7 +2040,6 @@ public class BattleManager : NetworkBehaviour
                 enemyAlive++;
         }
 
-        // Henüz iki taraf da sahaya yerleşmemişse maç sonucu üretme.
         if (playerAlive == 0 && enemyAlive == 0)
             return;
 
@@ -2191,17 +2055,6 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
-
-    /// <summary>
-    /// Maç sonucunu HER İKİ client'a da bildirir (ClientRpc, host'un kendi
-    /// client instance'ında da çalışır - Netcode'da host = server + client
-    /// birleşik). ÖNCEDEN GrantRewardTo SADECE sunucuda (host'un
-    /// makinesinde) doğrudan çağrılıyordu; bu yüzden host-olmayan oyuncu
-    /// (joiner) ne XP alıyordu ne de maç sonu ekranını görüyordu -
-    /// GrantMatchRewards, o an çalıştığı CİHAZDAKİ yerel DeckManagerObject/
-    /// CardLevelSystem/SaveSystem verisini günceller, bu yüzden mutlaka her
-    /// iki cihazda da AYRI AYRI çalıştırılması gerekiyordu.
-    /// </summary>
     [ClientRpc]
     private void NotifyMatchEndClientRpc(bool winnerIsPlayerSide, string reason)
     {
@@ -2239,9 +2092,6 @@ public class BattleManager : NetworkBehaviour
         if (character == null)
             return string.Empty;
 
-        // Karakter oluşturulurken kullanılan prefabı bul.
-        // Böylece sahnedeki nesnenin adı değiştirilmiş olsa da
-        // mümkün olduğunca gerçek prefab adını kullanırız.
         GameObject prefab = character.cardData != null
             ? ResolvePrefab(character.cardData)
             : null;
@@ -2255,7 +2105,6 @@ public class BattleManager : NetworkBehaviour
 
     private GameObject ResolvePrefab(CardData card)
     {
-        // 1) JWT/CSV’den gelen Resources yolu
         if (!string.IsNullOrEmpty(card.prefab))
         {
             var res = Resources.Load<GameObject>(card.prefab);
@@ -2263,23 +2112,18 @@ public class BattleManager : NetworkBehaviour
             Debug.LogWarning($"[BM] Resources prefab bulunamadı: {card.prefab}  (Kart: {card.cardName})");
         }
 
-        // 2) Kart üstüne atanmış gerçek prefab
         if (card.characterPrefab3D != null) return card.characterPrefab3D;
 
         GameObject debugPrefab = BattleDebugPrefabBootstrap.GetPrefab();
 
-        // Modelleme tamamlanana kadar Inspector'da atanmış eski/görünmez default
-        // prefabı atlayıp ağ uyumlu kapsülü kullan.
         if (forceDebugCharacterVisuals && debugPrefab != null)
         {
             Debug.Log($"[DEBUG PREFAB] {card?.cardName} görünür test kapsülüyle spawn ediliyor.");
             return debugPrefab;
         }
 
-        // 3) Inspector’dan verilen varsayılan karakter prefabı
         if (characterPrefab != null) return characterPrefab;
 
-        // 4) Model henüz yoksa otomatik üretilen ağ uyumlu test kapsülü
         if (debugPrefab != null)
         {
             Debug.LogWarning($"[BM] {card?.cardName} için 3D model yok; geçici kapsül kullanılıyor.");
@@ -2289,8 +2133,6 @@ public class BattleManager : NetworkBehaviour
         Debug.LogError("[BM] Prefab seçilemedi; geçici test prefabı da bulunamadı.");
         return null;
     }
-
-
 
     #region UI
 
@@ -2312,11 +2154,7 @@ public class BattleManager : NetworkBehaviour
         }
     }
 
-
-
     #endregion
-
-
 
     [ServerRpc(RequireOwnership = false)]
     public void SpawnCharacterAtPositionServerRpc(string cardName, Vector3 position, ServerRpcParams rpcParams = default)
@@ -2354,7 +2192,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Anti-cheat: kart gerçekten bu client'ın maça gönderdiği destede mi?
         if (!SenderOwnsCard(senderId, card))
         {
             Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi: client {senderId} '{card.cardName}' kartına sahip değil.");
@@ -2367,8 +2204,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Anti-cheat: sıra bu client'ın tarafında değilse yerleştirmeye izin verme.
-        // (Bu kontrol, "sıram geçmesine rağmen sınırsız saldırı" hatasının kaynağıydı.)
         if (!IsSendersTurn(senderId, out string turnReason))
         {
             Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi (client {senderId}): {turnReason}");
@@ -2391,7 +2226,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-        // Anti-cheat: sahada bu taraf için boş slot yoksa (sınırsız spawn engeli).
         if (!HasFreeSpawnSlot(isPlayer))
         {
             Debug.LogWarning($"[BM] SpawnCharacterAtPositionServerRpc reddedildi: {(isPlayer ? "player" : "enemy")} tarafında boş slot yok.");
@@ -2459,10 +2293,6 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
-
-
-        // Raycast zaten doğru savaş alanı noktasını verir; eski 108/-50/-90
-        // ofsetleri karakteri görünür alanın kilometrelerce dışına taşıyordu.
         Vector3 spawnPos = position + Vector3.up * 0.4f;
 
         Quaternion spawnRot = isPlayer
@@ -2554,7 +2384,6 @@ public class BattleManager : NetworkBehaviour
             .Replace("ç", "c");
     }
 
-
     private void SpawnRandomEnemyFromDeck()
     {
         var enemyCards = StartBattleManager.Instance?.enemyMatchCards;
@@ -2621,21 +2450,25 @@ public class BattleManager : NetworkBehaviour
             CharacterPlacer.Instance.PlacementResult(success);
     }
 
-    private void ResolveAttack(bool isPlayerTest)
+    // ---------------------------------------------------------
+    // ✅ GÜNCELLENMİŞ: Saldırı çözümü + VFX/SFX geri bildirimi
+    // ---------------------------------------------------------
+    private void ResolveAttack(bool isPlayerTurn)
     {
-        // Hasar mantığı ve görsel olay bildirimi sunucudan yürüsün.
         if (!IsServer)
             return;
+
+        Debug.Log($"⚔️ ResolveAttack başladı (PlayerTurn: {isPlayerTurn})");
 
         Character attacker = allCharacters.FirstOrDefault(c =>
             c != null &&
             c.IsAlive &&
-            c.isPlayer == isPlayerTest);
+            c.isPlayer == isPlayerTurn);
 
         Character defender = allCharacters.FirstOrDefault(c =>
             c != null &&
             c.IsAlive &&
-            c.isPlayer != isPlayerTest);
+            c.isPlayer != isPlayerTurn);
 
         if (attacker == null || defender == null)
         {
@@ -2663,12 +2496,14 @@ public class BattleManager : NetworkBehaviour
         // Mevcut hasar verme çağrısını koruyoruz.
         defenderHealth.TakeDamageServerRpc(damage);
 
-        // Host dahil istemcilerde görsel geri bildirim oynat.
+        // Host dahil tüm istemcilerde VFX/SFX geri bildirimini oynat.
         PlayAttackFeedbackClientRpc(
             attackerVFXKey,
             defenderVFXKey,
             attackPosition,
             hitPosition);
+
+        Debug.Log($"⚔️ {attacker.cardData.cardName} → {defender.cardData.cardName} | -{damage} HP");
     }
 
     [ClientRpc]
@@ -2681,17 +2516,16 @@ public class BattleManager : NetworkBehaviour
         if (VFXManager.Instance == null)
             return;
 
-        // Saldıran karakterin saldırı efekti.
+        // Saldıran karakterin Attack efekti.
         VFXManager.Instance.PlayCharacterVFX(
             attackerVFXKey,
             "Attack",
             attackPosition);
 
-        // Hedef karakterin vuruş alma efekti.
-        VFXManager.Instance.PlayCharacterVFX(
-            defenderVFXKey,
-            "Hit",
-            hitPosition);
+        Debug.Log($"⚡ Attack VFX: {attackerVFXKey} @ {attackPosition}");
+
+        // Hedef karakterin Hit efekti.
+        
     }
 
 } // <--- Bu parantez tüm BattleManager sınıfını kapatır.
