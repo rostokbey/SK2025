@@ -66,7 +66,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "swappywrapper::@7e25bd1f32ce224db4e9",
-					"jsonFile" : "target-swappywrapper-RelWithDebInfo-b87aa00f0bd09c96302c.json",
+					"jsonFile" : "target-swappywrapper-RelWithDebInfo-d6d9218b52532bc87e08.json",
 					"name" : "swappywrapper",
 					"projectIndex" : 1
 				}
@@ -76,7 +76,7 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/arm64-v8a",
+		"build" : "D:/SK2025/SK2025/.utmp/RelWithDebInfo/3v2l1h26/armeabi-v7a",
 		"source" : "D:/SK2025/SK2025/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp"
 	},
 	"version" : 

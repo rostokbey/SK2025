@@ -10,38 +10,47 @@ public class BattleCameraController : MonoBehaviour
     public Transform hostCameraPoint;
     public Transform clientCameraPoint;
 
-    [Header("Orbit Target")]
-    [Tooltip("Bos birakilirsa kameranin baktigi nokta otomatik merkez alinir.")]
+    [Header("Orbit Hedefi")]
+    [Tooltip("Savas alaninin ortasina koydugun bos objeyi surukle. Bos birakilirsa kameranin baktigi zemin noktasi kullanilir.")]
     public Transform orbitTarget;
 
-    public float autoTargetDistance = 35f;
-    public float minDistance = 15f;
-    public float maxDistance = 180f;
-    public float minPitch = 5f;
-    public float maxPitch = 75f;
+    [Header("Limitler")]
+    public float fallbackTargetDistance = 100f;
+    public float minDistance = 10f;
+    public float maxDistance = 600f;
     public float yawLimit = 30f;
+    public float pitchLimit = 25f;
 
-    [Header("Mobile Controls")]
+    [Header("Tek Parmak Kontrol")]
+    public bool oneFingerRotate = true;
     public float touchRotateSpeed = 0.08f;
-    public float pinchZoomSpeed = 0.1f;
+    [Tooltip("Bu kadar pikselden az hareket dokunma (secim) sayilir, kamera kipirdamaz.")]
+    public float dragThresholdPixels = 12f;
 
-    [Tooltip("Acilirsa tek parmak surukleme kamerayi dondurur. Kart/karakter secimiyle cakisabilir.")]
-    public bool allowOneFingerDrag = false;
+    [Header("Iki Parmak (Yedek)")]
+    public float pinchZoomSpeed = 0.15f;
 
-    [Header("Editor Mouse Controls")]
+    [Header("Zoom Butonlari")]
+    public bool showZoomButtons = true;
+    public float zoomButtonSpeed = 60f;
+
+    [Header("PC Test Kontrol")]
     public float mouseRotateSpeed = 120f;
-    public float mouseZoomSpeed = 10f;
+    public float mouseZoomSpeed = 15f;
 
     private bool isInitialized;
     private Vector3 pivot;
+    private float distance, yaw, pitch;
+    private float baseYaw, basePitch, baseDistance;
 
-    private float distance;
-    private float yaw;
-    private float pitch;
+    private int dragFingerId = -1;
+    private Vector2 dragStartPos;
+    private bool dragStarted;
 
-    private float baseYaw;
-    private float basePitch;
-    private float baseDistance;
+    private GUIStyle zoomButtonStyle;
+
+    private Rect ZoomInRect => new Rect(Screen.width - 150f, Screen.height - 230f, 120f, 90f);
+    private Rect ZoomOutRect => new Rect(Screen.width - 150f, Screen.height - 130f, 120f, 90f);
 
     private void Start()
     {
@@ -85,26 +94,39 @@ public class BattleCameraController : MonoBehaviour
 
     private void InitializeOrbit()
     {
-        pivot = orbitTarget != null
-            ? orbitTarget.position
-            : mainCamera.transform.position +
-              mainCamera.transform.forward * autoTargetDistance;
+        // 1) OrbitTarget atanmissa onu kullan (en saglam yontem)
+        if (orbitTarget != null)
+        {
+            pivot = orbitTarget.position;
+        }
+        else
+        {
+            // 2) Kameranin baktigi yonde zemine raycast at
+            Ray ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
+            if (Physics.Raycast(ray, out RaycastHit hit, 3000f))
+                pivot = hit.point;
+            else
+                // 3) O da yoksa bakis yonunde sabit mesafe
+                pivot = mainCamera.transform.position +
+                        mainCamera.transform.forward * fallbackTargetDistance;
+        }
 
         Vector3 offset = mainCamera.transform.position - pivot;
 
         distance = Mathf.Max(1f, offset.magnitude);
-        yaw = Mathf.Atan2(offset.x, offset.z) * Mathf.Rad2Deg;
-        pitch = Mathf.Asin(
-            Mathf.Clamp(offset.y / distance, -1f, 1f)) * Mathf.Rad2Deg;
+        yaw = Mathf.Atan2(-offset.x, -offset.z) * Mathf.Rad2Deg;
+        pitch = Mathf.Asin(Mathf.Clamp(offset.y / distance, -1f, 1f)) * Mathf.Rad2Deg;
 
         baseYaw = yaw;
-        basePitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-        pitch = basePitch;
-
-        baseDistance = Mathf.Clamp(distance, minDistance, maxDistance);
-        distance = baseDistance;
+        basePitch = pitch;      // Acilis acisi neyse o korunur
+        baseDistance = distance;
 
         isInitialized = true;
+
+        // DIKKAT: Burada ApplyOrbit CAGIRILMIYOR.
+        // Acilis goruntusu Camera Point ile birebir ayni kalir.
+        Debug.Log($"[Camera] Orbit hazir -> Mesafe: {distance:F1}, Yaw: {yaw:F1}, Pitch: {pitch:F1}");
+
         ApplyOrbit();
     }
 
@@ -121,89 +143,139 @@ public class BattleCameraController : MonoBehaviour
             ApplyOrbit();
     }
 
+    // ───────── TEK PARMAK + PINCH ─────────
+
     private bool HandleTouchControls()
     {
-        // Uc parmakla dokunma: kamerayi ilk host/client gorunusune sifirlar.
-        if (Input.touchCount == 3)
+        // Uc parmak dokunma: kamerayi sifirla
+        if (Input.touchCount >= 3)
         {
-            for (int i = 0; i < Input.touchCount; i++)
+            foreach (Touch t in Input.touches)
             {
-                if (Input.GetTouch(i).phase == TouchPhase.Began)
+                if (t.phase == TouchPhase.Began)
+                {
                     ResetCamera();
+                    break;
+                }
             }
-
+            EndDrag();
             return false;
         }
 
-        // Iki parmak: yatay surukleme dondurur, pinch yakinlastirir/uzaklastirir.
+        // Iki parmak: pinch zoom (yedek)
         if (Input.touchCount == 2)
         {
-            Touch touch0 = Input.GetTouch(0);
-            Touch touch1 = Input.GetTouch(1);
+            EndDrag();
 
-            if (IsTouchOverUI(touch0) || IsTouchOverUI(touch1))
+            Touch t0 = Input.GetTouch(0);
+            Touch t1 = Input.GetTouch(1);
+
+            if (IsTouchBlocked(t0) || IsTouchBlocked(t1))
                 return false;
 
-            Vector2 previous0 = touch0.position - touch0.deltaPosition;
-            Vector2 previous1 = touch1.position - touch1.deltaPosition;
+            Vector2 prev0 = t0.position - t0.deltaPosition;
+            Vector2 prev1 = t1.position - t1.deltaPosition;
 
-            float previousPinchDistance = Vector2.Distance(previous0, previous1);
-            float currentPinchDistance = Vector2.Distance(touch0.position, touch1.position);
+            float pinchDelta =
+                Vector2.Distance(t0.position, t1.position) -
+                Vector2.Distance(prev0, prev1);
 
-            distance -= (currentPinchDistance - previousPinchDistance) *
-                        pinchZoomSpeed;
-
-            float averageDeltaX =
-                (touch0.deltaPosition.x + touch1.deltaPosition.x) * 0.5f;
-
-            float averageDeltaY =
-                (touch0.deltaPosition.y + touch1.deltaPosition.y) * 0.5f;
-
-            yaw += averageDeltaX * touchRotateSpeed;
-            pitch -= averageDeltaY * touchRotateSpeed;
-
-            return true;
-        }
-
-        // Tek parmak normalde kart/karakter secimi icin serbest birakilir.
-        // Inspector'dan allowOneFingerDrag acilirsa tek parmak da dondurur.
-        if (Input.touchCount == 1 && allowOneFingerDrag)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if (IsTouchOverUI(touch))
-                return false;
-
-            if (touch.phase == TouchPhase.Moved)
+            if (Mathf.Abs(pinchDelta) > 0.01f)
             {
-                yaw += touch.deltaPosition.x * touchRotateSpeed;
-                pitch -= touch.deltaPosition.y * touchRotateSpeed;
+                distance -= pinchDelta * pinchZoomSpeed;
                 return true;
             }
+            return false;
+        }
+
+        // Tek parmak: yatay = saga/sola, dikey = yukari/asagi
+        if (Input.touchCount == 1 && oneFingerRotate)
+        {
+            Touch t = Input.GetTouch(0);
+
+            if (t.phase == TouchPhase.Began)
+            {
+                if (IsTouchBlocked(t))
+                {
+                    dragFingerId = -1;
+                    return false;
+                }
+
+                dragFingerId = t.fingerId;
+                dragStartPos = t.position;
+                dragStarted = false;
+                return false;
+            }
+
+            if (t.fingerId != dragFingerId)
+                return false;
+
+            // Kucuk hareketler secim (tap) sayilsin, kamera kipirdamasin
+            if (!dragStarted)
+            {
+                if (Vector2.Distance(t.position, dragStartPos) < dragThresholdPixels)
+                    return false;
+
+                dragStarted = true;
+            }
+
+            if (t.phase == TouchPhase.Moved)
+            {
+                yaw += t.deltaPosition.x * touchRotateSpeed;
+                pitch -= t.deltaPosition.y * touchRotateSpeed;
+                return true;
+            }
+
+            if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
+                EndDrag();
         }
 
         return false;
     }
 
+    private void EndDrag()
+    {
+        dragFingerId = -1;
+        dragStarted = false;
+    }
+
+    // UI butonu veya ekrandaki zoom butonu ustundeyse kamerayi devreye sokma
+    private bool IsTouchBlocked(Touch t)
+    {
+        if (EventSystem.current != null &&
+            EventSystem.current.IsPointerOverGameObject(t.fingerId))
+            return true;
+
+        if (showZoomButtons)
+        {
+            // GUI koordinati yukaridan asagi, touch asagidan yukari -> Y cevir
+            Vector2 guiPos = new Vector2(t.position.x, Screen.height - t.position.y);
+            if (ZoomInRect.Contains(guiPos) || ZoomOutRect.Contains(guiPos))
+                return true;
+        }
+
+        return false;
+    }
+
+    // ───────── PC TESTI ─────────
+
     private bool HandleMouseControls()
     {
         bool changed = false;
 
-        // Unity Editor / PC testi: sag mouse basili surukleme.
         if (Input.GetMouseButton(1))
         {
-            float mouseX = Input.GetAxis("Mouse X");
-            float mouseY = Input.GetAxis("Mouse Y");
+            float mx = Input.GetAxis("Mouse X");
+            float my = Input.GetAxis("Mouse Y");
 
-            if (Mathf.Abs(mouseX) > 0.001f || Mathf.Abs(mouseY) > 0.001f)
+            if (Mathf.Abs(mx) > 0.001f || Mathf.Abs(my) > 0.001f)
             {
-                yaw += mouseX * mouseRotateSpeed * Time.deltaTime;
-                pitch -= mouseY * mouseRotateSpeed * Time.deltaTime;
+                yaw += mx * mouseRotateSpeed * Time.deltaTime;
+                pitch -= my * mouseRotateSpeed * Time.deltaTime;
                 changed = true;
             }
         }
 
-        // Unity Editor / PC testi: mouse tekerlegi.
         float scroll = Input.mouseScrollDelta.y;
         if (Mathf.Abs(scroll) > 0.001f)
         {
@@ -212,29 +284,57 @@ public class BattleCameraController : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.R))
-        {
             ResetCamera();
-        }
 
         return changed;
     }
 
+    // ───────── ZOOM BUTONLARI (EKRAN) ─────────
+
+    private void OnGUI()
+    {
+        if (!showZoomButtons || !isInitialized)
+            return;
+
+        if (zoomButtonStyle == null)
+            zoomButtonStyle = new GUIStyle(GUI.skin.button) { fontSize = 40 };
+
+        bool dirty = false;
+
+        if (GUI.RepeatButton(ZoomInRect, "+", zoomButtonStyle))
+        {
+            distance -= zoomButtonSpeed * Time.unscaledDeltaTime;
+            dirty = true;
+        }
+
+        if (GUI.RepeatButton(ZoomOutRect, "-", zoomButtonStyle))
+        {
+            distance += zoomButtonSpeed * Time.unscaledDeltaTime;
+            dirty = true;
+        }
+
+        if (dirty)
+            ApplyOrbit();
+    }
+
+    // ───────── ORBIT ─────────
+
     private void ApplyOrbit()
     {
         float yawOffset = Mathf.Clamp(
-            Mathf.DeltaAngle(baseYaw, yaw),
-            -yawLimit,
-            yawLimit);
-
+            Mathf.DeltaAngle(baseYaw, yaw), -yawLimit, yawLimit);
         yaw = baseYaw + yawOffset;
-        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+        // Acilis acisinin etrafinda +-pitchLimit, boylece acilista asla snap olmaz
+        pitch = Mathf.Clamp(pitch,
+            Mathf.Max(2f, basePitch - pitchLimit),
+            Mathf.Min(88f, basePitch + pitchLimit));
+
         distance = Mathf.Clamp(distance, minDistance, maxDistance);
 
-        Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
-
+        Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
         mainCamera.transform.position =
-            pivot + rotation * new Vector3(0f, 0f, -distance);
-
+            pivot + rot * new Vector3(0f, 0f, -distance);
         mainCamera.transform.LookAt(pivot);
     }
 
@@ -246,13 +346,6 @@ public class BattleCameraController : MonoBehaviour
         yaw = baseYaw;
         pitch = basePitch;
         distance = baseDistance;
-
         ApplyOrbit();
-    }
-
-    private bool IsTouchOverUI(Touch touch)
-    {
-        return EventSystem.current != null &&
-               EventSystem.current.IsPointerOverGameObject(touch.fingerId);
     }
 }

@@ -878,6 +878,20 @@ MonoBehaviour:
   mainCamera: {fileID: 1701619196}
   hostCameraPoint: {fileID: 106566858}
   clientCameraPoint: {fileID: 23054487}
+  orbitTarget: {fileID: 0}
+  fallbackTargetDistance: 100
+  minDistance: 10
+  maxDistance: 600
+  yawLimit: 30
+  pitchLimit: 25
+  oneFingerRotate: 1
+  touchRotateSpeed: 0.08
+  dragThresholdPixels: 12
+  pinchZoomSpeed: 0.15
+  showZoomButtons: 1
+  zoomButtonSpeed: 60
+  mouseRotateSpeed: 120
+  mouseZoomSpeed: 15
 --- !u!4 &346664631
 Transform:
   m_ObjectHideFlags: 0
