@@ -17,11 +17,31 @@ public class HealthSystem : NetworkBehaviour
 
     // Karaktere özel VFX araması için temiz isim (örn: "Ates_Ciragi3D")
     private string vfxKey;
+    private Transform vfxAnchor;
 
     void Awake()
     {
         if (maxHP <= 0) maxHP = 100;
+
         vfxKey = gameObject.name.Replace("(Clone)", "").Trim();
+        vfxAnchor = FindVFXAnchor();
+    }
+    private Transform FindVFXAnchor()
+    {
+        // Karakter prefabında VFXAnchor varsa onu kullan.
+        foreach (Transform child in GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == "VFXAnchor")
+                return child;
+        }
+
+        // Anchor yoksa eski davranış: karakterin root noktası.
+        return transform;
+    }
+
+    private Vector3 GetVFXPosition()
+    {
+        return vfxAnchor != null ? vfxAnchor.position : transform.position;
     }
 
     public override void OnNetworkSpawn()
@@ -106,18 +126,15 @@ public class HealthSystem : NetworkBehaviour
         {
             if (isHeal)
             {
-                // Önce "Ates_Ciragi3D_Heal" arar, yoksa genel Heal efektine düşer.
-                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Heal", transform.position);
+                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Heal", GetVFXPosition());
             }
             else if (isShieldGain)
             {
-                // Önce "Ates_Ciragi3D_Shield" arar, yoksa genel/fallback efekt.
-                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Shield", transform.position);
+                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Shield", GetVFXPosition());
             }
             else if (amount > 0)
             {
-                // Önce "Ates_Ciragi3D_Hit" arar, yoksa genel Hit efektine düşer.
-                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Hit", transform.position);
+                VFXManager.Instance.PlayCharacterVFX(vfxKey, "Hit", GetVFXPosition());
             }
         }
 
@@ -168,7 +185,7 @@ public class HealthSystem : NetworkBehaviour
     {
         // Karaktere özel ölüm efekti: "Ates_Ciragi3D_Death" arar.
         if (VFXManager.Instance != null)
-            VFXManager.Instance.PlayCharacterVFX(vfxKey, "Death", transform.position);
+            VFXManager.Instance.PlayCharacterVFX(vfxKey, "Death", GetVFXPosition());
 
         // Inspector'dan atanmış eski tip deathEffect varsa onu da oynat.
         if (deathEffect != null)

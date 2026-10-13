@@ -476,22 +476,22 @@ public class BattleManager : NetworkBehaviour
             ? primaryTarget
             : allTargets.FirstOrDefault(c => c != null);
 
-        Vector3 skillPosition = visualTarget != null
-            ? visualTarget.transform.position
-            : character.transform.position;
+        Vector3 sourcePosition = GetCharacterVFXPosition(character);
+        Vector3 targetPosition = visualTarget != null
+            ? GetCharacterVFXPosition(visualTarget)
+            : sourcePosition;
 
-        // Mevcut oyun mantığı.
         ability.Apply(context);
         character.PlayAnimationClientRpc("Skill");
 
         character.AbilityCooldownRemaining.Value = 4;
         lastAbilityRoundByClient[senderId] = CurrentRound;
 
-        // Efekti sunucu onayından sonra istemcilere gönder (VFX + SFX birlikte).
         PlayApprovedAbilityFeedbackClientRpc(
             feedbackAbilityId,
             sourceVFXKey,
-            skillPosition);
+            sourcePosition,
+            targetPosition);
 
         if (primaryTarget != null)
             Debug.Log($"💡 {character.cardData.cardName} beceri kullandı: {character.cardData.ability} → {primaryTarget.cardData.cardName} (raund {CurrentRound})");
@@ -506,24 +506,27 @@ public class BattleManager : NetworkBehaviour
     private void PlayApprovedAbilityFeedbackClientRpc(
         string abilityId,
         string sourceVFXKey,
-        Vector3 effectPosition)
+        Vector3 sourcePosition,
+        Vector3 targetPosition)
     {
         if (VFXManager.Instance != null)
         {
-            VFXManager.Instance.PlayCharacterVFX(
-                sourceVFXKey,
-                "Skill",
-                effectPosition);
+            // 1) Büyü başı — karakter belinde
+            VFXManager.Instance.PlayVFX(sourceVFXKey + "_Cast", sourcePosition);
 
-            Debug.Log($"🔮 Skill VFX oynatılıyor: {sourceVFXKey} @ {effectPosition}");
+            // 2) Karakterden hedefe giden mermi/büyü
+            VFXManager.Instance.PlayProjectile(
+                sourceVFXKey + "_Projectile",
+                sourcePosition,
+                targetPosition,
+                35f);
+
+            // 3) Hedefte patlama
+            VFXManager.Instance.PlayVFX(sourceVFXKey + "_Impact", targetPosition);
         }
 
-        // Ses ve görsel efekt birbirini engellemesin.
-        if (AudioManager.Instance != null &&
-            !string.IsNullOrEmpty(abilityId))
-        {
+        if (AudioManager.Instance != null && !string.IsNullOrEmpty(abilityId))
             AudioManager.Instance.PlaySFX(abilityId);
-        }
     }
 
     #endregion
@@ -2102,7 +2105,19 @@ public class BattleManager : NetworkBehaviour
 
         return characterName.Replace("(Clone)", "").Trim();
     }
+    private Vector3 GetCharacterVFXPosition(Character character)
+    {
+        if (character == null)
+            return Vector3.zero;
 
+        foreach (Transform child in character.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == "VFXAnchor")
+                return child.position;
+        }
+
+        return character.transform.position;
+    }
     private GameObject ResolvePrefab(CardData card)
     {
         if (!string.IsNullOrEmpty(card.prefab))

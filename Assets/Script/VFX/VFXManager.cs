@@ -143,6 +143,40 @@ namespace SK2025.VFX
             return p;
         }
 
+        public VFXPlayer PlayProjectile(
+            string prefabName,
+            Vector3 startPosition,
+            Vector3 targetPosition,
+            float speed = 25f)
+        {
+            GameObject prefab = GetResourcePrefab(prefabName);
+
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    $"[VFX] Projectile prefab bulunamadı: " +
+                    $"Assets/Resources/VFX/{prefabName}.prefab");
+                return null;
+            }
+
+            float distance = Vector3.Distance(startPosition, targetPosition);
+
+            // Efektin hedefe varmasına yetecek süre.
+            float duration = Mathf.Clamp((distance / Mathf.Max(speed, 0.01f)) + 0.7f, 0.8f, 5f);
+
+            Vector3 direction = targetPosition - startPosition;
+            Quaternion rotation = direction.sqrMagnitude > 0.001f
+                ? Quaternion.LookRotation(direction.normalized)
+                : Quaternion.identity;
+
+            VFXPlayer player = Play(prefab, startPosition, rotation, duration);
+
+            if (player != null)
+                player.MoveTo(targetPosition, speed);
+
+            return player;
+        }
+
         // ─────────────────────────────────────────────────────────────
         // 2) ENUM BAZLI ÇAĞRILAR (GENEL EFEKTLER)
         // ─────────────────────────────────────────────────────────────
