@@ -170,6 +170,7 @@ PlayerSettings:
   androidMinAspectRatio: 1
   applicationIdentifier:
     Standalone: com.DefaultCompany.2DProject
+    iPhone: com.fahri.savaskartlari
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -564,7 +565,9 @@ PlayerSettings:
   enableInternalProfiler: 0
   logObjCUncaughtExceptions: 1
   enableCrashReportAPI: 0
-  cameraUsageDescription: 
+  cameraUsageDescription: "Sava\u015F Kartlar\u0131 fiziksel kartlar\u0131n \xFCzerindeki
+    QR kodlar\u0131n\u0131 taramak ve kartlar\u0131 oyun hesab\u0131na eklemek i\xE7in
+    kameraya eri\u015Fim ister."
   locationUsageDescription: 
   microphoneUsageDescription: 
   bluetoothUsageDescription: 
