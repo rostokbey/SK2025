@@ -106,6 +106,26 @@ public class SceneUIController : MonoBehaviour
         }
 
         UpdateGlobalUI(target);
+
+        // Lobiye girince butonları sıfırla.
+        if (target == TargetPanel.Lobby)
+            ResetLobbyIfNeeded();
+    }
+
+    // Sadece lobiye girildiğinde çalışır.
+    private void ResetLobbyIfNeeded()
+    {
+        var lobby = lobbyPanel != null
+            ? lobbyPanel.GetComponent<LobbyUIManager>()
+            : null;
+
+        if (lobby == null)
+        {
+            lobby = FindObjectOfType<LobbyUIManager>(true);
+        }
+
+        if (lobby != null)
+            lobby.OnLobbyPanelOpened();
     }
 
     private void CloseAllPanels()

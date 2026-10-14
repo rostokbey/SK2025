@@ -558,8 +558,11 @@ public class BattleManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        if (IsServer && NetworkManager.Singleton != null)
+        if (NetworkManager.Singleton != null)
+        {
             NetworkManager.Singleton.OnClientDisconnectCallback += HandleBattleClientDisconnected;
+            NetworkManager.Singleton.OnClientStopped += HandleClientStopped;
+        }
 
         if (IsClient)
             SubmitLocalSignedDeck();
@@ -567,12 +570,28 @@ public class BattleManager : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        if (IsServer && NetworkManager.Singleton != null)
+        if (NetworkManager.Singleton != null)
+        {
             NetworkManager.Singleton.OnClientDisconnectCallback -= HandleBattleClientDisconnected;
+            NetworkManager.Singleton.OnClientStopped -= HandleClientStopped;
+        }
 
         base.OnNetworkDespawn();
     }
 
+    private void HandleClientStopped(bool wasHost)
+    {
+        // Sadece join tarafı için. Host tarafında zaten EndBattle var.
+        if (wasHost) return;
+        if (IsServer) return;
+
+        Debug.Log("[BM] Server durdu; host oyundan ayrıldı, sonuç ekranı gösteriliyor.");
+
+        MatchEndUI.Show(
+            isWinner: true,
+            reason: "host_disconnected",
+            rewardText: "Rakip oyundan ayrıldı. Tecrübe kazandın.");
+    }
     private void HandleBattleClientDisconnected(ulong clientId)
     {
         if (!IsServer || battleEnded)
@@ -605,6 +624,8 @@ public class BattleManager : NetworkBehaviour
 
         bool sideStillConnected = matchPlayers.Any(id =>
             LobbyTeamManager.IsClientOnPlayerSide(id) == disconnectedSide);
+
+        Debug.Log($"[BM] Disconnect: client {clientId}, taraf bagli mi: {sideStillConnected}, matchPlayers: {matchPlayers.Count}");
 
         if (!sideStillConnected)
         {
@@ -730,6 +751,8 @@ public class BattleManager : NetworkBehaviour
         if (NetworkManager.Singleton.ConnectedClientsList.Count > 0)
             currentTurnClientId = NetworkManager.Singleton.ConnectedClientsList[0].ClientId;
     }
+
+
 
     public void OnFieldAttackButtonPressed()
     {
@@ -2067,10 +2090,15 @@ public class BattleManager : NetworkBehaviour
         bool localPlayerSide = LobbyTeamManager.IsClientOnPlayerSide(localId);
         bool isLocalPlayerWinner = localPlayerSide == winnerIsPlayerSide;
 
-        Debug.Log($"[BM] Maç sonu bildirimi alındı (client {localId}, taraf: {(localPlayerSide ? "Ay" : "Kan")}) -> " +
+        Debug.Log($"[BM] Maç sonu bildirimi (client {localId}): " +
                   $"{(isLocalPlayerWinner ? "KAZANDIN" : "KAYBETTİN")} (sebep: {reason})");
 
         GrantRewardTo(isLocalPlayerWinner);
+
+        // ⬇️ YENİ: Sonuç ekranını göster
+        MatchEndUI.Show(isLocalPlayerWinner, reason, isLocalPlayerWinner
+            ? "Maç kazanıldı. Tecrübe kazandın."
+            : "Maç kaybedildi. Kısmi tecrübe kazandın.");
     }
 
     public void GrantRewardTo(bool isLocalPlayerWinner)

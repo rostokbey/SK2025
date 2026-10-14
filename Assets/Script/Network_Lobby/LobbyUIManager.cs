@@ -110,11 +110,11 @@ public class LobbyUIManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (NetworkManager.Singleton == null)
-            return;
-
-        NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
+        }
     }
 
     private void SetLobbyStartState()
@@ -132,6 +132,12 @@ public class LobbyUIManager : MonoBehaviour
         {
             joinButton.gameObject.SetActive(true);
             joinButton.interactable = true;
+        }
+
+        if (joinCodeInput != null)
+        {
+            joinCodeInput.text = "";
+            joinCodeInput.gameObject.SetActive(true);
         }
 
         if (joinCodePanel != null)
@@ -164,6 +170,21 @@ public class LobbyUIManager : MonoBehaviour
         ShowWarning("");
     }
 
+    public void OnLobbyPanelOpened()
+    {
+        // NetworkManager hâlâ dinlemedeyse kapat (eski bağlantı kalıntısı)
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            Debug.Log("[Lobby] Eski bağlantı bulundu, kapatılıyor.");
+            NetworkManager.Singleton.Shutdown();
+        }
+
+        // Butonları ve panelleri başlangıç durumuna getir
+        SetLobbyStartState();
+
+        Debug.Log("[Lobby] Lobi paneli açıldı, butonlar sıfırlandı.");
+    }
+
     public void OpenMatchSizeSelection()
     {
         if (battleRoomPanel != null)
@@ -183,6 +204,12 @@ public class LobbyUIManager : MonoBehaviour
 
         if (joinButton != null)
             joinButton.gameObject.SetActive(false);
+
+        if (joinCodeInput != null)
+        {
+            joinCodeInput.text = "";
+            joinCodeInput.gameObject.SetActive(false);
+        }
 
         if (startBattleButton != null)
             startBattleButton.gameObject.SetActive(false);
@@ -236,6 +263,13 @@ public class LobbyUIManager : MonoBehaviour
 
             joinCodeUI?.SetCode(joinCode);
 
+            // Host, kendi oluşturduğu kodu girmez; sadece kodu görür/kopyalar.
+            if (joinCodeInput != null)
+            {
+                joinCodeInput.text = "";
+                joinCodeInput.gameObject.SetActive(false);
+            }
+
             if (hostButton != null)
                 hostButton.gameObject.SetActive(false);
 
@@ -280,6 +314,12 @@ public class LobbyUIManager : MonoBehaviour
 
     public async void JoinGame()
     {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+        {
+            ShowWarning("Siz zaten odasınız. Başka oyuncular bu kodu kullanarak katılabilir.");
+            return;
+        }
+
         if (isConnecting)
         {
             Debug.LogWarning("[Lobby] Bağlantı işlemi zaten devam ediyor.");
@@ -551,13 +591,19 @@ public class LobbyUIManager : MonoBehaviour
             }
         }
 
+        // Ağ kapanması için bekle
+        StartCoroutine(ShutdownWaitThenReset());
+
         if (joinCodeUI != null)
             joinCodeUI.Clear();
 
         LobbyTeamManager.ResetMatchSnapshot();
 
         if (joinCodeInput != null)
+        {
             joinCodeInput.text = "";
+            joinCodeInput.gameObject.SetActive(true);
+        }
 
         if (joinCodePanel != null)
             joinCodePanel.SetActive(false);
@@ -584,6 +630,29 @@ public class LobbyUIManager : MonoBehaviour
             joinButton.gameObject.SetActive(true);
 
         ShowWarning("");
+    }
+
+    private IEnumerator ShutdownWaitThenReset()
+    {
+        // Shutdown anında bitmiyor, birkaç frame bekleyip tekrar dene
+        float timeout = 3f;
+        float elapsed = 0f;
+
+        while (NetworkManager.Singleton != null &&
+               NetworkManager.Singleton.IsListening &&
+               elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        // Hâlâ dinlemedeyse zorla kapat
+        if (NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsListening)
+        {
+            Debug.LogWarning("[Lobby] Shutdown tamamlanmadı, zorla kapatılıyor.");
+            NetworkManager.Singleton.Shutdown();
+        }
     }
 
     public void ClearJoinCodeUI()

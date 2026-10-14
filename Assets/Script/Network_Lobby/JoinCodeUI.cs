@@ -20,7 +20,9 @@ public class JoinCodeUI : MonoBehaviour
 
     public void SetCode(string code)
     {
-        _code = code ?? "";
+        // Yildiz, bosluk gibi istenmeyen karakterleri temizle
+        _code = (code ?? "").Replace("*", "").Trim();
+
         if (codeText) codeText.text = string.IsNullOrEmpty(_code) ? "-" : _code;
         if (panel) panel.SetActive(!string.IsNullOrEmpty(_code));
     }
