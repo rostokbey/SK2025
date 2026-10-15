@@ -3794,6 +3794,10 @@ PrefabInstance:
       value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
+      propertyPath: turnTimeLimitSeconds
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: 'enemyGridPositions.Array.data[0]'
       value: 
       objectReference: {fileID: 777953419}
@@ -3889,6 +3893,10 @@ PrefabInstance:
       propertyPath: 'playerGridPositions.Array.data[11]'
       value: 
       objectReference: {fileID: 1271637163}
+    - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
+      propertyPath: maxConsecutiveAfkSkipsBeforeForfeit
+      value: 10
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

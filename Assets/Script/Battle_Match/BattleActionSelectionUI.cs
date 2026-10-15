@@ -21,6 +21,10 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
     private Button attackButton;
     private Button skillButton;
 
+    // Takım arkadaşına uygulanan yetenekte, butona basıldıktan sonra hedef
+    // seçmek için bir sonraki dokunuş beklenir.
+    private bool awaitingAllyTarget;
+
     public void Initialize(
         BattleManager manager,
         Button existingAttackButton = null,
@@ -90,7 +94,7 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
 
     public bool TryRequestActiveAbility()
     {
-        if (!CanUseSelection(out string reason))
+        if (!CanUseSelection(out string reason, requireEnemyTarget: false))
         {
             SetStatus(reason);
             return false;
@@ -103,12 +107,36 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             return false;
         }
 
-        selectedAttacker.UseActiveAbilityServerRpc(selectedTarget.gridColumn);
-        SetStatus("Yetenek isteği sunucuya gönderildi.");
-        return true;
+        switch (selectedAttacker.ActiveAbilityTargetSide)
+        {
+            case AbilityTargetSide.Self:
+                selectedAttacker.UseActiveAbilityServerRpc(
+                    selectedAttacker.gridColumn,
+                    (int)selectedAttacker.gridRow);
+                SetStatus("Yetenek isteği sunucuya gönderildi.");
+                return true;
+
+            case AbilityTargetSide.Ally:
+                awaitingAllyTarget = true;
+                SetStatus("Yeteneği uygulayacağın takım arkadaşına dokun.");
+                return true;
+
+            default:
+                if (!CanUseSelection(out reason, requireEnemyTarget: true))
+                {
+                    SetStatus(reason);
+                    return false;
+                }
+
+                selectedAttacker.UseActiveAbilityServerRpc(
+                    selectedTarget.gridColumn,
+                    (int)selectedTarget.gridRow);
+                SetStatus("Yetenek isteği sunucuya gönderildi.");
+                return true;
+        }
     }
 
-    private bool CanUseSelection(out string reason)
+    private bool CanUseSelection(out string reason, bool requireEnemyTarget = true)
     {
         reason = null;
 
@@ -137,6 +165,9 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             return false;
         }
 
+        if (!requireEnemyTarget)
+            return true;
+
         if (selectedTarget == null || !selectedTarget.IsAlive)
         {
             reason = "Saldırmak istediğin canlı düşmanı seç.";
@@ -150,6 +181,14 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
         }
 
         return true;
+    }
+
+    private bool IsLocalPlayersTurn()
+    {
+        return NetworkManager.Singleton != null &&
+               battleManager != null &&
+               battleManager.Phase.Value == BattlePhase.PlayerTurn &&
+               battleManager.ActivePlayerClientId.Value == NetworkManager.Singleton.LocalClientId;
     }
 
     private void TrySelectCharacterFromPointer()
@@ -194,6 +233,26 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             if (panelRect != null)
                 panelRect.gameObject.SetActive(true);
 
+            if (awaitingAllyTarget)
+            {
+                awaitingAllyTarget = false;
+
+                if (selectedAttacker != null && character.IsAlive &&
+                    battleManager.IsCharacterOnLocalPlayersTeam(character))
+                {
+                    selectedAttacker.UseActiveAbilityServerRpc(
+                        character.gridColumn,
+                        (int)character.gridRow);
+                    SetStatus("Yetenek isteği sunucuya gönderildi.");
+                }
+                else
+                {
+                    SetStatus("Geçerli bir takım arkadaşı seçilmedi; yetenek iptal edildi.");
+                }
+
+                return;
+            }
+
             if (!character.IsAlive)
             {
                 SetStatus("Bu karakter düşmüş durumda.");
@@ -221,6 +280,12 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
             }
 
             return;
+        }
+
+        if (awaitingAllyTarget)
+        {
+            awaitingAllyTarget = false;
+            SetStatus("Yetenek iptal edildi.");
         }
     }
 
@@ -251,6 +316,9 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
 
     private void ValidateSelection()
     {
+        if (awaitingAllyTarget && (selectedAttacker == null || !IsLocalPlayersTurn()))
+            awaitingAllyTarget = false;
+
         if (selectedAttacker != null &&
             (!selectedAttacker.IsAlive ||
              !battleManager.IsCharacterControlledByLocalPlayer(selectedAttacker)))
@@ -271,24 +339,28 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
 
     private void RefreshUI()
     {
-        bool isMyTurn =
-            NetworkManager.Singleton != null &&
-            battleManager != null &&
-            battleManager.Phase.Value == BattlePhase.PlayerTurn &&
-            battleManager.ActivePlayerClientId.Value == NetworkManager.Singleton.LocalClientId;
-
-        bool usable =
-            isMyTurn &&
+        bool hasAttacker =
+            IsLocalPlayersTurn() &&
             selectedAttacker != null &&
-            selectedAttacker.IsAlive &&
+            selectedAttacker.IsAlive;
+
+        bool hasEnemyTarget =
             selectedTarget != null &&
             selectedTarget.IsAlive;
 
         if (attackButton != null)
-            attackButton.interactable = usable;
+            attackButton.interactable = hasAttacker && hasEnemyTarget;
 
         if (skillButton != null)
-            skillButton.interactable = usable && selectedAttacker.IsActiveAbilityReady;
+        {
+            // Kendine / takım arkadaşına uygulanan yetenekler düşman hedefi gerektirmez.
+            bool needsEnemy = !hasAttacker ||
+                              selectedAttacker.ActiveAbilityTargetSide == AbilityTargetSide.Enemy;
+            skillButton.interactable =
+                hasAttacker &&
+                selectedAttacker.IsActiveAbilityReady &&
+                (!needsEnemy || hasEnemyTarget);
+        }
 
         if (infoText != null)
         {
@@ -345,13 +417,7 @@ public sealed class BattleActionSelectionUI : MonoBehaviour
         if (panelRect != null)
             return;
 
-        Canvas[] canvases = Object.FindObjectsByType<Canvas>(
-            FindObjectsInactive.Include,
-            FindObjectsSortMode.None);
-        Canvas canvas = System.Array.Find(canvases, item =>
-            item != null &&
-            item.gameObject.scene == gameObject.scene &&
-            item.renderMode != RenderMode.WorldSpace);
+        Canvas canvas = BattleCanvasUtility.FindScreenCanvas(gameObject.scene);
 
         if (canvas == null)
         {

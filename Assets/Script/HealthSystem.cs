@@ -53,9 +53,25 @@ public class HealthSystem : NetworkBehaviour
     }
 
     // ====== Server API ======
-    [ServerRpc(RequireOwnership = false)]
-    public void TakeDamageServerRpc(int damage)
+    // ANTI-CHEAT: RequireOwnership=false olduğu için bu RPC'leri herhangi bir
+    // client, herhangi bir karakter üzerinde çağırabilirdi (hasar / iyileştirme /
+    // kalkan). Sunucunun kendi kodu bu metotları doğrudan çağırdığında
+    // SenderClientId = ServerClientId olur ve çalışır; uzak client'tan gelen
+    // çağrılar reddedilir.
+    private static bool IsCalledByServer(ServerRpcParams rpcParams)
     {
+        return rpcParams.Receive.SenderClientId == NetworkManager.ServerClientId;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void TakeDamageServerRpc(int damage, ServerRpcParams rpcParams = default)
+    {
+        if (!IsCalledByServer(rpcParams))
+        {
+            Debug.LogWarning($"[HS] Yetkisiz TakeDamageServerRpc reddedildi (client {rpcParams.Receive.SenderClientId}).");
+            return;
+        }
+
         // Geriye dönük uyumluluk. Savaş hesapları sunucuda ApplyDamageServerSide kullanır.
         ApplyDamageServerSide(damage, false);
     }
@@ -85,8 +101,14 @@ public class HealthSystem : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void HealServerRpc(int amount)
+    public void HealServerRpc(int amount, ServerRpcParams rpcParams = default)
     {
+        if (!IsCalledByServer(rpcParams))
+        {
+            Debug.LogWarning($"[HS] Yetkisiz HealServerRpc reddedildi (client {rpcParams.Receive.SenderClientId}).");
+            return;
+        }
+
         HealServerSide(amount);
     }
 
@@ -108,9 +130,21 @@ public class HealthSystem : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void AddShieldServerRpc(int amount)
+    public void AddShieldServerRpc(int amount, ServerRpcParams rpcParams = default)
     {
-        if (amount <= 0) return;
+        if (!IsCalledByServer(rpcParams))
+        {
+            Debug.LogWarning($"[HS] Yetkisiz AddShieldServerRpc reddedildi (client {rpcParams.Receive.SenderClientId}).");
+            return;
+        }
+
+        AddShieldServerSide(amount);
+    }
+
+    /// <summary>Sunucu tarafında doğrudan çağrılacak kalkan ekleme (RPC değil).</summary>
+    public void AddShieldServerSide(int amount)
+    {
+        if (!IsServer || amount <= 0) return;
         shield += amount;
         ShowDamageClientRpc(amount, false, false, true);
     }

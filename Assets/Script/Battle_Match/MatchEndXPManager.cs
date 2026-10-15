@@ -56,6 +56,10 @@ public class MatchEndXPManager : MonoBehaviour
         MatchResultBus.LastWasSeason = MatchContext.LastMatchWasSeason;
         MatchResultBus.LastWin = myTeamWon;
 
+        // AdDefperience belleği günceller ama diske YAZMAZ (yalnızca AdDefperienceByKey yazıyor).
+        // Kaydetmezsek XP, uygulama kapanınca kaybolabilir.
+        PlayerInventory.Instance?.SaveToDisk();
+
         // Sezon puanı (yalnızca sezon maçında)
         if (MatchContext.LastMatchWasSeason)
         {

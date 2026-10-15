@@ -17,6 +17,15 @@ public class CharacterPlacer : MonoBehaviour
     private Action onPlacedCallback;
     private bool isPlacementMode = false;
     private bool isWaitingServerResult = false;
+    private int placementEnteredFrame = -1;
+
+    // Sunucuya gönderilmiş ve henüz cevaplanmamış isteğin sahibi. Cevap, o an seçili olan
+    // karta değil BU isteğe uygulanır; aksi halde cevap beklerken başka karta geçilirse
+    // ya da sağ tıkla iptal edilirse yanlış kart elden silinir / hiç silinmez.
+    private CardData pendingCard;
+    private Action pendingCallback;
+    private float waitStartedAt;
+    private const float ServerResultTimeoutSeconds = 5f;
 
     public bool IsPlacementMode => isPlacementMode;
 
@@ -32,11 +41,25 @@ public class CharacterPlacer : MonoBehaviour
 
     void Update()
     {
+        // Cevap hiç gelmezse arayüz sonsuza kadar kilitli kalmasın.
+        if (isWaitingServerResult &&
+            Time.unscaledTime - waitStartedAt > ServerResultTimeoutSeconds)
+        {
+            Debug.LogWarning("[PLACEMENT] Sunucu cevabı zaman aşımına uğradı; istek iptal sayıldı.");
+            isWaitingServerResult = false;
+            pendingCard = null;
+            pendingCallback = null;
+        }
+
         if (!isPlacementMode) return;
         if (isWaitingServerResult) return;
 
         if (Input.GetMouseButtonDown(0))
         {
+            // Kartı seçen tıklama aynı karede sahaya da tıklama sayılmasın.
+            if (Time.frameCount == placementEnteredFrame)
+                return;
+
             // Savaş sahnesindeki tam ekran UI arka planı her noktayı "UI" saydığı
             // için EventSystem.IsPointerOverGameObject kullanılamaz. Yalnızca
             // gerçekten açık olan ayarlar menüsü tıklamayı engeller.
@@ -55,10 +78,17 @@ public class CharacterPlacer : MonoBehaviour
     {
         if (card == null) return;
 
+        // Sunucudan cevap beklenirken başka karta geçilemez.
+        if (isWaitingServerResult)
+        {
+            Debug.LogWarning("[PLACEMENT] Önceki yerleştirmenin sunucu cevabı bekleniyor; kart değiştirilemedi.");
+            return;
+        }
+
         cardToPlace = card;
         onPlacedCallback = onPlaced;
         isPlacementMode = true;
-        isWaitingServerResult = false;
+        placementEnteredFrame = Time.frameCount;
 
         Debug.Log(card.cardName + " için yerleştirme modu aktif.");
     }
@@ -118,7 +148,12 @@ public class CharacterPlacer : MonoBehaviour
         }
 
         Debug.Log($"📍 Karakter spawn konumu: {placementPosition}");
+        // İsteği ve ait olduğu kartı/callback'i gönderilmeden ÖNCE sakla. Host'ta RPC aynı çağrı
+        // içinde işlenip PlacementResult hemen çağrılabildiği için sıra önemli.
+        pendingCard = cardToPlace;
+        pendingCallback = onPlacedCallback;
         isWaitingServerResult = true;
+        waitStartedAt = Time.unscaledTime;
         BattleManager.Instance.SpawnCharacterAtPositionServerRpc(cardToPlace.id, placementPosition);
     }
 
@@ -154,15 +189,32 @@ public class CharacterPlacer : MonoBehaviour
 
     public void PlacementResult(bool success)
     {
+        CardData resolvedCard = pendingCard;
+        Action resolvedCallback = pendingCallback;
+
         isWaitingServerResult = false;
+        pendingCard = null;
+        pendingCallback = null;
+
+        if (resolvedCard == null)
+        {
+            // Zaman aşımına uğramış / bilinmeyen isteğin geç gelen cevabı.
+            Debug.LogWarning("[PLACEMENT] Hangi isteğe ait olduğu bilinmeyen yerleştirme cevabı yok sayıldı.");
+            return;
+        }
 
         if (success)
         {
-            onPlacedCallback?.Invoke();
+            // Doğru kartı elden çıkarır (cevap beklenirken seçim değişmiş olsa bile).
+            resolvedCallback?.Invoke();
 
-            isPlacementMode = false;
-            cardToPlace = null;
-            onPlacedCallback = null;
+            // Yerleştirme modunu yalnızca hâlâ AYNI kart için açıksa kapat.
+            if (cardToPlace == resolvedCard)
+            {
+                isPlacementMode = false;
+                cardToPlace = null;
+                onPlacedCallback = null;
+            }
 
             Debug.Log("✅ Yerleştirme başarılı, kart kullanıldı.");
         }
@@ -172,10 +224,22 @@ public class CharacterPlacer : MonoBehaviour
         }
     }
 
+    /// <summary>Sunucu bu kartı zaten harcanmış saydıysa o kart için yerleştirme modundan çık.</summary>
+    public void AbortPlacementForCard(string cardId)
+    {
+        if (cardToPlace == null || string.IsNullOrEmpty(cardId)) return;
+        if (!string.Equals(cardToPlace.id, cardId, StringComparison.OrdinalIgnoreCase)) return;
+
+        isPlacementMode = false;
+        cardToPlace = null;
+        onPlacedCallback = null;
+    }
+
     private void CancelPlacement()
     {
+        // Sunucuya gönderilmiş bir istek varsa (pendingCard) cevabı yine doğru karta uygulanır;
+        // sadece yerleştirme modu kapanır.
         isPlacementMode = false;
-        isWaitingServerResult = false;
         cardToPlace = null;
         onPlacedCallback = null;
 

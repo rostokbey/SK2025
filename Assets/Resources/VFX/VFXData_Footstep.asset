@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VFXData_Footstep
   m_EditorClassIdentifier: Assembly-CSharp::SK2025.VFX.VFXData
   type: 40
-  prefab: {fileID: 0}
+  prefab: {fileID: 9205587769199710354, guid: 528450b10f6a7b747b023ac974274a5f, type: 3}
   duration: 2
   preloadCount: 5
   usePooling: 1

@@ -54,6 +54,13 @@ public class Character : NetworkBehaviour
 
     public ulong ControllerClientId => ControllerClientIdNet.Value;
 
+    // Aktif yeteneğin hedef tarafı (Enemy/Ally/Self). CardData istemcilerde
+    // olmadığı için UI'nin hedef seçim akışını belirleyebilmesi adına senkronlanır.
+    public readonly NetworkVariable<int> AbilityTargetSideNet =
+        new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public AbilityTargetSide ActiveAbilityTargetSide => (AbilityTargetSide)AbilityTargetSideNet.Value;
+
     [Header("Optional")]
     public Animator animator;
 
@@ -257,16 +264,18 @@ public class Character : NetworkBehaviour
     /// kısıtını tek yerden takip edebilmek için).
     /// </summary>
     [ServerRpc(RequireOwnership = false)]
-    public void UseActiveAbilityServerRpc(int targetColumn, ServerRpcParams rpcParams = default)
+    public void UseActiveAbilityServerRpc(int targetColumn, int targetRow, ServerRpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
 
-        if (BattleManager.Instance == null)
+        BattleManager manager = BattleManager.Instance;
+        if (manager == null)
             return;
 
-        if (!BattleManager.Instance.TryUseActiveAbilityForCharacter(this, targetColumn, senderId, out string reason))
+        if (!manager.TryUseActiveAbilityForCharacter(this, targetColumn, senderId, out string reason, targetRow))
         {
             Debug.LogWarning($"[CHAR] UseActiveAbilityServerRpc reddedildi ({cardData?.cardName}): {reason}");
+            manager.WarnClient(senderId, reason);
         }
     }
 
@@ -302,6 +311,13 @@ public class Character : NetworkBehaviour
             MaxHpNet.Value = data.baseHP;
             AttackNet.Value = data.str > 0 ? data.str : data.baseStr;
             DefenseNet.Value = data.def > 0 ? data.def : data.baseDef;
+
+            IActiveAbility activeAbility = string.IsNullOrEmpty(data.ability)
+                ? null
+                : AbilityCatalog.GetActive(data.ability);
+            AbilityTargetSideNet.Value = (int)(activeAbility is IAbilityTargetSide sided
+                ? sided.TargetSide
+                : AbilityTargetSide.Enemy);
         }
 
         InitAbilityStateServer();
@@ -331,21 +347,33 @@ public class Character : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void AttackServerRpc(int targetColumn, ServerRpcParams rpcParams = default)
     {
-        if (!isMyTurn) return;
+        ulong senderId = rpcParams.Receive.SenderClientId;
+
+        BattleManager manager = BattleManager.Instance;
+        if (manager == null)
+            return;
+
+        // Faz + sıra + canlılık. Yerleşim fazında ya da sırası olmayan karakterle saldırı yok.
+        if (manager.Phase.Value != BattlePhase.PlayerTurn || !isMyTurn || !IsAlive)
+        {
+            manager.WarnClient(senderId, "Şu anda bu karakterle saldıramazsın.");
+            return;
+        }
 
         // Anti-cheat: RequireOwnership=false olduğu için herhangi bir client
         // bu RPC'yi HERHANGİ bir Character NetworkObject'i üzerinden
         // çağırabilir. isMyTurn tek başına yeterli değil - ayrıca gönderen
         // client'ın gerçekten BU karakterin tarafında olduğunu doğrula.
-        ulong senderId = rpcParams.Receive.SenderClientId;
-        if (BattleManager.Instance == null ||
-            !BattleManager.Instance.IsSenderAuthorizedForCharacter(senderId, this))
+        if (!manager.IsSenderAuthorizedForCharacter(senderId, this))
         {
             Debug.LogWarning($"[CHAR] Yetkisiz AttackServerRpc reddedildi (client {senderId}) -> {cardData?.cardName}");
+            manager.WarnClient(senderId, "Bu karakter üzerinde yetkin yok.");
             return;
         }
 
-        BattleManager.Instance.ResolveColumnAttack(this, targetColumn, AbilityTargetingMode.Normal);
-        BattleManager.Instance.EndTurn();
+        if (manager.ResolveColumnAttack(this, targetColumn, AbilityTargetingMode.Normal))
+            manager.EndTurn();
+        else
+            manager.WarnClient(senderId, $"Seçilen {targetColumn + 1}. sütunda geçerli hedef yok.");
     }
 }

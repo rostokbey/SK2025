@@ -46,6 +46,34 @@ public class HandUIManager : MonoBehaviour
         Debug.Log($"[HandUI] Başlatıldı. Toplam deste: {deck.Count}, elde: {handCards.Count}");
     }
 
+    /// <summary>
+    /// Sunucunun artık harcanmış saydığı kartları (aynı id) elden çıkarır. Normalde cevap
+    /// akışı kartı zaten siler; bu, bir eşleşme kaybı olursa elde oynanamaz kart kalmasın diye
+    /// emniyet ağıdır.
+    /// </summary>
+    public void DiscardCardsById(string cardId)
+    {
+        if (string.IsNullOrEmpty(cardId)) return;
+
+        for (int i = handCards.Count - 1; i >= 0; i--)
+        {
+            CardUI ui = handCards[i];
+            if (ui == null)
+            {
+                handCards.RemoveAt(i);
+                continue;
+            }
+
+            CardData data = ui.GetCardData();
+            if (data != null && string.Equals(data.id, cardId, System.StringComparison.OrdinalIgnoreCase))
+            {
+                handCards.RemoveAt(i);
+                Destroy(ui.gameObject);
+                Debug.LogWarning($"[HandUI] Sunucu '{data.cardName}' kartını harcanmış saydı; elden çıkarıldı.");
+            }
+        }
+    }
+
     public void DrawCard()
     {
         if (remainingDeck == null || remainingDeck.Count == 0)
