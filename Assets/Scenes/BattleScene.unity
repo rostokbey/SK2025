@@ -3794,8 +3794,12 @@ PrefabInstance:
       value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
+      propertyPath: enemyFrontRowIsMaxZ
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: turnTimeLimitSeconds
-      value: 60
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 8848074687085774184, guid: 9110d5b053abe6342aaa6c518ce871f2, type: 3}
       propertyPath: 'enemyGridPositions.Array.data[0]'

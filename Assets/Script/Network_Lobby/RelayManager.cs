@@ -28,18 +28,26 @@ public class RelayManager : MonoBehaviour
 
     private async void Start()
     {
-        await UnityServices.InitializeAsync();
-        if (!AuthenticationService.Instance.IsSignedIn)
-        {
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-        }
+        // Unity Services başlatma ve oturum açma artık AccountService'te (tek yer).
+        // Hata olursa AccountService.LastError'a yazılır; CreateRelay/JoinRelay yeniden dener.
+        await AccountService.EnsureReadyAsync();
     }
 
     public async Task<string> CreateRelay()
     {
+        // Oturum hazır olmadan Relay çağrısı yapılırsa "oturum yok" hatası alınır.
+        if (!await AccountService.EnsureReadyAsync())
+        {
+            Debug.LogError($"CreateRelay: hesap servisi hazır değil. {AccountService.Instance?.LastError}");
+            return null;
+        }
+
         try
         {
-            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(2);
+            // Host hariç bağlanabilecek oyuncu sayısı. Eskiden sabit 2'ydi: 2v2 (3 client) ve
+            // 3v3 (5 client) maçlarında son oyuncular bağlanamazdı. En az 2 (eski davranış).
+            int maxConnections = Mathf.Clamp(LobbyTeamManager.SelectedPlayersPerTeam * 2 - 1, 2, 5);
+            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
             joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
             var utp = NetworkManager.Singleton.GetComponent<UnityTransport>();
@@ -64,6 +72,12 @@ public class RelayManager : MonoBehaviour
 
     public async Task<bool> JoinRelay(string joinCode)
     {
+        if (!await AccountService.EnsureReadyAsync())
+        {
+            Debug.LogError($"JoinRelay: hesap servisi hazır değil. {AccountService.Instance?.LastError}");
+            return false;
+        }
+
         try
         {
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);

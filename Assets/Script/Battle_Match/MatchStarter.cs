@@ -1,7 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Casual/Season bayraklarını saklar ve gerçek başlatmayı BattleStartAdapter’a devir eder.
+/// Casual/Season maçını host olarak başlatır. Maç bağlamını (sezon/casual, takım boyutu)
+/// MatchContext'e yazar; maç sonu XP ve sezon puanı oradan okunur.
 /// </summary>
 public class MatchStarter : MonoBehaviour
 {
@@ -13,8 +14,10 @@ public class MatchStarter : MonoBehaviour
     public LobbyUIManager lobbyUIManager;
     public LobbyTeamManager lobbyTeamManager;
 
-    public static bool LastMatchWasSeason { get; private set; }
-    public static int LastMatchTeamSize { get; private set; }
+    // Eskiden bunlar ayrı bir kopyaydı ve MatchEndXPManager'ın okuduğu MatchContext'e HİÇ yazılmıyordu
+    // (sezon puanı işlenmiyordu). Artık tek kaynak MatchContext; eski çağıranlar için yönlendirme.
+    public static bool LastMatchWasSeason => MatchContext.LastMatchWasSeason;
+    public static int LastMatchTeamSize => MatchContext.LastMatchTeamSize;
 
     void Awake()
     {
@@ -39,9 +42,9 @@ public class MatchStarter : MonoBehaviour
             return;
         }
 
+        int size = Mathf.Clamp(teamSize, 1, 3);
+
         LobbyTeamManager.ResetMatchSnapshot();
-        LastMatchWasSeason = seasonMode;
-        LastMatchTeamSize = Mathf.Clamp(teamSize, 1, 3);
 
         if (lobbyTeamManager == null)
             lobbyTeamManager = LobbyTeamManager.Instance
@@ -49,7 +52,7 @@ public class MatchStarter : MonoBehaviour
 
         if (lobbyTeamManager != null)
         {
-            lobbyTeamManager.SetMaxPlayersPerTeam(LastMatchTeamSize);
+            lobbyTeamManager.SetMaxPlayersPerTeam(size);
         }
         else
         {
@@ -60,16 +63,17 @@ public class MatchStarter : MonoBehaviour
         if (lobbyUIManager == null)
             lobbyUIManager = Object.FindFirstObjectByType<LobbyUIManager>(FindObjectsInactive.Include);
 
-        if (lobbyUIManager != null)
-        {
-            lobbyUIManager.HostGame();
-        }
-        else
+        if (lobbyUIManager == null)
         {
             Debug.LogError("[MatchStarter] LobbyUIManager atanmadı.");
+            return;
         }
 
-        Debug.Log($"[MatchStarter] Start → teamSize={LastMatchTeamSize}, season={LastMatchWasSeason}");
+        // Bağlam yalnızca maç gerçekten başlatılacaksa yazılır (hatalı denemeler bayrağı bozmasın).
+        MatchContext.Set(seasonMode, size);
+        lobbyUIManager.HostGame();
+
+        Debug.Log($"[MatchStarter] Start → teamSize={MatchContext.LastMatchTeamSize}, season={MatchContext.LastMatchWasSeason}");
     }
 
     // ===== CASUAL BUTTONS =====

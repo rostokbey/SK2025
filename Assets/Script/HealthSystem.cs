@@ -90,9 +90,8 @@ public class HealthSystem : NetworkBehaviour
 
         Debug.Log($"[HS] Hasar {damage} (kalkan {beforeShield}->{shield}) kalan HP: {currentHP.Value}");
 
-        // ✅ Hit animasyonu
-        if (animator != null)
-            animator.SetTrigger("Hit");
+        // ✅ Hit animasyonu (tüm client'larda; eskiden yalnızca sunucuda tetikleniyordu)
+        PlayAnimationTriggerClientRpc("Hit");
 
         ShowDamageClientRpc(remaining, isCritical, false, false);
 
@@ -190,9 +189,8 @@ public class HealthSystem : NetworkBehaviour
     {
         Debug.Log($"[HS] {gameObject.name} öldü.");
 
-        // ✅ Die animasyonu
-        if (animator != null)
-            animator.SetTrigger("Die");
+        // ✅ Die animasyonu (tüm client'larda; eskiden yalnızca sunucuda tetikleniyordu)
+        PlayAnimationTriggerClientRpc("Die");
 
         // Ölüm efekti tüm istemcilerde oynasın.
         PlayDeathFXClientRpc();
@@ -212,6 +210,20 @@ public class HealthSystem : NetworkBehaviour
 
         // ✅ Victory kontrolü
         BattleManager.Instance?.CheckVictory();
+    }
+
+    [ClientRpc]
+    private void PlayAnimationTriggerClientRpc(string triggerName)
+    {
+        if (animator == null)
+            animator = GetComponent<Animator>();
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>(true);
+        if (animator == null)
+            return;
+
+        animator.ResetTrigger(triggerName);
+        animator.SetTrigger(triggerName);
     }
 
     [ClientRpc]

@@ -720,6 +720,24 @@ public class BattleManager : NetworkBehaviour
         return fallbackTarget.gridColumn;
     }
 
+    /// <summary>
+    /// Aktif yeteneğin neden kullanılamadığını oyuncuya anlatır. Hem sunucuda hem
+    /// client UI'sında kullanılır (yalnızca NetworkVariable tabanlı alanlara bakar).
+    /// </summary>
+    public static string DescribeAbilityNotReady(Character character)
+    {
+        if (character == null) return "Karakter yok.";
+        if (character.IsStunned) return "Karakter sersemletildi; aksiyon alamaz.";
+        if (character.IsBlinded) return "Körlük aktif: aktif yetenek kullanılamaz.";
+        if (character.IsSilenced) return "Susturulma aktif: aktif yetenek kullanılamaz.";
+
+        // Character.IsActiveAbilityReady, ilk kullanım için 4 kişisel tik şartı arıyor.
+        if (character.PersonalCounter < 4)
+            return $"Yetenek henüz hazır değil: {4 - character.PersonalCounter} raund sonra açılır.";
+
+        return $"Yetenek bekleme süresinde: {character.AbilityCooldownRemaining.Value} raund kaldı.";
+    }
+
     private static AbilityTargetSide GetAbilityTargetSide(IActiveAbility ability)
     {
         return ability is IAbilityTargetSide sided ? sided.TargetSide : AbilityTargetSide.Enemy;
@@ -766,7 +784,7 @@ public class BattleManager : NetworkBehaviour
 
         if (!character.IsActiveAbilityReady)
         {
-            reason = $"Yetenek hazır değil ({character.AbilityCooldownRemaining.Value} raund kaldı).";
+            reason = DescribeAbilityNotReady(character);
             return false;
         }
 
@@ -1987,6 +2005,15 @@ public class BattleManager : NetworkBehaviour
 
         bool rewardable = IsRewardableEnd(reason);
 
+        // Sezon/casual ve takım boyutu bilgisini host bilir; joiner'ın MatchContext'i hiç ayarlanmadığı
+        // için (maça katılırken bu bilgiyi kimse göndermiyor) sonuçla birlikte her oyuncuya sunucu yollar.
+        bool seasonMatch = MatchContext.LastMatchWasSeason;
+        int matchTeamSize = Mathf.Clamp(
+            MatchContext.LastMatchTeamSize > 0
+                ? MatchContext.LastMatchTeamSize
+                : LobbyTeamManager.SelectedPlayersPerTeam,
+            1, 3);
+
         Debug.Log($"[BM] Maç sona erdi (maç {currentMatchId}). Kazanan: " +
                   $"{(winnerIsPlayerSide.HasValue ? (winnerIsPlayerSide.Value ? "player" : "enemy") : "yok")} | sebep: {reason}");
 
@@ -1998,7 +2025,7 @@ public class BattleManager : NetworkBehaviour
             bool won = winnerIsPlayerSide.HasValue &&
                        LobbyTeamManager.IsClientOnPlayerSide(clientId) == winnerIsPlayerSide.Value;
 
-            NotifyMatchEndClientRpc(won, reason, rewardable, currentMatchId, SendTo(clientId));
+            NotifyMatchEndClientRpc(won, reason, rewardable, currentMatchId, seasonMatch, matchTeamSize, SendTo(clientId));
         }
     }
 
@@ -2463,6 +2490,12 @@ public class BattleManager : NetworkBehaviour
             return;
         }
 
+        if (!attacker.CanUseNormalAction)
+        {
+            RejectAction(senderId, "Seçili saldırı", "Karakter sersemletildi; saldıramaz.");
+            return;
+        }
+
         if (attacker.isPlayer == target.isPlayer)
         {
             RejectAction(senderId, "Seçili saldırı", "Takım arkadaşına saldırılamaz.");
@@ -2506,6 +2539,7 @@ public class BattleManager : NetworkBehaviour
         var attacker = allCharacters.FirstOrDefault(c =>
             c != null &&
             c.IsAlive &&
+            c.CanUseNormalAction &&
             c.isPlayer == senderIsPlayerSide &&
             (c.ControllerClientId == ulong.MaxValue || c.ControllerClientId == senderId));
         if (attacker == null)
@@ -2673,6 +2707,8 @@ public class BattleManager : NetworkBehaviour
         string reason,
         bool rewardable,
         string matchId,
+        bool seasonMatch,
+        int teamSize,
         ClientRpcParams clientRpcParams = default)
     {
         ulong localId = NetworkManager.Singleton != null
@@ -2683,7 +2719,11 @@ public class BattleManager : NetworkBehaviour
                   $"{(localWon ? "KAZANDIN" : "KAYBETTİN")} (sebep: {reason})");
 
         if (rewardable)
+        {
+            // MatchEndXPManager sezon puanını MatchContext'ten okur; sunucudan gelen değeri yaz.
+            MatchContext.Set(seasonMatch, teamSize);
             ApplyServerVerdictReward(localWon, matchId);
+        }
 
         MatchEndUI.Show(localWon, reason, BuildResultText(localWon, rewardable));
     }

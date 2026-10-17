@@ -29,16 +29,15 @@ public class BattleStartAdapter : MonoBehaviour
     // ------------ BUTONLARIN / DIŞ ÇAĞRILARIN KULLANACAĞI TEK METOT ------------
     public void StartMatch(int teamSize, bool seasonMode)
     {
-        // 1) Bağlam bayrakları
-        MatchContext.LastMatchWasSeason = seasonMode;
-        MatchContext.LastMatchTeamSize = Mathf.Clamp(teamSize, 1, 3);
-
-        // 2) Sezon elenme kapısı
+        // 1) Sezon elenme kapısı (bağlamı yazmadan ÖNCE: reddedilen sezon isteği bayrağı bozmasın)
         if (seasonMode && SeasonManager.Instance?.IsEliminated() == true)
         {
             Debug.LogWarning("[BattleStartAdapter] Bu sezon elendiniz (puan=0).");
             return;
         }
+
+        // 2) Bağlam bayrakları
+        MatchContext.Set(seasonMode, teamSize);
 
         // 3) Gerçek başlatıcıyı çağırmayı dene
         bool invoked = InvokeTarget(MatchContext.LastMatchTeamSize);
@@ -117,4 +116,14 @@ public static class MatchContext
 {
     public static bool LastMatchWasSeason { get; set; }
     public static int LastMatchTeamSize { get; set; }
+
+    /// <summary>
+    /// Bağlamı tek yerden yazar (takım boyutunu 1-3'e sıkıştırır). Maç başlatan her yol
+    /// (MatchStarter, BattleStartAdapter) bunu kullanmalı; maç sonu XP/sezon puanı buradan okunur.
+    /// </summary>
+    public static void Set(bool seasonMode, int teamSize)
+    {
+        LastMatchWasSeason = seasonMode;
+        LastMatchTeamSize = Mathf.Clamp(teamSize, 1, 3);
+    }
 }
