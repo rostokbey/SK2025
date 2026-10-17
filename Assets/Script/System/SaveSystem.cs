@@ -32,10 +32,16 @@ public static class SaveSystem
         Path.Combine(Application.persistentDataPath, $"{DeckFilePrefix}{profileId}.json");
 
     // --- Envanter Fonksiyonları ---
+    public static bool InventoryExists(string profileId) => File.Exists(InventoryPathFor(profileId));
+    public static bool DecksExists(string profileId) => File.Exists(DeckPathFor(profileId));
+
     public static void SaveInventory(string profileId, InventorySaveData data)
     {
         WriteSigned(InventoryPathFor(profileId), data, profileId, InventoryPurpose);
         Debug.Log($"[SaveSystem] Envanter kaydedildi (imzalı): {InventoryPathFor(profileId)}");
+
+        // Bulut hesabı aktifse değişikliği Cloud Save'e de gönder.
+        CloudSaveSync.OnLocalSaved(profileId, CloudSaveSync.InventoryKey, JsonUtility.ToJson(data, false));
     }
 
     public static InventorySaveData LoadInventory(string profileId)
@@ -60,6 +66,8 @@ public static class SaveSystem
     {
         WriteSigned(DeckPathFor(profileId), data, profileId, DeckPurpose);
         Debug.Log($"[SaveSystem] Desteler kaydedildi (imzalı): {DeckPathFor(profileId)}");
+
+        CloudSaveSync.OnLocalSaved(profileId, CloudSaveSync.DecksKey, JsonUtility.ToJson(data, false));
     }
 
     public static DeckSaveData LoadDecks(string profileId)
